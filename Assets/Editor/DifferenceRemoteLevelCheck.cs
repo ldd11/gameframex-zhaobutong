@@ -182,7 +182,7 @@ public static class DifferenceRemoteLevelCheck
                     ui.bottomRings[last].gameObject.activeSelf, "最后一个差异点闪动后恢复各自图片并保留双圈 " + (index + 1));
             }
             Check(ui.Round.Total == 25 && ui.Round.IsFound(24), "第 4 关完整加载 25 处差异并命中第 25 处");
-            Check(ui.progressDots[0].transform.parent != ui.progressDots[24].transform.parent, "25 处差异进度分成两行");
+            Check(ui.progressDots[0].transform.parent == ui.progressDots[24].transform.parent, "25 处差异进度保持单行");
             ui.ShowHome(); ui.ShowAlbum();
             var firstRow = ui.stage.Find("Album/Card/Level0");
             var rowTitle = firstRow.Find("Title").GetComponent<UnityEngine.UI.Text>();

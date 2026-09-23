@@ -18,6 +18,9 @@ namespace Hotfix.UI
         float elapsed;
         bool revealed;
         Action onReveal;
+#if UNITY_EDITOR
+        Material editorMaterial;
+#endif
 
         public static void Launch(RectTransform parent, Vector3 worldOrigin, RectTransform target, Action onReveal = null, Material glowMaterial = null)
         {
@@ -30,6 +33,14 @@ namespace Hotfix.UI
             var flight = node.GetComponent<DifferenceFoundFlight>();
             flight.raycastTarget = false;
             flight.material = glowMaterial;
+#if UNITY_EDITOR
+            // Keep the bundled material intact; use the locally imported shader only in Editor Play.
+            if (glowMaterial && !glowMaterial.shader.isSupported)
+            {
+                var shader = UnityEditor.AssetDatabase.LoadAssetAtPath<Shader>("Assets/Bundles/UI/UIDifferences/Art/FoundGlow.shader");
+                if (shader) flight.material = flight.editorMaterial = new Material(glowMaterial) { shader = shader };
+            }
+#endif
             flight.origin = rect.InverseTransformPoint(worldOrigin);
             flight.destination = target;
             flight.onReveal = onReveal;
@@ -87,6 +98,14 @@ namespace Hotfix.UI
             onReveal = null;
             base.OnDisable();
         }
+
+#if UNITY_EDITOR
+        protected override void OnDestroy()
+        {
+            if (editorMaterial) Destroy(editorMaterial);
+            base.OnDestroy();
+        }
+#endif
 
         protected override void OnPopulateMesh(UnityEngine.UI.VertexHelper mesh)
         {

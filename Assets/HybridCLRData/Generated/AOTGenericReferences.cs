@@ -308,6 +308,7 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// System.Func<object,object,object>
 	// System.Func<object,object>
 	// System.Func<object>
+	// System.Nullable<UnityEngine.Color>
 	// System.Nullable<UnityEngine.Vector3>
 	// System.Nullable<long>
 	// System.Predicate<Hotfix.Events.PlayerAttributeChangeItem>
@@ -573,6 +574,7 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Start<Hotfix.UI.UIRoomListPanel.<OnOpen>d__14>(Hotfix.UI.UIRoomListPanel.<OnOpen>d__14&)
 		// object UnityEngine.Component.GetComponent<object>()
 		// object UnityEngine.Component.GetComponentInChildren<object>()
+		// object UnityEngine.Component.GetComponentInChildren<object>(bool)
 		// object UnityEngine.Component.GetComponentInParent<object>()
 		// object[] UnityEngine.Component.GetComponentsInChildren<object>(bool)
 		// object UnityEngine.GameObject.AddComponent<object>()
@@ -580,6 +582,7 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 		// object[] UnityEngine.GameObject.GetComponentsInChildren<object>(bool)
 		// object UnityEngine.Object.Instantiate<object>(object,UnityEngine.Transform)
 		// object UnityEngine.Object.Instantiate<object>(object,UnityEngine.Transform,bool)
+		// object UnityEngine.Resources.Load<object>(string)
 		// object YooAsset.AssetHandle.GetAssetObject<object>()
 		// string string.Join<int>(string,System.Collections.Generic.IEnumerable<int>)
 		// string string.JoinCore<int>(System.Char*,int,System.Collections.Generic.IEnumerable<int>)

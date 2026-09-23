@@ -53,6 +53,7 @@ namespace Hotfix.UI
         int level, completed, coins, hints, avatar, frame, music, totalFound, perfect, ownedAvatars, ownedFrames;
         int draftAvatar, draftFrame, roundMistakes;
         bool sound, musicEnabled, settled, frameTab, testing, shopReturnsToPlay, interactionsBound;
+        bool vibration = true;
         string nickname, giftDate, roundContent;
         Action dialogAction, secondaryAction, tertiaryAction;
         Coroutine noticeRoutine, endRoutine;
@@ -117,7 +118,8 @@ namespace Hotfix.UI
             tabHighlight.SetSiblingIndex(4);
             var tabShadow = tabHighlight.gameObject.AddComponent<UnityEngine.UI.Shadow>();
             tabShadow.effectColor = new Color(.04f,.1f,.2f,.45f); tabShadow.effectDistance = new Vector2(0, -1);
-            if (!stage.GetComponent<UnityEngine.UI.RectMask2D>()) stage.gameObject.AddComponent<UnityEngine.UI.RectMask2D>();
+            /*if (!stage.GetComponent<UnityEngine.UI.RectMask2D>()) 
+                stage.gameObject.AddComponent<UnityEngine.UI.RectMask2D>();*/
             DifferenceButtonShine.Create(startButton);
             hintHand = DifferenceHintHand.Create(hintButton, hintHandSprite);
             hintSpotlight = DifferenceHintSpotlight.Create((RectTransform)play.transform, hintSpotlightMaterial);
@@ -173,6 +175,7 @@ namespace Hotfix.UI
             albumPrevious = AlbumPageButton("PreviousPage", "上一页", 24, -1);
             albumNext = AlbumPageButton("NextPage", "下一页", 428, 1);
             Bind("Play/Zoom", () => { if (HintActive) return; var board = upperImage.GetComponent<DifferenceBoard>(); board.SetZoom(upperImage.transform.localScale.x > 1.01f ? 1 : 2); });
+            InstallFigmaDesign();
         }
 
         public override void OnOpen(object userData)
@@ -193,6 +196,7 @@ namespace Hotfix.UI
             if ((ownedFrames & (1 << frame)) == 0) frame = 0;
             sound = GameApp.Setting.GetBool(Key + "Sound", true);
             musicEnabled = GameApp.Setting.GetBool(Key + "Music", true);
+            vibration = GameApp.Setting.GetBool(Key + "Vibration", true);
             nickname = GameApp.Setting.GetString(Key + "Nickname", "Player_1001");
             giftDate = GameApp.Setting.GetString(Key + "GiftDate", "");
             totalFound = Mathf.Max(0, GetInt("TotalFound", 0)); perfect = Mathf.Max(0, GetInt("Perfect", 0));
@@ -204,18 +208,21 @@ namespace Hotfix.UI
         {
             var root = (RectTransform)transform;
             var area = Screen.safeArea;
-            var scale = Mathf.Min(root.rect.width * area.width / Mathf.Max(1, Screen.width) / 720f,
-                root.rect.height * area.height / Mathf.Max(1, Screen.height) / 1280f);
+            var scale = Mathf.Min(root.rect.width * area.width / Mathf.Max(1, Screen.width) / stage.rect.width,
+                root.rect.height * area.height / Mathf.Max(1, Screen.height) / stage.rect.height);
             stage.localScale = Vector3.one * scale;
             stage.anchoredPosition = new Vector2((area.center.x / Mathf.Max(1, Screen.width) - .5f) * root.rect.width,
                 (area.center.y / Mathf.Max(1, Screen.height) - .5f) * root.rect.height);
+            AdvanceDesignLoading();
             AdvanceTabTransition(Time.unscaledDeltaTime);
             AdvancePatches(Time.unscaledDeltaTime);
             if (Input.GetMouseButton(0) || Input.touchCount > 0 || Input.mouseScrollDelta.sqrMagnitude > 0) hintIdle = 0;
             if (!testing) AdvanceHintGuide(Time.unscaledDeltaTime);
             if (Input.GetKeyDown(KeyCode.Escape))
             {
-                if (modal.activeSelf) { if (modalClose.gameObject.activeSelf) modal.SetActive(false); }
+                if (hintDesign && hintDesign.activeSelf) CloseDesignHint();
+                else if (figmaResultActive) { CloseFigmaResult(); ShowHome(); }
+                else if (modal.activeSelf) { if (modalClose.gameObject.activeSelf) modal.SetActive(false); }
                 else if (profile.activeSelf) profile.SetActive(false);
                 else if (musicPanel.activeSelf) musicPanel.SetActive(false);
                 else if (album.activeSelf) album.SetActive(false);
@@ -233,15 +240,17 @@ namespace Hotfix.UI
             if (play.activeSelf && page != play) { SaveRound(); CancelEndAnimation(); ClearFoundFeedback(); }
             if (page != shop) shopReturnsToPlay = false;
             modal.SetActive(false); settings.SetActive(false); profile.SetActive(false); album.SetActive(false); achievements.SetActive(false); musicPanel.SetActive(false);
-            navigation.SetActive(page != play);
+            navigation.SetActive(false);
+            CloseDesignHint();
             RefreshWallet();
-            if (page == currentPage) { if (wasDragging) StartTabTransition(); return; }
+            if (page == currentPage) { UpdateFigmaDesign(page); if (wasDragging) StartTabTransition(); return; }
             var animate = !testing && currentPage && currentPage != play && page != play && isActiveAndEnabled;
             currentPage = page;
             selectedTab = page == shop ? 0 : page == ranking ? 2 : 1;
             play.SetActive(page == play);
-            if (!animate) { FinishTabTransition(); return; }
+            if (!animate) { FinishTabTransition(); UpdateFigmaDesign(page); return; }
             StartTabTransition();
+            UpdateFigmaDesign(page);
         }
 
         void StartTabTransition()
@@ -368,6 +377,7 @@ namespace Hotfix.UI
         {
             CancelRemoteLoad();
             CancelEndAnimation();
+            CloseFigmaResult();
             SaveRound();
             Round = null; settled = false;
             var saved = SavedLevel();
@@ -379,7 +389,7 @@ namespace Hotfix.UI
 
         public void StartLevel()
         {
-            if (completed == LevelLimit && home.activeSelf && SavedLevel() < 0) { ShowAlbum(); return; }
+            if (completed == LevelLimit && home.activeSelf && SavedLevel() < 0) { BeginLevel(0, false); return; }
             BeginLevel(level, true);
         }
 
@@ -392,6 +402,8 @@ namespace Hotfix.UI
         void BeginLevel(int index, bool resume)
         {
             CancelRemoteLoad();
+            CloseFigmaResult();
+            loadingStarted = Time.unscaledTime;
             if (OnlineLevels && (remoteLevel == null || loadedApiUrl != LevelUrl(index)))
             {
                 SaveRound(); ClearFoundFeedback(); CancelEndAnimation(); Round = null;
@@ -399,11 +411,14 @@ namespace Hotfix.UI
                 var request = new DifferenceRemoteLevel();
                 loadingLevel = request;
                 startButton.interactable = false;
-                ShowDialog("正在加载关卡", "正在获取图片和差异位置…", "返回首页", ShowHome, terminal: true);
+                UpdateFigmaDesign(currentPage);
                 StartCoroutine(LoadRemoteLevel(request, index, resume));
                 return;
             }
-            OpenLevel(index, resume);
+            if (testing) { OpenLevel(index, resume); return; }
+            SaveRound(); ClearFoundFeedback(); CancelEndAnimation(); Round = null;
+            localLoading = true; UpdateFigmaDesign(currentPage);
+            localLoadRoutine = StartCoroutine(LoadLocalLevel(index, resume));
         }
 
         void OpenLevel(int index, bool resume)
@@ -474,7 +489,7 @@ namespace Hotfix.UI
 
         public void ClickImage(float x, float y, bool fromLower = false)
         {
-            if (!play.activeSelf || modal.activeSelf || settings.activeSelf || Round == null || settled) return;
+            if (!play.activeSelf || modal.activeSelf || settings.activeSelf || (hintDesign && hintDesign.activeSelf) || IsLoadingLevel || Round == null || settled) return;
             hintIdle = 0; hintHand.Show(false);
             var source = fromLower ? lowerImage.rectTransform : upperImage.rectTransform;
             var point = new Vector3(source.rect.xMin + x * source.rect.width, source.rect.yMax - y * source.rect.height);
@@ -484,7 +499,7 @@ namespace Hotfix.UI
             {
                 if (!hintSpotlight.Ready || float.IsNaN(x) || float.IsNaN(y) || x < 0 || x > 1 || y < 0 || y > 1) return;
                 var spot = spots[hintSpotlight.TargetIndex];
-                var distance = Vector2.Scale(new Vector2(x - spot.x, y - spot.y), source.rect.size) * source.localScale.x;
+                var distance = (Vector2)play.transform.InverseTransformVector(source.TransformVector(Vector2.Scale(new Vector2(x - spot.x, y - spot.y), source.rect.size)));
                 if (distance.sqrMagnitude > DifferenceHintSpotlight.Radius * DifferenceHintSpotlight.Radius) return;
                 x = spot.x; y = spot.y;
             }
@@ -496,9 +511,9 @@ namespace Hotfix.UI
 
         public void UseHint()
         {
-            if (!play.activeSelf || modal.activeSelf || settings.activeSelf || Round == null || Round.Finished || settled || HintActive) return;
+            if (!play.activeSelf || modal.activeSelf || settings.activeSelf || (hintDesign && hintDesign.activeSelf) || IsLoadingLevel || Round == null || Round.Finished || settled || HintActive) return;
             if (pendingHint >= 0) { RestoreHint(); return; }
-            if (hints == 0) { ShowShop(); return; }
+            if (hints == 0) { hintDesign.SetActive(true); hintDesign.transform.SetAsLastSibling(); return; }
             var result = Round.Hint();
             if (result < 0) return;
             pendingHint = result;
@@ -521,7 +536,7 @@ namespace Hotfix.UI
         void AdvanceHintGuide(float deltaTime)
         {
             var available = play.activeSelf && Round != null && !Round.Finished && !settled && hints > 0 &&
-                !HintActive && !modal.activeSelf && !settings.activeSelf;
+                !HintActive && !modal.activeSelf && !settings.activeSelf && !(hintDesign && hintDesign.activeSelf) && !IsLoadingLevel;
             if (!available) hintIdle = 0;
             else hintIdle += Mathf.Max(0, deltaTime);
             hintHand.Show(available && hintIdle >= 8);
@@ -576,17 +591,10 @@ namespace Hotfix.UI
 
         void ShowRoundResult(bool won, int reward)
         {
+            ShowFigmaResult(won);
             if (won)
             {
-                ShowDialog("太棒了！", "已找到全部 " + Round.Total + " 处不同\n" + (reward > 0 ? "+ " + reward + " 金币" : "本关已完成"),
-                    level + 1 < LevelLimit ? "下一关" : "关卡相册", () => { if (level + 1 < LevelLimit) BeginLevel(level + 1, false); else { ShowHome(); ShowAlbum(); } },
-                    "返回首页", ShowHome, null, null, true);
                 StartCoroutine(Celebrate());
-            }
-            else
-            {
-                ShowDialog("机会用完了", "已找到 " + Round.Count + " / " + Round.Total + "\n补充爱心，保留已找到的位置", "30 金币继续", Revive,
-                    "重新挑战", () => BeginLevel(level, false), "返回首页", ShowHome, true);
             }
         }
 
@@ -595,11 +603,11 @@ namespace Hotfix.UI
             if (Round == null || Round.Complete || Round.Lives != 0) return;
             if (coins < 30)
             {
-                ShowDialog("金币不足", "继续挑战需要 30 金币。\n也可以免费重新挑战。", "重新挑战", () => BeginLevel(level, false), "返回首页", ShowHome, null, null, true);
+                Notice("继续需要 30 金币，也可以免费 Retry", 2);
                 return;
             }
             if (!Round.Revive()) return;
-            coins -= 30; settled = false; modal.SetActive(false); SaveRound(); Save(); UpdateHUD();
+            coins -= 30; settled = false; modal.SetActive(false); CloseFigmaResult(); SaveRound(); Save(); UpdateHUD();
         }
 
         void ClearFoundFeedback()
@@ -629,7 +637,6 @@ namespace Hotfix.UI
                 if (shown) shownCount++;
                 progressDots[i].gameObject.SetActive(i < Round.Total);
                 progressDots[i].sprite = shown ? progressCheck : progressQuestion;
-                progressDots[i].GetComponentInChildren<UnityEngine.UI.Text>().text = shown ? "✓" : "?";
             }
             progressLabel.text = shownCount + " / " + Round.Total;
             RefreshWallet();
@@ -639,13 +646,16 @@ namespace Hotfix.UI
         {
             if (hintSpotlight) hintSpotlight.Cancel();
             hintIdle = 0; if (hintHand) hintHand.Show(false);
-            settings.SetActive(true); RefreshSettings();
+            settings.SetActive(true); UpdateFigmaDesign(currentPage); RefreshSettings();
         }
-        void CloseSettings() { settings.SetActive(false); musicPanel.SetActive(false); achievements.SetActive(false); album.SetActive(false); RestoreHint(); }
+        void CloseSettings() { settings.SetActive(false); musicPanel.SetActive(false); achievements.SetActive(false); album.SetActive(false); UpdateFigmaDesign(currentPage); RestoreHint(); }
         void RefreshSettings()
         {
             ToggleLook("Settings/Scroll/Viewport/Content/Sound", sound);
             ToggleLook("Settings/Scroll/Viewport/Content/Music", musicEnabled);
+            if (musicToggle) musicToggle.sprite = musicEnabled ? toggleOn : toggleOff;
+            if (soundToggle) soundToggle.sprite = sound ? toggleOn : toggleOff;
+            if (vibrationToggle) vibrationToggle.sprite = vibration ? toggleOn : toggleOff;
         }
         void ToggleLook(string path, bool enabled)
         {
@@ -802,6 +812,7 @@ namespace Hotfix.UI
         void RefreshWallet()
         {
             coinsLabel.text = coins.ToString(); SetText("Shop/Coins", coins.ToString());
+            if (designCoins) designCoins.text = coins.ToString();
             SetText("Ranking/PlayerName", nickname ?? "Player_1001");
         }
         int GetInt(string name, int value) { return GameApp.Setting.GetInt(Key + name, value); }
@@ -836,7 +847,7 @@ namespace Hotfix.UI
             var names = new[] { "Completed", "Coins", "Hints", "Avatar", "Frame", "MusicTrack", "OwnedAvatars", "OwnedFrames", "TotalFound", "Perfect" };
             var values = new[] { completed, coins, hints, avatar, frame, music, ownedAvatars, ownedFrames, totalFound, perfect };
             for (var i = 0; i < names.Length; i++) GameApp.Setting.SetInt(Key + names[i], values[i]);
-            GameApp.Setting.SetBool(Key + "Sound", sound); GameApp.Setting.SetBool(Key + "Music", musicEnabled);
+            GameApp.Setting.SetBool(Key + "Sound", sound); GameApp.Setting.SetBool(Key + "Music", musicEnabled); GameApp.Setting.SetBool(Key + "Vibration", vibration);
             GiftClaimed(DateTime.UtcNow.ToString("yyyy-MM-dd"));
             GameApp.Setting.SetString(Key + "Nickname", nickname); GameApp.Setting.SetString(Key + "GiftDate", giftDate);
             GameApp.Setting.Save();
@@ -865,7 +876,7 @@ namespace Hotfix.UI
         IEnumerator Celebrate()
         {
             for (var i = 0; i < confetti.Length; i++) confetti[i].gameObject.SetActive(true);
-            for (var elapsed = 0f; elapsed < 2f && modal.activeSelf; elapsed += Time.unscaledDeltaTime)
+            for (var elapsed = 0f; elapsed < 2f && (modal.activeSelf || (victoryDesign && victoryDesign.activeSelf)); elapsed += Time.unscaledDeltaTime)
             {
                 for (var i = 0; i < confetti.Length; i++)
                 {

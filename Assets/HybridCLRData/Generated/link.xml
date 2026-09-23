@@ -128,15 +128,20 @@
     <type fullname="UnityEngine.Events.UnityEvent" preserve="all" />
     <type fullname="UnityEngine.Events.UnityEventBase" preserve="all" />
     <type fullname="UnityEngine.GameObject" preserve="all" />
+    <type fullname="UnityEngine.Handheld" preserve="all" />
     <type fullname="UnityEngine.Hash128" preserve="all" />
     <type fullname="UnityEngine.KeyCode" preserve="all" />
     <type fullname="UnityEngine.Material" preserve="all" />
     <type fullname="UnityEngine.Mathf" preserve="all" />
     <type fullname="UnityEngine.MonoBehaviour" preserve="all" />
     <type fullname="UnityEngine.Object" preserve="all" />
+    <type fullname="UnityEngine.Quaternion" preserve="all" />
     <type fullname="UnityEngine.Rect" preserve="all" />
+    <type fullname="UnityEngine.RectOffset" preserve="all" />
     <type fullname="UnityEngine.RectTransform" preserve="all" />
+    <type fullname="UnityEngine.RectTransform/Axis" preserve="all" />
     <type fullname="UnityEngine.RequireComponent" preserve="all" />
+    <type fullname="UnityEngine.Resources" preserve="all" />
     <type fullname="UnityEngine.Screen" preserve="all" />
     <type fullname="UnityEngine.Serialization.FormerlySerializedAsAttribute" preserve="all" />
     <type fullname="UnityEngine.SerializeField" preserve="all" />
@@ -164,6 +169,8 @@
     <type fullname="UnityEngine.Touch" preserve="all" />
   </assembly>
   <assembly fullname="UnityEngine.TextRenderingModule">
+    <type fullname="UnityEngine.Font" preserve="all" />
+    <type fullname="UnityEngine.FontStyle" preserve="all" />
     <type fullname="UnityEngine.TextAnchor" preserve="all" />
   </assembly>
   <assembly fullname="UnityEngine.UI">

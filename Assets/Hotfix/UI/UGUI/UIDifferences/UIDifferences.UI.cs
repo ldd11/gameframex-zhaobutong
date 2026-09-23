@@ -989,12 +989,28 @@ namespace Hotfix.UI
 			get { return Stage_Play_Frame;}
 		}
 
+		[UGUIElementProperty("Stage/Play/UpperViewport/Image/Found0/Outline")]
+		private UnityEngine.RectTransform Stage_Play_UpperViewport_Image_Found0_Outline;
+
+		public UnityEngine.RectTransform m_Stage_Play_UpperViewport_Image_Found0_Outline
+		{
+			get { return Stage_Play_UpperViewport_Image_Found0_Outline;}
+		}
+
 		[UGUIElementProperty("Stage/Play/UpperViewport/Image/Found0")]
 		private UnityEngine.UI.Image Stage_Play_UpperViewport_Image_Found0;
 
 		public UnityEngine.UI.Image m_Stage_Play_UpperViewport_Image_Found0
 		{
 			get { return Stage_Play_UpperViewport_Image_Found0;}
+		}
+
+		[UGUIElementProperty("Stage/Play/UpperViewport/Image/Found1/Outline")]
+		private UnityEngine.RectTransform Stage_Play_UpperViewport_Image_Found1_Outline;
+
+		public UnityEngine.RectTransform m_Stage_Play_UpperViewport_Image_Found1_Outline
+		{
+			get { return Stage_Play_UpperViewport_Image_Found1_Outline;}
 		}
 
 		[UGUIElementProperty("Stage/Play/UpperViewport/Image/Found1")]
@@ -1005,12 +1021,28 @@ namespace Hotfix.UI
 			get { return Stage_Play_UpperViewport_Image_Found1;}
 		}
 
+		[UGUIElementProperty("Stage/Play/UpperViewport/Image/Found2/Outline")]
+		private UnityEngine.RectTransform Stage_Play_UpperViewport_Image_Found2_Outline;
+
+		public UnityEngine.RectTransform m_Stage_Play_UpperViewport_Image_Found2_Outline
+		{
+			get { return Stage_Play_UpperViewport_Image_Found2_Outline;}
+		}
+
 		[UGUIElementProperty("Stage/Play/UpperViewport/Image/Found2")]
 		private UnityEngine.UI.Image Stage_Play_UpperViewport_Image_Found2;
 
 		public UnityEngine.UI.Image m_Stage_Play_UpperViewport_Image_Found2
 		{
 			get { return Stage_Play_UpperViewport_Image_Found2;}
+		}
+
+		[UGUIElementProperty("Stage/Play/UpperViewport/Image/Found3/Outline")]
+		private UnityEngine.RectTransform Stage_Play_UpperViewport_Image_Found3_Outline;
+
+		public UnityEngine.RectTransform m_Stage_Play_UpperViewport_Image_Found3_Outline
+		{
+			get { return Stage_Play_UpperViewport_Image_Found3_Outline;}
 		}
 
 		[UGUIElementProperty("Stage/Play/UpperViewport/Image/Found3")]
@@ -1021,12 +1053,28 @@ namespace Hotfix.UI
 			get { return Stage_Play_UpperViewport_Image_Found3;}
 		}
 
+		[UGUIElementProperty("Stage/Play/UpperViewport/Image/Found4/Outline")]
+		private UnityEngine.RectTransform Stage_Play_UpperViewport_Image_Found4_Outline;
+
+		public UnityEngine.RectTransform m_Stage_Play_UpperViewport_Image_Found4_Outline
+		{
+			get { return Stage_Play_UpperViewport_Image_Found4_Outline;}
+		}
+
 		[UGUIElementProperty("Stage/Play/UpperViewport/Image/Found4")]
 		private UnityEngine.UI.Image Stage_Play_UpperViewport_Image_Found4;
 
 		public UnityEngine.UI.Image m_Stage_Play_UpperViewport_Image_Found4
 		{
 			get { return Stage_Play_UpperViewport_Image_Found4;}
+		}
+
+		[UGUIElementProperty("Stage/Play/UpperViewport/Image/Found5/Outline")]
+		private UnityEngine.RectTransform Stage_Play_UpperViewport_Image_Found5_Outline;
+
+		public UnityEngine.RectTransform m_Stage_Play_UpperViewport_Image_Found5_Outline
+		{
+			get { return Stage_Play_UpperViewport_Image_Found5_Outline;}
 		}
 
 		[UGUIElementProperty("Stage/Play/UpperViewport/Image/Found5")]
@@ -1037,12 +1085,28 @@ namespace Hotfix.UI
 			get { return Stage_Play_UpperViewport_Image_Found5;}
 		}
 
+		[UGUIElementProperty("Stage/Play/UpperViewport/Image/Found6/Outline")]
+		private UnityEngine.RectTransform Stage_Play_UpperViewport_Image_Found6_Outline;
+
+		public UnityEngine.RectTransform m_Stage_Play_UpperViewport_Image_Found6_Outline
+		{
+			get { return Stage_Play_UpperViewport_Image_Found6_Outline;}
+		}
+
 		[UGUIElementProperty("Stage/Play/UpperViewport/Image/Found6")]
 		private UnityEngine.UI.Image Stage_Play_UpperViewport_Image_Found6;
 
 		public UnityEngine.UI.Image m_Stage_Play_UpperViewport_Image_Found6
 		{
 			get { return Stage_Play_UpperViewport_Image_Found6;}
+		}
+
+		[UGUIElementProperty("Stage/Play/UpperViewport/Image/Found7/Outline")]
+		private UnityEngine.RectTransform Stage_Play_UpperViewport_Image_Found7_Outline;
+
+		public UnityEngine.RectTransform m_Stage_Play_UpperViewport_Image_Found7_Outline
+		{
+			get { return Stage_Play_UpperViewport_Image_Found7_Outline;}
 		}
 
 		[UGUIElementProperty("Stage/Play/UpperViewport/Image/Found7")]
@@ -1053,12 +1117,28 @@ namespace Hotfix.UI
 			get { return Stage_Play_UpperViewport_Image_Found7;}
 		}
 
+		[UGUIElementProperty("Stage/Play/UpperViewport/Image/Found8/Outline")]
+		private UnityEngine.RectTransform Stage_Play_UpperViewport_Image_Found8_Outline;
+
+		public UnityEngine.RectTransform m_Stage_Play_UpperViewport_Image_Found8_Outline
+		{
+			get { return Stage_Play_UpperViewport_Image_Found8_Outline;}
+		}
+
 		[UGUIElementProperty("Stage/Play/UpperViewport/Image/Found8")]
 		private UnityEngine.UI.Image Stage_Play_UpperViewport_Image_Found8;
 
 		public UnityEngine.UI.Image m_Stage_Play_UpperViewport_Image_Found8
 		{
 			get { return Stage_Play_UpperViewport_Image_Found8;}
+		}
+
+		[UGUIElementProperty("Stage/Play/UpperViewport/Image/Found9/Outline")]
+		private UnityEngine.RectTransform Stage_Play_UpperViewport_Image_Found9_Outline;
+
+		public UnityEngine.RectTransform m_Stage_Play_UpperViewport_Image_Found9_Outline
+		{
+			get { return Stage_Play_UpperViewport_Image_Found9_Outline;}
 		}
 
 		[UGUIElementProperty("Stage/Play/UpperViewport/Image/Found9")]
@@ -1069,12 +1149,28 @@ namespace Hotfix.UI
 			get { return Stage_Play_UpperViewport_Image_Found9;}
 		}
 
+		[UGUIElementProperty("Stage/Play/UpperViewport/Image/Found10/Outline")]
+		private UnityEngine.RectTransform Stage_Play_UpperViewport_Image_Found10_Outline;
+
+		public UnityEngine.RectTransform m_Stage_Play_UpperViewport_Image_Found10_Outline
+		{
+			get { return Stage_Play_UpperViewport_Image_Found10_Outline;}
+		}
+
 		[UGUIElementProperty("Stage/Play/UpperViewport/Image/Found10")]
 		private UnityEngine.UI.Image Stage_Play_UpperViewport_Image_Found10;
 
 		public UnityEngine.UI.Image m_Stage_Play_UpperViewport_Image_Found10
 		{
 			get { return Stage_Play_UpperViewport_Image_Found10;}
+		}
+
+		[UGUIElementProperty("Stage/Play/UpperViewport/Image/Found11/Outline")]
+		private UnityEngine.RectTransform Stage_Play_UpperViewport_Image_Found11_Outline;
+
+		public UnityEngine.RectTransform m_Stage_Play_UpperViewport_Image_Found11_Outline
+		{
+			get { return Stage_Play_UpperViewport_Image_Found11_Outline;}
 		}
 
 		[UGUIElementProperty("Stage/Play/UpperViewport/Image/Found11")]
@@ -1085,6 +1181,14 @@ namespace Hotfix.UI
 			get { return Stage_Play_UpperViewport_Image_Found11;}
 		}
 
+		[UGUIElementProperty("Stage/Play/UpperViewport/Image/Found12/Outline")]
+		private UnityEngine.RectTransform Stage_Play_UpperViewport_Image_Found12_Outline;
+
+		public UnityEngine.RectTransform m_Stage_Play_UpperViewport_Image_Found12_Outline
+		{
+			get { return Stage_Play_UpperViewport_Image_Found12_Outline;}
+		}
+
 		[UGUIElementProperty("Stage/Play/UpperViewport/Image/Found12")]
 		private UnityEngine.UI.Image Stage_Play_UpperViewport_Image_Found12;
 
@@ -1093,12 +1197,28 @@ namespace Hotfix.UI
 			get { return Stage_Play_UpperViewport_Image_Found12;}
 		}
 
+		[UGUIElementProperty("Stage/Play/UpperViewport/Image/Found13/Outline")]
+		private UnityEngine.RectTransform Stage_Play_UpperViewport_Image_Found13_Outline;
+
+		public UnityEngine.RectTransform m_Stage_Play_UpperViewport_Image_Found13_Outline
+		{
+			get { return Stage_Play_UpperViewport_Image_Found13_Outline;}
+		}
+
 		[UGUIElementProperty("Stage/Play/UpperViewport/Image/Found13")]
 		private UnityEngine.UI.Image Stage_Play_UpperViewport_Image_Found13;
 
 		public UnityEngine.UI.Image m_Stage_Play_UpperViewport_Image_Found13
 		{
 			get { return Stage_Play_UpperViewport_Image_Found13;}
+		}
+
+		[UGUIElementProperty("Stage/Play/UpperViewport/Image/Found14/Outline")]
+		private UnityEngine.RectTransform Stage_Play_UpperViewport_Image_Found14_Outline;
+
+		public UnityEngine.RectTransform m_Stage_Play_UpperViewport_Image_Found14_Outline
+		{
+			get { return Stage_Play_UpperViewport_Image_Found14_Outline;}
 		}
 
 		[UGUIElementProperty("Stage/Play/UpperViewport/Image/Found14")]
@@ -1373,12 +1493,28 @@ namespace Hotfix.UI
 			get { return Stage_Play_LowerViewport_Image_Difference14;}
 		}
 
+		[UGUIElementProperty("Stage/Play/LowerViewport/Image/Found0/Outline")]
+		private UnityEngine.RectTransform Stage_Play_LowerViewport_Image_Found0_Outline;
+
+		public UnityEngine.RectTransform m_Stage_Play_LowerViewport_Image_Found0_Outline
+		{
+			get { return Stage_Play_LowerViewport_Image_Found0_Outline;}
+		}
+
 		[UGUIElementProperty("Stage/Play/LowerViewport/Image/Found0")]
 		private UnityEngine.UI.Image Stage_Play_LowerViewport_Image_Found0;
 
 		public UnityEngine.UI.Image m_Stage_Play_LowerViewport_Image_Found0
 		{
 			get { return Stage_Play_LowerViewport_Image_Found0;}
+		}
+
+		[UGUIElementProperty("Stage/Play/LowerViewport/Image/Found1/Outline")]
+		private UnityEngine.RectTransform Stage_Play_LowerViewport_Image_Found1_Outline;
+
+		public UnityEngine.RectTransform m_Stage_Play_LowerViewport_Image_Found1_Outline
+		{
+			get { return Stage_Play_LowerViewport_Image_Found1_Outline;}
 		}
 
 		[UGUIElementProperty("Stage/Play/LowerViewport/Image/Found1")]
@@ -1389,12 +1525,28 @@ namespace Hotfix.UI
 			get { return Stage_Play_LowerViewport_Image_Found1;}
 		}
 
+		[UGUIElementProperty("Stage/Play/LowerViewport/Image/Found2/Outline")]
+		private UnityEngine.RectTransform Stage_Play_LowerViewport_Image_Found2_Outline;
+
+		public UnityEngine.RectTransform m_Stage_Play_LowerViewport_Image_Found2_Outline
+		{
+			get { return Stage_Play_LowerViewport_Image_Found2_Outline;}
+		}
+
 		[UGUIElementProperty("Stage/Play/LowerViewport/Image/Found2")]
 		private UnityEngine.UI.Image Stage_Play_LowerViewport_Image_Found2;
 
 		public UnityEngine.UI.Image m_Stage_Play_LowerViewport_Image_Found2
 		{
 			get { return Stage_Play_LowerViewport_Image_Found2;}
+		}
+
+		[UGUIElementProperty("Stage/Play/LowerViewport/Image/Found3/Outline")]
+		private UnityEngine.RectTransform Stage_Play_LowerViewport_Image_Found3_Outline;
+
+		public UnityEngine.RectTransform m_Stage_Play_LowerViewport_Image_Found3_Outline
+		{
+			get { return Stage_Play_LowerViewport_Image_Found3_Outline;}
 		}
 
 		[UGUIElementProperty("Stage/Play/LowerViewport/Image/Found3")]
@@ -1405,12 +1557,28 @@ namespace Hotfix.UI
 			get { return Stage_Play_LowerViewport_Image_Found3;}
 		}
 
+		[UGUIElementProperty("Stage/Play/LowerViewport/Image/Found4/Outline")]
+		private UnityEngine.RectTransform Stage_Play_LowerViewport_Image_Found4_Outline;
+
+		public UnityEngine.RectTransform m_Stage_Play_LowerViewport_Image_Found4_Outline
+		{
+			get { return Stage_Play_LowerViewport_Image_Found4_Outline;}
+		}
+
 		[UGUIElementProperty("Stage/Play/LowerViewport/Image/Found4")]
 		private UnityEngine.UI.Image Stage_Play_LowerViewport_Image_Found4;
 
 		public UnityEngine.UI.Image m_Stage_Play_LowerViewport_Image_Found4
 		{
 			get { return Stage_Play_LowerViewport_Image_Found4;}
+		}
+
+		[UGUIElementProperty("Stage/Play/LowerViewport/Image/Found5/Outline")]
+		private UnityEngine.RectTransform Stage_Play_LowerViewport_Image_Found5_Outline;
+
+		public UnityEngine.RectTransform m_Stage_Play_LowerViewport_Image_Found5_Outline
+		{
+			get { return Stage_Play_LowerViewport_Image_Found5_Outline;}
 		}
 
 		[UGUIElementProperty("Stage/Play/LowerViewport/Image/Found5")]
@@ -1421,12 +1589,28 @@ namespace Hotfix.UI
 			get { return Stage_Play_LowerViewport_Image_Found5;}
 		}
 
+		[UGUIElementProperty("Stage/Play/LowerViewport/Image/Found6/Outline")]
+		private UnityEngine.RectTransform Stage_Play_LowerViewport_Image_Found6_Outline;
+
+		public UnityEngine.RectTransform m_Stage_Play_LowerViewport_Image_Found6_Outline
+		{
+			get { return Stage_Play_LowerViewport_Image_Found6_Outline;}
+		}
+
 		[UGUIElementProperty("Stage/Play/LowerViewport/Image/Found6")]
 		private UnityEngine.UI.Image Stage_Play_LowerViewport_Image_Found6;
 
 		public UnityEngine.UI.Image m_Stage_Play_LowerViewport_Image_Found6
 		{
 			get { return Stage_Play_LowerViewport_Image_Found6;}
+		}
+
+		[UGUIElementProperty("Stage/Play/LowerViewport/Image/Found7/Outline")]
+		private UnityEngine.RectTransform Stage_Play_LowerViewport_Image_Found7_Outline;
+
+		public UnityEngine.RectTransform m_Stage_Play_LowerViewport_Image_Found7_Outline
+		{
+			get { return Stage_Play_LowerViewport_Image_Found7_Outline;}
 		}
 
 		[UGUIElementProperty("Stage/Play/LowerViewport/Image/Found7")]
@@ -1437,12 +1621,28 @@ namespace Hotfix.UI
 			get { return Stage_Play_LowerViewport_Image_Found7;}
 		}
 
+		[UGUIElementProperty("Stage/Play/LowerViewport/Image/Found8/Outline")]
+		private UnityEngine.RectTransform Stage_Play_LowerViewport_Image_Found8_Outline;
+
+		public UnityEngine.RectTransform m_Stage_Play_LowerViewport_Image_Found8_Outline
+		{
+			get { return Stage_Play_LowerViewport_Image_Found8_Outline;}
+		}
+
 		[UGUIElementProperty("Stage/Play/LowerViewport/Image/Found8")]
 		private UnityEngine.UI.Image Stage_Play_LowerViewport_Image_Found8;
 
 		public UnityEngine.UI.Image m_Stage_Play_LowerViewport_Image_Found8
 		{
 			get { return Stage_Play_LowerViewport_Image_Found8;}
+		}
+
+		[UGUIElementProperty("Stage/Play/LowerViewport/Image/Found9/Outline")]
+		private UnityEngine.RectTransform Stage_Play_LowerViewport_Image_Found9_Outline;
+
+		public UnityEngine.RectTransform m_Stage_Play_LowerViewport_Image_Found9_Outline
+		{
+			get { return Stage_Play_LowerViewport_Image_Found9_Outline;}
 		}
 
 		[UGUIElementProperty("Stage/Play/LowerViewport/Image/Found9")]
@@ -1453,12 +1653,28 @@ namespace Hotfix.UI
 			get { return Stage_Play_LowerViewport_Image_Found9;}
 		}
 
+		[UGUIElementProperty("Stage/Play/LowerViewport/Image/Found10/Outline")]
+		private UnityEngine.RectTransform Stage_Play_LowerViewport_Image_Found10_Outline;
+
+		public UnityEngine.RectTransform m_Stage_Play_LowerViewport_Image_Found10_Outline
+		{
+			get { return Stage_Play_LowerViewport_Image_Found10_Outline;}
+		}
+
 		[UGUIElementProperty("Stage/Play/LowerViewport/Image/Found10")]
 		private UnityEngine.UI.Image Stage_Play_LowerViewport_Image_Found10;
 
 		public UnityEngine.UI.Image m_Stage_Play_LowerViewport_Image_Found10
 		{
 			get { return Stage_Play_LowerViewport_Image_Found10;}
+		}
+
+		[UGUIElementProperty("Stage/Play/LowerViewport/Image/Found11/Outline")]
+		private UnityEngine.RectTransform Stage_Play_LowerViewport_Image_Found11_Outline;
+
+		public UnityEngine.RectTransform m_Stage_Play_LowerViewport_Image_Found11_Outline
+		{
+			get { return Stage_Play_LowerViewport_Image_Found11_Outline;}
 		}
 
 		[UGUIElementProperty("Stage/Play/LowerViewport/Image/Found11")]
@@ -1469,6 +1685,14 @@ namespace Hotfix.UI
 			get { return Stage_Play_LowerViewport_Image_Found11;}
 		}
 
+		[UGUIElementProperty("Stage/Play/LowerViewport/Image/Found12/Outline")]
+		private UnityEngine.RectTransform Stage_Play_LowerViewport_Image_Found12_Outline;
+
+		public UnityEngine.RectTransform m_Stage_Play_LowerViewport_Image_Found12_Outline
+		{
+			get { return Stage_Play_LowerViewport_Image_Found12_Outline;}
+		}
+
 		[UGUIElementProperty("Stage/Play/LowerViewport/Image/Found12")]
 		private UnityEngine.UI.Image Stage_Play_LowerViewport_Image_Found12;
 
@@ -1477,12 +1701,28 @@ namespace Hotfix.UI
 			get { return Stage_Play_LowerViewport_Image_Found12;}
 		}
 
+		[UGUIElementProperty("Stage/Play/LowerViewport/Image/Found13/Outline")]
+		private UnityEngine.RectTransform Stage_Play_LowerViewport_Image_Found13_Outline;
+
+		public UnityEngine.RectTransform m_Stage_Play_LowerViewport_Image_Found13_Outline
+		{
+			get { return Stage_Play_LowerViewport_Image_Found13_Outline;}
+		}
+
 		[UGUIElementProperty("Stage/Play/LowerViewport/Image/Found13")]
 		private UnityEngine.UI.Image Stage_Play_LowerViewport_Image_Found13;
 
 		public UnityEngine.UI.Image m_Stage_Play_LowerViewport_Image_Found13
 		{
 			get { return Stage_Play_LowerViewport_Image_Found13;}
+		}
+
+		[UGUIElementProperty("Stage/Play/LowerViewport/Image/Found14/Outline")]
+		private UnityEngine.RectTransform Stage_Play_LowerViewport_Image_Found14_Outline;
+
+		public UnityEngine.RectTransform m_Stage_Play_LowerViewport_Image_Found14_Outline
+		{
+			get { return Stage_Play_LowerViewport_Image_Found14_Outline;}
 		}
 
 		[UGUIElementProperty("Stage/Play/LowerViewport/Image/Found14")]
@@ -3761,20 +4001,35 @@ namespace Hotfix.UI
 			Stage_Play_Progress_Dot14 = gameObject.transform.FindChildName("Stage/Play/Progress/Dot14").GetComponent<UnityEngine.UI.Image>();
 			Stage_Play_Progress = gameObject.transform.FindChildName("Stage/Play/Progress").GetComponent<UnityEngine.RectTransform>();
 			Stage_Play_Frame = gameObject.transform.FindChildName("Stage/Play/Frame").GetComponent<UnityEngine.UI.Image>();
+			Stage_Play_UpperViewport_Image_Found0_Outline = gameObject.transform.FindChildName("Stage/Play/UpperViewport/Image/Found0/Outline").GetComponent<UnityEngine.RectTransform>();
 			Stage_Play_UpperViewport_Image_Found0 = gameObject.transform.FindChildName("Stage/Play/UpperViewport/Image/Found0").GetComponent<UnityEngine.UI.Image>();
+			Stage_Play_UpperViewport_Image_Found1_Outline = gameObject.transform.FindChildName("Stage/Play/UpperViewport/Image/Found1/Outline").GetComponent<UnityEngine.RectTransform>();
 			Stage_Play_UpperViewport_Image_Found1 = gameObject.transform.FindChildName("Stage/Play/UpperViewport/Image/Found1").GetComponent<UnityEngine.UI.Image>();
+			Stage_Play_UpperViewport_Image_Found2_Outline = gameObject.transform.FindChildName("Stage/Play/UpperViewport/Image/Found2/Outline").GetComponent<UnityEngine.RectTransform>();
 			Stage_Play_UpperViewport_Image_Found2 = gameObject.transform.FindChildName("Stage/Play/UpperViewport/Image/Found2").GetComponent<UnityEngine.UI.Image>();
+			Stage_Play_UpperViewport_Image_Found3_Outline = gameObject.transform.FindChildName("Stage/Play/UpperViewport/Image/Found3/Outline").GetComponent<UnityEngine.RectTransform>();
 			Stage_Play_UpperViewport_Image_Found3 = gameObject.transform.FindChildName("Stage/Play/UpperViewport/Image/Found3").GetComponent<UnityEngine.UI.Image>();
+			Stage_Play_UpperViewport_Image_Found4_Outline = gameObject.transform.FindChildName("Stage/Play/UpperViewport/Image/Found4/Outline").GetComponent<UnityEngine.RectTransform>();
 			Stage_Play_UpperViewport_Image_Found4 = gameObject.transform.FindChildName("Stage/Play/UpperViewport/Image/Found4").GetComponent<UnityEngine.UI.Image>();
+			Stage_Play_UpperViewport_Image_Found5_Outline = gameObject.transform.FindChildName("Stage/Play/UpperViewport/Image/Found5/Outline").GetComponent<UnityEngine.RectTransform>();
 			Stage_Play_UpperViewport_Image_Found5 = gameObject.transform.FindChildName("Stage/Play/UpperViewport/Image/Found5").GetComponent<UnityEngine.UI.Image>();
+			Stage_Play_UpperViewport_Image_Found6_Outline = gameObject.transform.FindChildName("Stage/Play/UpperViewport/Image/Found6/Outline").GetComponent<UnityEngine.RectTransform>();
 			Stage_Play_UpperViewport_Image_Found6 = gameObject.transform.FindChildName("Stage/Play/UpperViewport/Image/Found6").GetComponent<UnityEngine.UI.Image>();
+			Stage_Play_UpperViewport_Image_Found7_Outline = gameObject.transform.FindChildName("Stage/Play/UpperViewport/Image/Found7/Outline").GetComponent<UnityEngine.RectTransform>();
 			Stage_Play_UpperViewport_Image_Found7 = gameObject.transform.FindChildName("Stage/Play/UpperViewport/Image/Found7").GetComponent<UnityEngine.UI.Image>();
+			Stage_Play_UpperViewport_Image_Found8_Outline = gameObject.transform.FindChildName("Stage/Play/UpperViewport/Image/Found8/Outline").GetComponent<UnityEngine.RectTransform>();
 			Stage_Play_UpperViewport_Image_Found8 = gameObject.transform.FindChildName("Stage/Play/UpperViewport/Image/Found8").GetComponent<UnityEngine.UI.Image>();
+			Stage_Play_UpperViewport_Image_Found9_Outline = gameObject.transform.FindChildName("Stage/Play/UpperViewport/Image/Found9/Outline").GetComponent<UnityEngine.RectTransform>();
 			Stage_Play_UpperViewport_Image_Found9 = gameObject.transform.FindChildName("Stage/Play/UpperViewport/Image/Found9").GetComponent<UnityEngine.UI.Image>();
+			Stage_Play_UpperViewport_Image_Found10_Outline = gameObject.transform.FindChildName("Stage/Play/UpperViewport/Image/Found10/Outline").GetComponent<UnityEngine.RectTransform>();
 			Stage_Play_UpperViewport_Image_Found10 = gameObject.transform.FindChildName("Stage/Play/UpperViewport/Image/Found10").GetComponent<UnityEngine.UI.Image>();
+			Stage_Play_UpperViewport_Image_Found11_Outline = gameObject.transform.FindChildName("Stage/Play/UpperViewport/Image/Found11/Outline").GetComponent<UnityEngine.RectTransform>();
 			Stage_Play_UpperViewport_Image_Found11 = gameObject.transform.FindChildName("Stage/Play/UpperViewport/Image/Found11").GetComponent<UnityEngine.UI.Image>();
+			Stage_Play_UpperViewport_Image_Found12_Outline = gameObject.transform.FindChildName("Stage/Play/UpperViewport/Image/Found12/Outline").GetComponent<UnityEngine.RectTransform>();
 			Stage_Play_UpperViewport_Image_Found12 = gameObject.transform.FindChildName("Stage/Play/UpperViewport/Image/Found12").GetComponent<UnityEngine.UI.Image>();
+			Stage_Play_UpperViewport_Image_Found13_Outline = gameObject.transform.FindChildName("Stage/Play/UpperViewport/Image/Found13/Outline").GetComponent<UnityEngine.RectTransform>();
 			Stage_Play_UpperViewport_Image_Found13 = gameObject.transform.FindChildName("Stage/Play/UpperViewport/Image/Found13").GetComponent<UnityEngine.UI.Image>();
+			Stage_Play_UpperViewport_Image_Found14_Outline = gameObject.transform.FindChildName("Stage/Play/UpperViewport/Image/Found14/Outline").GetComponent<UnityEngine.RectTransform>();
 			Stage_Play_UpperViewport_Image_Found14 = gameObject.transform.FindChildName("Stage/Play/UpperViewport/Image/Found14").GetComponent<UnityEngine.UI.Image>();
 			Stage_Play_UpperViewport_Image_Miss = gameObject.transform.FindChildName("Stage/Play/UpperViewport/Image/Miss").GetComponent<UnityEngine.UI.Text>();
 			Stage_Play_UpperViewport_Image = gameObject.transform.FindChildName("Stage/Play/UpperViewport/Image").GetComponent<UnityEngine.UI.Image>();
@@ -3809,20 +4064,35 @@ namespace Hotfix.UI
 			Stage_Play_LowerViewport_Image_Difference13 = gameObject.transform.FindChildName("Stage/Play/LowerViewport/Image/Difference13").GetComponent<UnityEngine.RectTransform>();
 			Stage_Play_LowerViewport_Image_Difference14_Picture = gameObject.transform.FindChildName("Stage/Play/LowerViewport/Image/Difference14/Picture").GetComponent<UnityEngine.UI.Image>();
 			Stage_Play_LowerViewport_Image_Difference14 = gameObject.transform.FindChildName("Stage/Play/LowerViewport/Image/Difference14").GetComponent<UnityEngine.RectTransform>();
+			Stage_Play_LowerViewport_Image_Found0_Outline = gameObject.transform.FindChildName("Stage/Play/LowerViewport/Image/Found0/Outline").GetComponent<UnityEngine.RectTransform>();
 			Stage_Play_LowerViewport_Image_Found0 = gameObject.transform.FindChildName("Stage/Play/LowerViewport/Image/Found0").GetComponent<UnityEngine.UI.Image>();
+			Stage_Play_LowerViewport_Image_Found1_Outline = gameObject.transform.FindChildName("Stage/Play/LowerViewport/Image/Found1/Outline").GetComponent<UnityEngine.RectTransform>();
 			Stage_Play_LowerViewport_Image_Found1 = gameObject.transform.FindChildName("Stage/Play/LowerViewport/Image/Found1").GetComponent<UnityEngine.UI.Image>();
+			Stage_Play_LowerViewport_Image_Found2_Outline = gameObject.transform.FindChildName("Stage/Play/LowerViewport/Image/Found2/Outline").GetComponent<UnityEngine.RectTransform>();
 			Stage_Play_LowerViewport_Image_Found2 = gameObject.transform.FindChildName("Stage/Play/LowerViewport/Image/Found2").GetComponent<UnityEngine.UI.Image>();
+			Stage_Play_LowerViewport_Image_Found3_Outline = gameObject.transform.FindChildName("Stage/Play/LowerViewport/Image/Found3/Outline").GetComponent<UnityEngine.RectTransform>();
 			Stage_Play_LowerViewport_Image_Found3 = gameObject.transform.FindChildName("Stage/Play/LowerViewport/Image/Found3").GetComponent<UnityEngine.UI.Image>();
+			Stage_Play_LowerViewport_Image_Found4_Outline = gameObject.transform.FindChildName("Stage/Play/LowerViewport/Image/Found4/Outline").GetComponent<UnityEngine.RectTransform>();
 			Stage_Play_LowerViewport_Image_Found4 = gameObject.transform.FindChildName("Stage/Play/LowerViewport/Image/Found4").GetComponent<UnityEngine.UI.Image>();
+			Stage_Play_LowerViewport_Image_Found5_Outline = gameObject.transform.FindChildName("Stage/Play/LowerViewport/Image/Found5/Outline").GetComponent<UnityEngine.RectTransform>();
 			Stage_Play_LowerViewport_Image_Found5 = gameObject.transform.FindChildName("Stage/Play/LowerViewport/Image/Found5").GetComponent<UnityEngine.UI.Image>();
+			Stage_Play_LowerViewport_Image_Found6_Outline = gameObject.transform.FindChildName("Stage/Play/LowerViewport/Image/Found6/Outline").GetComponent<UnityEngine.RectTransform>();
 			Stage_Play_LowerViewport_Image_Found6 = gameObject.transform.FindChildName("Stage/Play/LowerViewport/Image/Found6").GetComponent<UnityEngine.UI.Image>();
+			Stage_Play_LowerViewport_Image_Found7_Outline = gameObject.transform.FindChildName("Stage/Play/LowerViewport/Image/Found7/Outline").GetComponent<UnityEngine.RectTransform>();
 			Stage_Play_LowerViewport_Image_Found7 = gameObject.transform.FindChildName("Stage/Play/LowerViewport/Image/Found7").GetComponent<UnityEngine.UI.Image>();
+			Stage_Play_LowerViewport_Image_Found8_Outline = gameObject.transform.FindChildName("Stage/Play/LowerViewport/Image/Found8/Outline").GetComponent<UnityEngine.RectTransform>();
 			Stage_Play_LowerViewport_Image_Found8 = gameObject.transform.FindChildName("Stage/Play/LowerViewport/Image/Found8").GetComponent<UnityEngine.UI.Image>();
+			Stage_Play_LowerViewport_Image_Found9_Outline = gameObject.transform.FindChildName("Stage/Play/LowerViewport/Image/Found9/Outline").GetComponent<UnityEngine.RectTransform>();
 			Stage_Play_LowerViewport_Image_Found9 = gameObject.transform.FindChildName("Stage/Play/LowerViewport/Image/Found9").GetComponent<UnityEngine.UI.Image>();
+			Stage_Play_LowerViewport_Image_Found10_Outline = gameObject.transform.FindChildName("Stage/Play/LowerViewport/Image/Found10/Outline").GetComponent<UnityEngine.RectTransform>();
 			Stage_Play_LowerViewport_Image_Found10 = gameObject.transform.FindChildName("Stage/Play/LowerViewport/Image/Found10").GetComponent<UnityEngine.UI.Image>();
+			Stage_Play_LowerViewport_Image_Found11_Outline = gameObject.transform.FindChildName("Stage/Play/LowerViewport/Image/Found11/Outline").GetComponent<UnityEngine.RectTransform>();
 			Stage_Play_LowerViewport_Image_Found11 = gameObject.transform.FindChildName("Stage/Play/LowerViewport/Image/Found11").GetComponent<UnityEngine.UI.Image>();
+			Stage_Play_LowerViewport_Image_Found12_Outline = gameObject.transform.FindChildName("Stage/Play/LowerViewport/Image/Found12/Outline").GetComponent<UnityEngine.RectTransform>();
 			Stage_Play_LowerViewport_Image_Found12 = gameObject.transform.FindChildName("Stage/Play/LowerViewport/Image/Found12").GetComponent<UnityEngine.UI.Image>();
+			Stage_Play_LowerViewport_Image_Found13_Outline = gameObject.transform.FindChildName("Stage/Play/LowerViewport/Image/Found13/Outline").GetComponent<UnityEngine.RectTransform>();
 			Stage_Play_LowerViewport_Image_Found13 = gameObject.transform.FindChildName("Stage/Play/LowerViewport/Image/Found13").GetComponent<UnityEngine.UI.Image>();
+			Stage_Play_LowerViewport_Image_Found14_Outline = gameObject.transform.FindChildName("Stage/Play/LowerViewport/Image/Found14/Outline").GetComponent<UnityEngine.RectTransform>();
 			Stage_Play_LowerViewport_Image_Found14 = gameObject.transform.FindChildName("Stage/Play/LowerViewport/Image/Found14").GetComponent<UnityEngine.UI.Image>();
 			Stage_Play_LowerViewport_Image_Miss = gameObject.transform.FindChildName("Stage/Play/LowerViewport/Image/Miss").GetComponent<UnityEngine.UI.Text>();
 			Stage_Play_LowerViewport_Image = gameObject.transform.FindChildName("Stage/Play/LowerViewport/Image").GetComponent<UnityEngine.UI.Image>();

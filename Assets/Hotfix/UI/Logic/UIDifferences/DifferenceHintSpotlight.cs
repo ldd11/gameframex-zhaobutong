@@ -26,6 +26,14 @@ namespace Hotfix.UI
             rect.offsetMin = rect.offsetMax = Vector2.zero;
             var effect = go.AddComponent<DifferenceHintSpotlight>();
             effect.spotlightMaterial = new Material(material);
+#if UNITY_EDITOR
+            // Exported Android bundles may contain no shader program for the Editor's graphics API.
+            if (!effect.spotlightMaterial.shader.isSupported)
+            {
+                var shader = UnityEditor.AssetDatabase.LoadAssetAtPath<Shader>("Assets/Bundles/UI/UIDifferences/Art/HintSpotlight.shader");
+                if (shader) effect.spotlightMaterial.shader = shader;
+            }
+#endif
             effect.material = effect.spotlightMaterial;
             effect.color = new Color(0, 0, 0, .8f);
             go.SetActive(false);

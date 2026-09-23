@@ -22,10 +22,9 @@ namespace Hotfix.UI
         int LevelLimit => OnlineLevels ? int.MaxValue - 1 : levels.Length;
         bool UsingRemoteLevel => OnlineLevels && remoteLevel != null && loadedApiUrl == LevelUrl(level);
         DifferenceLevel CurrentLevel => UsingRemoteLevel ? remoteLevel.Level : levels[level];
-        public bool IsLoadingLevel => loadingLevel != null;
+        public bool IsLoadingLevel => loadingLevel != null || localLoading;
         int albumPage;
         UnityEngine.UI.Button albumPrevious, albumNext;
-        RectTransform progressSecondRow;
 
         public string LevelUrl(int index)
         {
@@ -40,8 +39,10 @@ namespace Hotfix.UI
         {
             var url = LevelUrl(index);
             yield return request.Load(url, index + 1);
+            while (loadingLevel == request && Time.unscaledTime - loadingStarted < .55f) yield return null;
             if (loadingLevel != request) { request.Dispose(); yield break; }
             loadingLevel = null;
+            UpdateFigmaDesign(currentPage);
             startButton.interactable = true;
             if (!OnlineLevels || url != LevelUrl(index)) { request.Dispose(); ShowHome(); yield break; }
             if (request.Error != null || request.Level == null)
@@ -58,8 +59,11 @@ namespace Hotfix.UI
 
         void CancelRemoteLoad()
         {
+            if (localLoadRoutine != null) { StopCoroutine(localLoadRoutine); localLoadRoutine = null; }
+            localLoading = false;
             if (loadingLevel != null) { loadingLevel.Dispose(); loadingLevel = null; }
             if (startButton) startButton.interactable = true;
+            UpdateFigmaDesign(currentPage);
         }
 
         void ReleaseRemoteLevel()
@@ -107,30 +111,11 @@ namespace Hotfix.UI
             }
             var progress = (RectTransform)progressDots[0].transform.parent;
             var horizontal = progress.GetComponent<UnityEngine.UI.HorizontalLayoutGroup>();
-            var twoRows = count > 15;
-            var columns = twoRows ? Mathf.CeilToInt(count / 2f) : count;
-            horizontal.spacing = twoRows ? Mathf.Clamp((progress.sizeDelta.x - columns * progressDots[0].rectTransform.sizeDelta.x) / Mathf.Max(1, columns - 1), 0, 5) : 4;
-            if (twoRows && !progressSecondRow)
-            {
-                var row = new GameObject("ProgressSecondRow", typeof(RectTransform), typeof(UnityEngine.UI.HorizontalLayoutGroup));
-                row.layer = progress.gameObject.layer;
-                progressSecondRow = (RectTransform)row.transform; progressSecondRow.SetParent(progress.parent, false);
-                progressSecondRow.anchorMin = progress.anchorMin; progressSecondRow.anchorMax = progress.anchorMax; progressSecondRow.pivot = progress.pivot;
-                progressSecondRow.anchoredPosition = progress.anchoredPosition + new Vector2(0, -44); progressSecondRow.sizeDelta = progress.sizeDelta;
-                var layout = row.GetComponent<UnityEngine.UI.HorizontalLayoutGroup>();
-                layout.childAlignment = TextAnchor.MiddleCenter;
-                layout.childControlWidth = layout.childControlHeight = layout.childForceExpandWidth = layout.childForceExpandHeight = false;
-            }
-            for (var i = 0; i < progressDots.Length; i++)
-            {
-                progressDots[i].transform.SetParent(twoRows && i >= columns && i < count ? progressSecondRow : progress, false);
-                progressDots[i].transform.SetAsLastSibling();
-            }
-            if (progressSecondRow)
-            {
-                progressSecondRow.GetComponent<UnityEngine.UI.HorizontalLayoutGroup>().spacing = horizontal.spacing;
-                progressSecondRow.gameObject.SetActive(twoRows);
-            }
+            progress.anchoredPosition = new Vector2(14, -212.5f);
+            var width = progress.rect.width - horizontal.padding.horizontal;
+            var scale = Mathf.Min(1, width / (Mathf.Max(1, count) * 41 + Mathf.Max(0, count - 1) * 4));
+            horizontal.spacing = 4 * scale;
+            foreach (var dot in progressDots) dot.rectTransform.sizeDelta = new Vector2(41, 42) * scale;
         }
 
         UnityEngine.UI.Button AlbumPageButton(string name, string caption, float x, int step)

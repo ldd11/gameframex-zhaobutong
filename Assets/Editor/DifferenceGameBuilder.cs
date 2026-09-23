@@ -61,6 +61,7 @@ public static class DifferenceGameBuilder
             var rect=(RectTransform)root.transform; rect.anchorMin=Vector2.zero;rect.anchorMax=Vector2.one;rect.sizeDelta=Vector2.zero;
             root.AddComponent<UnityEngine.UI.Image>().color=Color.black;
             var ui=root.AddComponent<UIDifferences>(); ui.levels=data; ui.avatarSprites=animals;
+            ui.designSprites = LoadDesignSprites();
             ui.stage=Rect(root.transform,"Stage",0,0,720,1280);
             ui.stage.anchorMin=ui.stage.anchorMax=ui.stage.pivot=new Vector2(.5f,.5f);ui.stage.anchoredPosition=Vector2.zero;
             BuildHome(ui);
@@ -89,6 +90,33 @@ public static class DifferenceGameBuilder
         AssetDatabase.SaveAssets();Verify();
         GameFrameX.UI.UGUI.Editor.UGUICodeGenerator.Generate(AssetDatabase.LoadAssetAtPath<GameObject>(Folder+"UIDifferences.prefab"));
         Debug.Log("Find Differences V2: 3 unique scenes, complete UI pages, profile, music, saved rounds and animated feedback built.");
+    }
+
+    static Sprite[] LoadDesignSprites()
+    {
+        return Directory.GetFiles(Folder + "Art/Figma", "*.png").OrderBy(path => path)
+            .Select(path => AssetDatabase.LoadAssetAtPath<Sprite>(path.Replace('\\', '/'))).ToArray();
+    }
+
+    [MenuItem("Tools/Find Differences/Refresh Current Prefab Data")]
+    public static void RefreshCurrentPrefabData()
+    {
+        if (EditorApplication.isPlaying) throw new InvalidOperationException("请先退出 Play 模式");
+        var path = Folder + "UIDifferences.prefab";
+        var sprites = LoadDesignSprites();
+        if (sprites.Length == 0 || sprites.Any(sprite => !sprite))
+            throw new InvalidOperationException("Art/Figma 中有尚未正确导入的 Sprite，请先检查图片导入设置");
+        var root = PrefabUtility.LoadPrefabContents(path);
+        try
+        {
+            root.GetComponent<UIDifferences>().designSprites = sprites;
+            PrefabUtility.SaveAsPrefabAsset(root, path);
+        }
+        finally { PrefabUtility.UnloadPrefabContents(root); }
+        AssetDatabase.SaveAssets();
+        Verify();
+        GameFrameX.UI.UGUI.Editor.UGUICodeGenerator.Generate(AssetDatabase.LoadAssetAtPath<GameObject>(path));
+        Debug.Log($"当前预制体数据已更新：{sprites.Length} 张 UI 图片，已按现有节点重新生成 UI 代码；布局保留。");
     }
 
     [MenuItem("Tools/Find Differences/Update Gameplay Art")]
@@ -131,11 +159,11 @@ public static class DifferenceGameBuilder
         }
         else ui.hintSpotlightMaterial.shader = hintShader;
         EditorUtility.SetDirty(ui.hintSpotlightMaterial);
-        ui.hintHandSprite = ImportSprite("Art/HintHand.png");
-        var handImporter = (TextureImporter)AssetImporter.GetAtPath(Folder + "Art/HintHand.png");
+        ui.hintHandSprite = ImportSprite("Art/Figma/HintHand.png");
+        var handImporter = (TextureImporter)AssetImporter.GetAtPath(Folder + "Art/Figma/HintHand.png");
         handImporter.maxTextureSize = 512; handImporter.SaveAndReimport();
-        ui.progressQuestion = ImportSprite("Art/ProgressQuestion.png");
-        ui.progressCheck = ImportSprite("Art/ProgressCheck.png");
+        ui.progressQuestion = ImportSprite("Art/Figma/ProgressQuestion.png");
+        ui.progressCheck = ImportSprite("Art/Figma/ProgressCheck.png");
         var layout = ui.stage.Find("Play/Progress").GetComponent<UnityEngine.UI.HorizontalLayoutGroup>();
         layout.spacing = 4;
         foreach (var dot in ui.progressDots)
@@ -144,7 +172,8 @@ public static class DifferenceGameBuilder
             dot.rectTransform.sizeDelta = new Vector2(41, 41);
             dot.rectTransform.pivot = new Vector2(.5f, .5f);
             // Keep the bound text's state for debugging; artwork supplies the visible glyph.
-            dot.GetComponentInChildren<UnityEngine.UI.Text>(true).enabled = false;
+            var legacyLabel = dot.GetComponentInChildren<UnityEngine.UI.Text>(true);
+            if (legacyLabel) legacyLabel.enabled = false;
         }
         var button = ui.hintButton.GetComponent<UnityEngine.UI.Image>();
         button.sprite = ImportSprite("Art/HintButton.png"); button.type = UnityEngine.UI.Image.Type.Simple;
@@ -389,6 +418,14 @@ public static class DifferenceGameBuilder
             foreach(Transform child in t)if(!names.Add(child.name))throw new InvalidOperationException("同级 UI 节点重名："+t.name+"/"+child.name);
         }
         var ui=prefab.GetComponent<UIDifferences>();
+        var designPaths = Directory.GetFiles(Folder + "Art/Figma", "*.png").Select(path => path.Replace('\\', '/')).ToArray();
+        var dependencies = AssetDatabase.GetDependencies(Folder + "UIDifferences.prefab");
+        if (ui.designSprites == null || ui.designSprites.Length != designPaths.Length || designPaths.Length == 0 ||
+            ui.designSprites.Any(sprite => !sprite) ||
+            designPaths.Any(path => !dependencies.Contains(path) || !ui.designSprites.Contains(AssetDatabase.LoadAssetAtPath<Sprite>(path))))
+            throw new InvalidOperationException("Figma UI 图片没有完整绑定到 Bundle 预制体");
+        if (Directory.Exists("Assets/Resources/FindDifferences"))
+            throw new InvalidOperationException("Figma UI 图片仍残留在 Resources");
         foreach(var field in typeof(UIDifferences).GetFields(System.Reflection.BindingFlags.Public|System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.DeclaredOnly))
             if(typeof(UnityEngine.Object).IsAssignableFrom(field.FieldType)&&!(field.GetValue(ui)as UnityEngine.Object))throw new InvalidOperationException("丢失引用："+field.Name);
         foreach(var level in ui.levels)
@@ -476,4 +513,3 @@ public static class DifferenceGameBuilder
     }
 }
 #endif
-
