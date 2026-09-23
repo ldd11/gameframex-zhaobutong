@@ -37,7 +37,7 @@ namespace Hotfix.UI
         public Material foundFlightMaterial, hintSpotlightMaterial;
         public UnityEngine.UI.Image upperImage, lowerImage, profileAvatar, homeAvatar, profileFrame, homeFrame, resultIcon;
         public UnityEngine.UI.InputField nicknameInput;
-        public UnityEngine.UI.Text crossTop, crossBottom;
+        public UnityEngine.UI.Graphic crossTop, crossBottom;
         public AudioSource audioSource, musicSource;
         public AudioClip foundSound, missSound, winSound;
         public AudioClip[] musicTracks;
@@ -463,26 +463,22 @@ namespace Hotfix.UI
                 var r = data.regions[i];
                 var radius = Mathf.Max(23f / 600, new Vector2(r.z, r.w / ImageAspect).magnitude * .5f);
                 spots[i] = data.hitSpots != null ? data.hitSpots[i] : new DifferenceSpot(r.x, r.y, radius);
-                var left = (r.x - r.z / 2) * 600; var top = (r.y - r.w / 2) * 400;
-                var patch = (RectTransform)differencePatches[i].transform;
-                patch.SetParent(data.changedOnTop ? upperImage.transform : lowerImage.transform, false);
-                patch.SetSiblingIndex(i);
-                patch.anchoredPosition = new Vector2(left, -top); patch.sizeDelta = new Vector2(r.z * 600, r.w * 400);
                 var cropped = data.croppedPatches != null;
-                patchImages[i].rectTransform.anchoredPosition = cropped ? Vector2.zero : new Vector2(-left, top);
-                patchImages[i].rectTransform.sizeDelta = cropped ? patch.sizeDelta : new Vector2(600, 400);
-                patchImages[i].sprite = cropped ? data.croppedPatches[i] : data.changed;
-                patchImages[i].color = Color.white;
-                ConfigurePatchFlash(originalPatchImages[i], data.changedOnTop ? upperImage : lowerImage,
-                    patch, data.original, new Vector2(-left, top), new Vector2(600, 400));
-                ConfigurePatchFlash(changedFlashImages[i], data.changedOnTop ? lowerImage : upperImage,
-                    patch, patchImages[i].sprite, patchImages[i].rectTransform.anchoredPosition, patchImages[i].rectTransform.sizeDelta);
+                var changedBoard = data.changedOnTop ? upperImage : lowerImage;
+                var originalBoard = data.changedOnTop ? lowerImage : upperImage;
+                var patch = ConfigurePatch(patchImages[i], changedBoard, r,
+                    cropped ? data.croppedPatches[i] : data.changed, cropped);
+                patch.SetSiblingIndex(i);
+                var originalFlash = ConfigurePatch(originalPatchImages[i], changedBoard, r, data.original, false);
+                var changedFlash = ConfigurePatch(changedFlashImages[i], originalBoard, r, patchImages[i].sprite, cropped);
+                originalFlash.SetSiblingIndex((data.changedOnTop ? topRings : bottomRings)[0].transform.GetSiblingIndex());
+                changedFlash.SetSiblingIndex((data.changedOnTop ? bottomRings : topRings)[0].transform.GetSiblingIndex());
+                originalFlash.gameObject.SetActive(false); changedFlash.gameObject.SetActive(false);
                 patchElapsed[i] = -1;
-                var size = spots[i].radius * 1200;
                 foreach (var marker in new[] { topRings[i], bottomRings[i] })
                 {
-                    marker.rectTransform.anchoredPosition = new Vector2(spots[i].x * 600, -spots[i].y * 400);
-                    marker.rectTransform.sizeDelta = Vector2.one * size;
+                    SetBoardRegion(marker.rectTransform, new Vector4(spots[i].x, spots[i].y,
+                        spots[i].radius * 2, spots[i].radius * 2 * ImageAspect));
                 }
             }
         }
@@ -862,11 +858,13 @@ namespace Hotfix.UI
         {
             foreach (var label in new[] { crossTop, crossBottom })
             {
-                label.rectTransform.anchoredPosition = new Vector2(x * 600, -y * 400);
+                label.rectTransform.anchorMin = label.rectTransform.anchorMax = new Vector2(x, 1 - y);
+                label.rectTransform.pivot = new Vector2(.5f, .5f);
+                label.rectTransform.anchoredPosition = Vector2.zero;
                 label.gameObject.SetActive(true); StartCoroutine(HideCross(label));
             }
         }
-        IEnumerator HideCross(UnityEngine.UI.Text label) { yield return new WaitForSecondsRealtime(.6f); label.gameObject.SetActive(false); }
+        IEnumerator HideCross(UnityEngine.UI.Graphic label) { yield return new WaitForSecondsRealtime(.6f); label.gameObject.SetActive(false); }
         IEnumerator Pulse(Transform target, float amount = .22f)
         {
             for (var elapsed = 0f; elapsed < .32f; elapsed += Time.unscaledDeltaTime)

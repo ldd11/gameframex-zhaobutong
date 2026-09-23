@@ -25,6 +25,8 @@ namespace Hotfix.UI
         public bool IsLoadingLevel => loadingLevel != null || localLoading;
         int albumPage;
         UnityEngine.UI.Button albumPrevious, albumNext;
+        Vector2 progressDotSize;
+        float progressDotSpacing;
 
         public string LevelUrl(int index)
         {
@@ -111,11 +113,15 @@ namespace Hotfix.UI
             }
             var progress = (RectTransform)progressDots[0].transform.parent;
             var horizontal = progress.GetComponent<UnityEngine.UI.HorizontalLayoutGroup>();
-            progress.anchoredPosition = new Vector2(14, -212.5f);
+            if (progressDotSize == Vector2.zero)
+            {
+                progressDotSize = progressDots[0].rectTransform.sizeDelta;
+                progressDotSpacing = horizontal.spacing;
+            }
             var width = progress.rect.width - horizontal.padding.horizontal;
-            var scale = Mathf.Min(1, width / (Mathf.Max(1, count) * 41 + Mathf.Max(0, count - 1) * 4));
-            horizontal.spacing = 4 * scale;
-            foreach (var dot in progressDots) dot.rectTransform.sizeDelta = new Vector2(41, 42) * scale;
+            var scale = Mathf.Min(1, width / (Mathf.Max(1, count) * progressDotSize.x + Mathf.Max(0, count - 1) * progressDotSpacing));
+            horizontal.spacing = progressDotSpacing * scale;
+            foreach (var dot in progressDots) dot.rectTransform.sizeDelta = progressDotSize * scale;
         }
 
         UnityEngine.UI.Button AlbumPageButton(string name, string caption, float x, int step)
@@ -135,20 +141,29 @@ namespace Hotfix.UI
             RefreshAlbum();
         }
 
-        void ConfigurePatchFlash(UnityEngine.UI.Image image, UnityEngine.UI.Image board, RectTransform crop,
-            Sprite sprite, Vector2 picturePosition, Vector2 pictureSize)
+        static RectTransform ConfigurePatch(UnityEngine.UI.Image image, UnityEngine.UI.Image board,
+            Vector4 region, Sprite sprite, bool cropped)
         {
             var rect = (RectTransform)image.transform.parent;
             rect.SetParent(board.transform, false);
-            rect.SetAsLastSibling();
-            rect.SetSiblingIndex((board == upperImage ? topRings : bottomRings)[0].transform.GetSiblingIndex());
-            rect.pivot = new Vector2(.5f, .5f);
-            rect.sizeDelta = crop.sizeDelta;
-            rect.anchoredPosition = crop.anchoredPosition + Vector2.Scale(crop.sizeDelta, new Vector2(.5f, -.5f));
-            rect.localScale = Vector3.one;
-            image.rectTransform.anchoredPosition = picturePosition; image.rectTransform.sizeDelta = pictureSize;
+            SetBoardRegion(rect, region);
+            // Express the full picture relative to its crop; anchors follow any board size or pivot.
+            SetBoardRegion(image.rectTransform, cropped ? new Vector4(.5f, .5f, 1, 1) :
+                new Vector4((.5f - region.x) / region.z + .5f, (.5f - region.y) / region.w + .5f,
+                    1 / region.z, 1 / region.w));
+            image.preserveAspect = false;
             image.sprite = sprite; image.color = Color.white;
-            rect.gameObject.SetActive(false);
+            return rect;
+        }
+
+        static void SetBoardRegion(RectTransform rect, Vector4 region)
+        {
+            var center = new Vector2(region.x, 1 - region.y);
+            var half = new Vector2(region.z, region.w) * .5f;
+            rect.anchorMin = center - half; rect.anchorMax = center + half;
+            rect.pivot = new Vector2(.5f, .5f);
+            rect.offsetMin = rect.offsetMax = Vector2.zero;
+            rect.localScale = Vector3.one;
         }
 
         void ResetPatchFlash(int index)

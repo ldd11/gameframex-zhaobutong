@@ -1230,9 +1230,9 @@ namespace Hotfix.UI
 		}
 
 		[UGUIElementProperty("Stage/Play/UpperViewport/Image/Miss")]
-		private UnityEngine.UI.Text Stage_Play_UpperViewport_Image_Miss;
+		private UnityEngine.UI.Image Stage_Play_UpperViewport_Image_Miss;
 
-		public UnityEngine.UI.Text m_Stage_Play_UpperViewport_Image_Miss
+		public UnityEngine.UI.Image m_Stage_Play_UpperViewport_Image_Miss
 		{
 			get { return Stage_Play_UpperViewport_Image_Miss;}
 		}
@@ -1734,9 +1734,9 @@ namespace Hotfix.UI
 		}
 
 		[UGUIElementProperty("Stage/Play/LowerViewport/Image/Miss")]
-		private UnityEngine.UI.Text Stage_Play_LowerViewport_Image_Miss;
+		private UnityEngine.UI.Image Stage_Play_LowerViewport_Image_Miss;
 
-		public UnityEngine.UI.Text m_Stage_Play_LowerViewport_Image_Miss
+		public UnityEngine.UI.Image m_Stage_Play_LowerViewport_Image_Miss
 		{
 			get { return Stage_Play_LowerViewport_Image_Miss;}
 		}
@@ -1747,6 +1747,14 @@ namespace Hotfix.UI
 		public UnityEngine.UI.Image m_Stage_Play_LowerViewport_Image
 		{
 			get { return Stage_Play_LowerViewport_Image;}
+		}
+
+		[UGUIElementProperty("Stage/Play/LowerViewport/LineMiddle")]
+		private UnityEngine.UI.Image Stage_Play_LowerViewport_LineMiddle;
+
+		public UnityEngine.UI.Image m_Stage_Play_LowerViewport_LineMiddle
+		{
+			get { return Stage_Play_LowerViewport_LineMiddle;}
 		}
 
 		[UGUIElementProperty("Stage/Play/LowerViewport")]
@@ -4031,7 +4039,7 @@ namespace Hotfix.UI
 			Stage_Play_UpperViewport_Image_Found13 = gameObject.transform.FindChildName("Stage/Play/UpperViewport/Image/Found13").GetComponent<UnityEngine.UI.Image>();
 			Stage_Play_UpperViewport_Image_Found14_Outline = gameObject.transform.FindChildName("Stage/Play/UpperViewport/Image/Found14/Outline").GetComponent<UnityEngine.RectTransform>();
 			Stage_Play_UpperViewport_Image_Found14 = gameObject.transform.FindChildName("Stage/Play/UpperViewport/Image/Found14").GetComponent<UnityEngine.UI.Image>();
-			Stage_Play_UpperViewport_Image_Miss = gameObject.transform.FindChildName("Stage/Play/UpperViewport/Image/Miss").GetComponent<UnityEngine.UI.Text>();
+			Stage_Play_UpperViewport_Image_Miss = gameObject.transform.FindChildName("Stage/Play/UpperViewport/Image/Miss").GetComponent<UnityEngine.UI.Image>();
 			Stage_Play_UpperViewport_Image = gameObject.transform.FindChildName("Stage/Play/UpperViewport/Image").GetComponent<UnityEngine.UI.Image>();
 			Stage_Play_UpperViewport = gameObject.transform.FindChildName("Stage/Play/UpperViewport").GetComponent<UnityEngine.RectTransform>();
 			Stage_Play_LowerViewport_Image_Difference0_Picture = gameObject.transform.FindChildName("Stage/Play/LowerViewport/Image/Difference0/Picture").GetComponent<UnityEngine.UI.Image>();
@@ -4094,8 +4102,9 @@ namespace Hotfix.UI
 			Stage_Play_LowerViewport_Image_Found13 = gameObject.transform.FindChildName("Stage/Play/LowerViewport/Image/Found13").GetComponent<UnityEngine.UI.Image>();
 			Stage_Play_LowerViewport_Image_Found14_Outline = gameObject.transform.FindChildName("Stage/Play/LowerViewport/Image/Found14/Outline").GetComponent<UnityEngine.RectTransform>();
 			Stage_Play_LowerViewport_Image_Found14 = gameObject.transform.FindChildName("Stage/Play/LowerViewport/Image/Found14").GetComponent<UnityEngine.UI.Image>();
-			Stage_Play_LowerViewport_Image_Miss = gameObject.transform.FindChildName("Stage/Play/LowerViewport/Image/Miss").GetComponent<UnityEngine.UI.Text>();
+			Stage_Play_LowerViewport_Image_Miss = gameObject.transform.FindChildName("Stage/Play/LowerViewport/Image/Miss").GetComponent<UnityEngine.UI.Image>();
 			Stage_Play_LowerViewport_Image = gameObject.transform.FindChildName("Stage/Play/LowerViewport/Image").GetComponent<UnityEngine.UI.Image>();
+			Stage_Play_LowerViewport_LineMiddle = gameObject.transform.FindChildName("Stage/Play/LowerViewport/LineMiddle").GetComponent<UnityEngine.UI.Image>();
 			Stage_Play_LowerViewport = gameObject.transform.FindChildName("Stage/Play/LowerViewport").GetComponent<UnityEngine.RectTransform>();
 			Stage_Play_Hint_Label = gameObject.transform.FindChildName("Stage/Play/Hint/Label").GetComponent<UnityEngine.UI.Text>();
 			Stage_Play_Hint_Bulb = gameObject.transform.FindChildName("Stage/Play/Hint/Bulb").GetComponent<UnityEngine.UI.Image>();

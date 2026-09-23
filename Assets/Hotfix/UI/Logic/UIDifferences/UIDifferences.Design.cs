@@ -24,7 +24,6 @@ namespace Hotfix.UI
         // Figma UI定稿 (125:220 etc.): use its 1440 x 3200 coordinates at half scale.
         void InstallFigmaDesign()
         {
-            stage.sizeDelta = new Vector2(720, 1600);
             designRound = DesignSprite("RoundedPanel");
             toggleOn = DesignSprite("ToggleOn"); toggleOff = DesignSprite("ToggleOff");
             navigation.SetActive(false);
@@ -101,7 +100,6 @@ namespace Hotfix.UI
             DesignButton(victoryDesign.transform, "Next", "GreenButton", 267, 2316, 906, 236, "Next Level", OnFigmaResultPrimary, 120);
             foreach (var piece in confetti) { piece.SetParent(victoryDesign.transform, false); piece.GetComponent<Image>().raycastTarget = false; }
 
-            ApplyGameplayDesign();
             UpdateFigmaDesign(currentPage);
         }
 
@@ -153,6 +151,10 @@ namespace Hotfix.UI
         GameObject DesignLayer(string name, Color color)
         {
             var rect = DesignRect(stage, name, 0, 0, 1440, 3200);
+            var scale = Mathf.Min(stage.rect.width / 720, stage.rect.height / 1600);
+            rect.localScale = Vector3.one * scale;
+            rect.anchoredPosition = new Vector2((stage.rect.width - 720 * scale) / 2,
+                -(stage.rect.height - 1600 * scale) / 2);
             var image = rect.gameObject.AddComponent<Image>(); image.color = color; image.raycastTarget = true;
             rect.gameObject.SetActive(false); return rect.gameObject;
         }
@@ -187,53 +189,6 @@ namespace Hotfix.UI
             border.pixelsPerUnitMultiplier = 180f / 55;
             var surface = DesignImage(row.transform, "Surface", null, 4, 4, 922, height - 8, fill);
             surface.pixelsPerUnitMultiplier = 180f / 51;
-        }
-
-        void ApplyGameplayDesign()
-        {
-            ((RectTransform)play.transform).sizeDelta = stage.sizeDelta;
-            var background = At<Image>("Play/Background"); background.sprite = DesignSprite("PlayBackground");
-            background.rectTransform.sizeDelta = stage.sizeDelta;
-            levelLabel.gameObject.SetActive(false); progressLabel.gameObject.SetActive(false);
-            SkinButton(backButton, "Back", 37, 108, 221, 221);
-            SkinButton(At<Button>("Play/Zoom"), "Zoom", 1248, 2482, 141, 148);
-            var badge = At<Image>("Play/LifeBadge"); badge.sprite = designRound; badge.type = Image.Type.Sliced;
-            badge.pixelsPerUnitMultiplier = 2; badge.color = DesignCream; PlaceDesign(badge.rectTransform, 1087, 150, 295, 156);
-            var heart = At<Image>("Play/Heart"); heart.sprite = DesignSprite("Heart"); PlaceDesign(heart.rectTransform, 1125, 177, 103, 103);
-            heartsLabel.color = new Color(.08f, .29f, .55f); heartsLabel.fontSize = 45; PlaceDesign(heartsLabel.rectTransform, 1230, 166, 96, 114);
-            PlaceDesign(At<RectTransform>("Play/Progress"), 28, 425, 1384, 85);
-            progressCheck = DesignSprite("ProgressCheck"); progressQuestion = DesignSprite("ProgressQuestion");
-            foreach (var dot in progressDots)
-            {
-                dot.rectTransform.sizeDelta = new Vector2(41, 42); dot.color = Color.white;
-                var legacyLabel = dot.GetComponentInChildren<Text>(true);
-                if (legacyLabel) legacyLabel.enabled = false;
-            }
-            // Keep the board's 600 x 400 coordinates, so patches, hit regions and zoom share one space.
-            var boardScale = 708f / 600;
-            foreach (var viewport in new[] { upperImage.transform.parent, lowerImage.transform.parent }) viewport.localScale = Vector3.one * boardScale;
-            ((RectTransform)upperImage.transform.parent).anchoredPosition = new Vector2(6, -280);
-            ((RectTransform)lowerImage.transform.parent).anchoredPosition = new Vector2(6, -756);
-            PlaceDesign(At<RectTransform>("Play/Frame"), 0, 549, 1440, 1914);
-            hintButton.GetComponent<Image>().sprite = designRound; hintButton.GetComponent<Image>().type = Image.Type.Sliced;
-            hintButton.GetComponent<Image>().pixelsPerUnitMultiplier = 1.6f;
-            hintButton.GetComponent<Image>().color = DesignCream; PlaceDesign((RectTransform)hintButton.transform, 610, 2565, 224, 225);
-            var bulb = At<Image>("Play/Hint/Bulb"); bulb.sprite = DesignSprite("LoadingMagnifier"); PlaceDesign(bulb.rectTransform, 7, 7, 198, 198);
-            PlaceDesign(At<RectTransform>("Play/Hint/Badge"), 162, 146, 82, 82);
-            PlaceDesign(hintLabel.rectTransform, 162, 146, 82, 82);
-        }
-
-        void SkinButton(Button button, string sprite, float x, float y, float width, float height)
-        {
-            var image = button.GetComponent<Image>(); image.sprite = DesignSprite(sprite); image.type = Image.Type.Simple; image.color = Color.white;
-            foreach (Transform child in button.transform) child.gameObject.SetActive(false);
-            var shadow = button.GetComponent<Shadow>(); if (shadow) shadow.enabled = false;
-            PlaceDesign((RectTransform)button.transform, x, y, width, height);
-        }
-
-        static void PlaceDesign(RectTransform rect, float x, float y, float width, float height)
-        {
-            rect.anchoredPosition = new Vector2(x, -y) * .5f; rect.sizeDelta = new Vector2(width, height) * .5f;
         }
 
         void UpdateFigmaDesign(GameObject page)

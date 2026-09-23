@@ -34,6 +34,7 @@ public static class DifferenceGameBuilder
     public static void Build()
     {
         if (EditorApplication.isPlaying) throw new InvalidOperationException("请先退出 Play 模式");
+        if (File.Exists(Folder + "UIDifferences.prefab")) { RefreshCurrentPrefabData(); return; }
         DifferenceRound.SelfCheck();
         font = AssetDatabase.LoadAssetAtPath<Font>(Folder + "Art/NotoSansCJKsc-Medium.otf");
         if (!font) throw new InvalidOperationException("中文字体尚未导入");
@@ -106,13 +107,21 @@ public static class DifferenceGameBuilder
         var sprites = LoadDesignSprites();
         if (sprites.Length == 0 || sprites.Any(sprite => !sprite))
             throw new InvalidOperationException("Art/Figma 中有尚未正确导入的 Sprite，请先检查图片导入设置");
-        var root = PrefabUtility.LoadPrefabContents(path);
+        var prefabStage = UnityEditor.SceneManagement.PrefabStageUtility.GetCurrentPrefabStage();
+        var editingCurrent = prefabStage != null && prefabStage.assetPath == path;
+        var root = editingCurrent ? prefabStage.prefabContentsRoot : PrefabUtility.LoadPrefabContents(path);
         try
         {
-            root.GetComponent<UIDifferences>().designSprites = sprites;
+            var ui = root.GetComponent<UIDifferences>();
+            ui.designSprites = sprites;
+            if (!ui.crossTop) ui.crossTop = ui.upperImage.transform.Find("Miss").GetComponent<UnityEngine.UI.Graphic>();
+            if (!ui.crossBottom) ui.crossBottom = ui.lowerImage.transform.Find("Miss").GetComponent<UnityEngine.UI.Graphic>();
+            RefreshSpriteReferences(ui, sprites);
+            foreach (var image in root.GetComponentsInChildren<UnityEngine.UI.Image>(true))
+                RefreshSpriteReferences(image, sprites);
             PrefabUtility.SaveAsPrefabAsset(root, path);
         }
-        finally { PrefabUtility.UnloadPrefabContents(root); }
+        finally { if (!editingCurrent) PrefabUtility.UnloadPrefabContents(root); }
         AssetDatabase.SaveAssets();
         Verify();
         GameFrameX.UI.UGUI.Editor.UGUICodeGenerator.Generate(AssetDatabase.LoadAssetAtPath<GameObject>(path));
@@ -122,17 +131,30 @@ public static class DifferenceGameBuilder
     [MenuItem("Tools/Find Differences/Update Gameplay Art")]
     public static void UpdateGameplayArt()
     {
-        if (EditorApplication.isPlaying) throw new InvalidOperationException("请先退出 Play 模式");
-        var path = Folder + "UIDifferences.prefab";
-        var root = PrefabUtility.LoadPrefabContents(path);
-        try
+        RefreshCurrentPrefabData();
+    }
+
+    static void RefreshSpriteReferences(UnityEngine.Object target, Sprite[] sprites)
+    {
+        var serialized = new SerializedObject(target);
+        var property = serialized.GetIterator();
+        while (property.Next(true))
         {
-            ApplyGameplayArt(root.GetComponent<UIDifferences>());
-            PrefabUtility.SaveAsPrefabAsset(root, path);
+            if (property.propertyType != SerializedPropertyType.ObjectReference || !(property.objectReferenceValue is Sprite old)) continue;
+            var oldPath = AssetDatabase.GetAssetPath(old);
+            if (!oldPath.StartsWith(Folder + "Art/", StringComparison.Ordinal) || oldPath.StartsWith(Folder + "Art/Figma/", StringComparison.Ordinal)) continue;
+            var name = old.name;
+            switch (name)
+            {
+                case "HintBulb": name = "LoadingMagnifier"; break;
+                case "HintButton": name = "RoundedPanel"; break;
+                case "PlayBackdropV2": name = "PlayBackground"; break;
+                case "BeachV2": name = "HomeArtwork"; break;
+            }
+            var replacement = Array.Find(sprites, sprite => sprite.name == name);
+            if (replacement) property.objectReferenceValue = replacement;
         }
-        finally { PrefabUtility.UnloadPrefabContents(root); }
-        AssetDatabase.SaveAssets();
-        Verify();
+        serialized.ApplyModifiedPropertiesWithoutUndo();
     }
 
     static void ApplyGameplayArt(UIDifferences ui)

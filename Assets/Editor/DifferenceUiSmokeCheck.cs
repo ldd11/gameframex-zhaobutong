@@ -156,15 +156,127 @@ public static class DifferenceUiSmokeCheck
             var board = (RectTransform)ui.upperImage.transform.parent;
             var progressBottom = ui.stage.InverseTransformPoint(progress.TransformPoint(progress.rect.min)).y;
             var boardTop = ui.stage.InverseTransformPoint(board.TransformPoint(board.rect.max)).y;
-            if (boardTop >= progressBottom || board.anchoredPosition != new Vector2(6, -280) ||
-                ((RectTransform)ui.lowerImage.transform.parent).anchoredPosition != new Vector2(6, -756) ||
-                ui.stage.Find("Play/Hint/Bulb").GetComponent<Image>().sprite.name != "LoadingMagnifier")
-                throw new InvalidOperationException("Gameplay layout or hint artwork was not initialized.");
-            var result = $"PASS: real level {ui.SelectedLevel + 1}, {ui.Round.Total} dots; board below progress by {progressBottom - boardTop:F2}; new hint magnifier visible.";
+            VerifyPrefabLayout(ui);
+            if (boardTop >= progressBottom)
+                throw new InvalidOperationException("The prefab places the board over the progress row.");
+            var lower = (RectTransform)ui.lowerImage.transform.parent;
+            var upperBottom = ui.stage.InverseTransformPoint(board.TransformPoint(board.rect.min)).y;
+            var lowerTop = ui.stage.InverseTransformPoint(lower.TransformPoint(lower.rect.max)).y;
+            var lowerBottom = ui.stage.InverseTransformPoint(lower.TransformPoint(lower.rect.min)).y;
+            var hint = (RectTransform)ui.hintButton.transform;
+            var hintTop = ui.stage.InverseTransformPoint(hint.TransformPoint(hint.rect.max)).y;
+            if (!ui.upperImage.gameObject.activeInHierarchy || !ui.lowerImage.gameObject.activeInHierarchy ||
+                !ui.upperImage.sprite || !ui.lowerImage.sprite || lowerTop > upperBottom + .1f ||
+                hintTop > lowerBottom || lowerBottom < ui.stage.rect.yMin)
+                throw new InvalidOperationException("Boards are missing, overlapping, outside the stage or covered by the hint button.");
+            typeof(UIDifferences).GetMethod("ShowCross", Private).Invoke(ui, new object[] { .5f, .5f });
+            if (!ui.crossTop.gameObject.activeSelf || !ui.crossBottom.gameObject.activeSelf)
+                throw new InvalidOperationException("Bound miss feedback did not appear.");
+            await Task.Delay(750);
+            if (ui.crossTop.gameObject.activeSelf || ui.crossBottom.gameObject.activeSelf)
+                throw new InvalidOperationException("Bound miss feedback did not clear.");
+            var result = $"PASS: real level {ui.SelectedLevel + 1}, {ui.Round.Total} dots; board below progress by {progressBottom - boardTop:F2}; authored prefab layout and UI sprites preserved.";
             File.WriteAllText(report, result); Debug.Log(result);
         }
         catch (Exception error) { File.WriteAllText(report, "FAIL: " + error); Debug.LogException(error); }
         finally { running = false; }
+    }
+
+    [MenuItem("Tools/Find Differences/Check Board Coordinates Only")]
+    public static void CheckBoardCoordinatesOnly()
+    {
+        var ui = UnityEngine.Object.FindObjectOfType<UIDifferences>();
+        if (running || !EditorApplication.isPlaying || !ui || ui.IsLoadingLevel || ui.Round == null) return;
+        var report = Path.Combine(Application.dataPath, "../Temp/FindDifferences-board-coordinates.txt");
+        try
+        {
+            var data = (DifferenceLevel)typeof(UIDifferences).GetProperty("CurrentLevel", Private).GetValue(ui);
+            var originals = (Image[])Field(ui, "originalPatchImages");
+            var flashes = (Image[])Field(ui, "changedFlashImages");
+            foreach (var board in new[] { ui.upperImage, ui.lowerImage })
+            {
+                var rect = board.rectTransform;
+                var size = rect.sizeDelta; var pivot = rect.pivot; var position = rect.anchoredPosition; var scale = rect.localScale;
+                try
+                {
+                    for (var variant = 0; variant < 3; variant++)
+                    {
+                        if (variant > 0)
+                        {
+                            rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, variant == 1 ? 800 : 360);
+                            rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, variant == 1 ? 350 : 640);
+                            rect.pivot = variant == 1 ? new Vector2(.31f, .73f) : new Vector2(.5f, .5f);
+                            rect.localScale = variant == 1 ? new Vector3(1.7f, .8f, 1) : Vector3.one;
+                        }
+                        rect.ForceUpdateRectTransforms();
+                        for (var i = 0; i < data.regions.Length; i++)
+                        {
+                            var spot = ui.spots[i];
+                            var marker = (board == ui.upperImage ? ui.topRings : ui.bottomRings)[i].rectTransform;
+                            AssertBoardPoint(rect, marker.TransformPoint(marker.rect.center), new Vector2(spot.x, spot.y), "found ring");
+                            foreach (var pictures in new[] { ui.patchImages, originals, flashes })
+                            {
+                                var picture = pictures[i].rectTransform;
+                                var crop = (RectTransform)picture.parent;
+                                if (crop.parent != rect) continue;
+                                var r = data.regions[i];
+                                AssertBoardPoint(rect, crop.TransformPoint(new Vector2(crop.rect.xMin, crop.rect.yMax)),
+                                    new Vector2(r.x - r.z / 2, r.y - r.w / 2), "crop top-left");
+                                AssertBoardPoint(rect, crop.TransformPoint(new Vector2(crop.rect.xMax, crop.rect.yMin)),
+                                    new Vector2(r.x + r.z / 2, r.y + r.w / 2), "crop bottom-right");
+                                var cropped = pictures != originals && data.croppedPatches != null;
+                                AssertBoardPoint(rect, picture.TransformPoint(new Vector2(picture.rect.xMin, picture.rect.yMax)),
+                                    cropped ? new Vector2(r.x - r.z / 2, r.y - r.w / 2) : Vector2.zero, "picture top-left");
+                                AssertBoardPoint(rect, picture.TransformPoint(new Vector2(picture.rect.xMax, picture.rect.yMin)),
+                                    cropped ? new Vector2(r.x + r.z / 2, r.y + r.w / 2) : Vector2.one, "picture bottom-right");
+                            }
+                            var canvas = board.GetComponentInParent<Canvas>();
+                            var camera = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
+                            var screen = RectTransformUtility.WorldToScreenPoint(camera, marker.TransformPoint(marker.rect.center));
+                            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(rect, screen, camera, out var local))
+                                throw new InvalidOperationException("Screen click conversion failed.");
+                            var point = new Vector2((local.x - rect.rect.xMin) / rect.rect.width, 1 - (local.y - rect.rect.yMin) / rect.rect.height);
+                            var round = new Hotfix.Manager.DifferenceRound(new[] {spot}, UIDifferences.ImageAspect);
+                            if (round.Click(point.x, point.y) != 0) throw new InvalidOperationException("Visual marker does not match hit coordinates.");
+                        }
+                        typeof(UIDifferences).GetMethod("ShowCross", Private).Invoke(ui, new object[] {.73f, .29f});
+                        var cross = board == ui.upperImage ? ui.crossTop.rectTransform : ui.crossBottom.rectTransform;
+                        AssertBoardPoint(rect, cross.TransformPoint(cross.rect.center), new Vector2(.73f, .29f), "miss feedback");
+                    }
+                }
+                finally { rect.pivot = pivot; rect.sizeDelta = size; rect.anchoredPosition = position; rect.localScale = scale; }
+            }
+            var result = $"PASS: {data.regions.Length} spots on both boards; authored size, 800x350 and 360x640; changed pivots and zoom; crops, flash pictures, rings, screen hit coordinates and miss feedback aligned. Prefab unchanged.";
+            File.WriteAllText(report, result); Debug.Log(result);
+        }
+        catch (Exception error) { File.WriteAllText(report, "FAIL: " + error); Debug.LogException(error); }
+    }
+
+    static void AssertBoardPoint(RectTransform board, Vector3 world, Vector2 expected, string label)
+    {
+        var point = board.InverseTransformPoint(world);
+        var normalized = new Vector2((point.x - board.rect.xMin) / board.rect.width, (board.rect.yMax - point.y) / board.rect.height);
+        if (Vector2.Distance(normalized, expected) > .001f)
+            throw new InvalidOperationException(label + " mismatch: " + normalized + " expected " + expected);
+    }
+
+    static void VerifyPrefabLayout(UIDifferences ui)
+    {
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Bundles/UI/UIDifferences/UIDifferences.prefab").GetComponent<UIDifferences>();
+        if (ui.stage.sizeDelta != prefab.stage.sizeDelta) throw new InvalidOperationException("Stage size overwritten at runtime.");
+        foreach (var path in new[] { "Play", "Play/Background", "Play/Back", "Play/Zoom", "Play/Hint", "Play/Hint/Bulb", "Play/Frame", "Play/Progress", "Play/UpperViewport", "Play/LowerViewport" })
+        {
+            var actual = (RectTransform)ui.stage.Find(path);
+            var expected = (RectTransform)prefab.stage.Find(path);
+            if (actual.anchorMin != expected.anchorMin || actual.anchorMax != expected.anchorMax ||
+                actual.pivot != expected.pivot || actual.anchoredPosition != expected.anchoredPosition ||
+                actual.sizeDelta != expected.sizeDelta || actual.localScale != expected.localScale)
+                throw new InvalidOperationException("Prefab layout overwritten: " + path);
+            var image = actual.GetComponent<Image>();
+            var source = expected.GetComponent<Image>();
+            if (image && source && image.sprite != source.sprite)
+                throw new InvalidOperationException("Prefab sprite overwritten: " + path);
+        }
     }
 
     static void Tick()
@@ -213,11 +325,7 @@ public static class DifferenceUiSmokeCheck
             ui.levelApiUrl = ""; ui.OnOpen(null);
             await Capture("01-home");
             Check(Active(ui, "homeDesign"), "new home visible");
-            Check(((RectTransform)ui.upperImage.transform.parent).anchoredPosition == new Vector2(6, -280) &&
-                ((RectTransform)ui.lowerImage.transform.parent).anchoredPosition == new Vector2(6, -756),
-                "gameplay layout initialized even without legacy progress text");
-            Check(ui.stage.Find("Play/Hint/Bulb").GetComponent<Image>().sprite.name == "LoadingMagnifier",
-                "hint button uses the new magnifier artwork");
+            VerifyPrefabLayout(ui);
             Check(!ui.shopButton.gameObject.activeInHierarchy && !ui.trophyButton.gameObject.activeInHierarchy,
                 "shop and ranking navigation hidden");
             foreach (var oldButton in ui.home.GetComponentsInChildren<Button>(true))
