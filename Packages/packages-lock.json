@@ -19,6 +19,24 @@
       "dependencies": {},
       "hash": "fd32708e7f5106f0ffa375bcfe43342ee594c1e5"
     },
+    "com.esotericsoftware.spine.spine-csharp": {
+      "version": "file:com.esotericsoftware.spine.spine-csharp",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {}
+    },
+    "com.esotericsoftware.spine.spine-unity": {
+      "version": "file:com.esotericsoftware.spine.spine-unity",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {
+        "com.unity.ugui": "1.0.0",
+        "com.unity.modules.animation": "1.0.0",
+        "com.unity.modules.physics": "1.0.0",
+        "com.unity.modules.physics2d": "1.0.0",
+        "com.esotericsoftware.spine.spine-csharp": "4.2.0"
+      }
+    },
     "com.gameframex.unity": {
       "version": "2.5.3",
       "depth": 0,
@@ -421,6 +439,13 @@
         "com.gameframex.unity.web": "1.4.0"
       },
       "url": "https://gameframex.upm.alianblank.uk"
+    },
+    "com.netpyoung.webp": {
+      "version": "https://github.com/netpyoung/unity.webp.git?path=unity_project/Assets/unity.webp#9818db6327e09d399bf4fb84da4ed19f03b565b4",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "9818db6327e09d399bf4fb84da4ed19f03b565b4"
     },
     "com.unity.2d.sprite": {
       "version": "1.0.0",

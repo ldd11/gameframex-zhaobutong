@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "com.netpyoung.webp": "https://github.com/netpyoung/unity.webp.git?path=unity_project/Assets/unity.webp#9818db6327e09d399bf4fb84da4ed19f03b565b4",
     "com.besty.unity-skills": "https://github.com/Besty0728/Unity-Skills.git?path=/SkillsForUnity#72f7e9e9f4a32703889df00d907f90bdc4f1642b",
     "com.code-philosophy.hybridclr": "https://github.com/focus-creative-games/hybridclr_unity.git#fd32708e7f5106f0ffa375bcfe43342ee594c1e5",
     "com.gameframex.unity": "2.5.3",

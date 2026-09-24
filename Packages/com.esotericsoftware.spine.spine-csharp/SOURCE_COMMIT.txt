@@ -1,0 +1,4 @@
+Official source: https://github.com/EsotericSoftware/spine-runtimes
+Branch: 4.2
+Commit: e7dc1435fa4a0083ab431f1b28e083c14a1f5c68
+Embedded to avoid network-dependent Git resolution.
