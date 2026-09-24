@@ -693,6 +693,14 @@ namespace Hotfix.UI
 			get { return Stage_Play_Background;}
 		}
 
+		[UGUIElementProperty("Stage/Play/RawImage")]
+		private UnityEngine.UI.RawImage Stage_Play_RawImage;
+
+		public UnityEngine.UI.RawImage m_Stage_Play_RawImage
+		{
+			get { return Stage_Play_RawImage;}
+		}
+
 		[UGUIElementProperty("Stage/Play/Back")]
 		private UnityEngine.UI.Button Stage_Play_Back;
 
@@ -709,28 +717,28 @@ namespace Hotfix.UI
 			get { return Stage_Play_Level;}
 		}
 
+		[UGUIElementProperty("Stage/Play/LifeBadge/Heart")]
+		private UnityEngine.UI.Image Stage_Play_LifeBadge_Heart;
+
+		public UnityEngine.UI.Image m_Stage_Play_LifeBadge_Heart
+		{
+			get { return Stage_Play_LifeBadge_Heart;}
+		}
+
+		[UGUIElementProperty("Stage/Play/LifeBadge/Lives")]
+		private UnityEngine.UI.Text Stage_Play_LifeBadge_Lives;
+
+		public UnityEngine.UI.Text m_Stage_Play_LifeBadge_Lives
+		{
+			get { return Stage_Play_LifeBadge_Lives;}
+		}
+
 		[UGUIElementProperty("Stage/Play/LifeBadge")]
 		private UnityEngine.UI.Image Stage_Play_LifeBadge;
 
 		public UnityEngine.UI.Image m_Stage_Play_LifeBadge
 		{
 			get { return Stage_Play_LifeBadge;}
-		}
-
-		[UGUIElementProperty("Stage/Play/Heart")]
-		private UnityEngine.UI.Image Stage_Play_Heart;
-
-		public UnityEngine.UI.Image m_Stage_Play_Heart
-		{
-			get { return Stage_Play_Heart;}
-		}
-
-		[UGUIElementProperty("Stage/Play/Lives")]
-		private UnityEngine.UI.Text Stage_Play_Lives;
-
-		public UnityEngine.UI.Text m_Stage_Play_Lives
-		{
-			get { return Stage_Play_Lives;}
 		}
 
 		[UGUIElementProperty("Stage/Play/Progress/Dot0/Text")]
@@ -3972,11 +3980,12 @@ namespace Hotfix.UI
 			Stage_Ranking_PlayerName = gameObject.transform.FindChildName("Stage/Ranking/PlayerName").GetComponent<UnityEngine.UI.Text>();
 			Stage_Ranking = gameObject.transform.FindChildName("Stage/Ranking").GetComponent<UnityEngine.RectTransform>();
 			Stage_Play_Background = gameObject.transform.FindChildName("Stage/Play/Background").GetComponent<UnityEngine.UI.Image>();
+			Stage_Play_RawImage = gameObject.transform.FindChildName("Stage/Play/RawImage").GetComponent<UnityEngine.UI.RawImage>();
 			Stage_Play_Back = gameObject.transform.FindChildName("Stage/Play/Back").GetComponent<UnityEngine.UI.Button>();
 			Stage_Play_Level = gameObject.transform.FindChildName("Stage/Play/Level").GetComponent<UnityEngine.UI.Text>();
+			Stage_Play_LifeBadge_Heart = gameObject.transform.FindChildName("Stage/Play/LifeBadge/Heart").GetComponent<UnityEngine.UI.Image>();
+			Stage_Play_LifeBadge_Lives = gameObject.transform.FindChildName("Stage/Play/LifeBadge/Lives").GetComponent<UnityEngine.UI.Text>();
 			Stage_Play_LifeBadge = gameObject.transform.FindChildName("Stage/Play/LifeBadge").GetComponent<UnityEngine.UI.Image>();
-			Stage_Play_Heart = gameObject.transform.FindChildName("Stage/Play/Heart").GetComponent<UnityEngine.UI.Image>();
-			Stage_Play_Lives = gameObject.transform.FindChildName("Stage/Play/Lives").GetComponent<UnityEngine.UI.Text>();
 			Stage_Play_Progress_Dot0_Text = gameObject.transform.FindChildName("Stage/Play/Progress/Dot0/Text").GetComponent<UnityEngine.UI.Text>();
 			Stage_Play_Progress_Dot0 = gameObject.transform.FindChildName("Stage/Play/Progress/Dot0").GetComponent<UnityEngine.UI.Image>();
 			Stage_Play_Progress_Dot1_Text = gameObject.transform.FindChildName("Stage/Play/Progress/Dot1/Text").GetComponent<UnityEngine.UI.Text>();

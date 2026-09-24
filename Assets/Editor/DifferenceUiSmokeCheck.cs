@@ -182,6 +182,44 @@ public static class DifferenceUiSmokeCheck
         finally { running = false; }
     }
 
+    [MenuItem("Tools/Find Differences/Check UI Initialization Only")]
+    public static void CheckInitializationOnly()
+    {
+        var ui = UnityEngine.Object.FindObjectOfType<UIDifferences>();
+        if (!EditorApplication.isPlaying || !ui) return;
+        var report = Path.Combine(Application.dataPath, "../Temp/FindDifferences-initialization.txt");
+        try
+        {
+            if (!(bool)Field(ui, "interactionsBound") || !(Field(ui, "hintHand") is DifferenceHintHand) ||
+                !(Field(ui, "hintSpotlight") is DifferenceHintSpotlight) || !(Field(ui, "homeDesign") is GameObject))
+                throw new InvalidOperationException("UI initialization did not finish.");
+            var stage = ui.stage;
+            var min = stage.anchorMin; var max = stage.anchorMax; var size = stage.sizeDelta;
+            var scale = stage.localScale; var position = stage.anchoredPosition;
+            var update = typeof(UIDifferences).GetMethod("LateUpdate", Private);
+            try
+            {
+                stage.anchorMin = stage.anchorMax = new Vector2(.5f, .5f); stage.sizeDelta = Vector2.zero;
+                stage.ForceUpdateRectTransforms(); update.Invoke(ui, null);
+                if (stage.localScale != scale) throw new InvalidOperationException("Zero-sized stage changed scale.");
+                typeof(UIDifferences).GetField("interactionsBound", Private).SetValue(ui, false);
+                update.Invoke(ui, null);
+            }
+            finally
+            {
+                stage.anchorMin = min; stage.anchorMax = max; stage.sizeDelta = size;
+                stage.localScale = scale; stage.anchoredPosition = position;
+                typeof(UIDifferences).GetField("interactionsBound", Private).SetValue(ui, true);
+            }
+            update.Invoke(ui, null);
+            if (stage.rect.width <= 0 || stage.rect.height <= 0 || float.IsNaN(stage.localScale.x) || float.IsInfinity(stage.localScale.x))
+                throw new InvalidOperationException("Invalid runtime stage dimensions or scale.");
+            var result = "PASS: generated bindings and UI initialization succeeded; hint effects created; zero-size layout and pre-initialization updates are safe; authored stage restored.";
+            File.WriteAllText(report, result); Debug.Log(result);
+        }
+        catch (Exception error) { File.WriteAllText(report, "FAIL: " + error); Debug.LogException(error); }
+    }
+
     [MenuItem("Tools/Find Differences/Check Board Coordinates Only")]
     public static void CheckBoardCoordinatesOnly()
     {
@@ -268,9 +306,10 @@ public static class DifferenceUiSmokeCheck
         {
             var actual = (RectTransform)ui.stage.Find(path);
             var expected = (RectTransform)prefab.stage.Find(path);
-            if (actual.anchorMin != expected.anchorMin || actual.anchorMax != expected.anchorMax ||
+            // Layout/AspectRatio fitters legitimately drive runtime RectTransform values.
+            if (!actual.drivenByObject && (actual.anchorMin != expected.anchorMin || actual.anchorMax != expected.anchorMax ||
                 actual.pivot != expected.pivot || actual.anchoredPosition != expected.anchoredPosition ||
-                actual.sizeDelta != expected.sizeDelta || actual.localScale != expected.localScale)
+                actual.sizeDelta != expected.sizeDelta || actual.localScale != expected.localScale))
                 throw new InvalidOperationException("Prefab layout overwritten: " + path);
             var image = actual.GetComponent<Image>();
             var source = expected.GetComponent<Image>();

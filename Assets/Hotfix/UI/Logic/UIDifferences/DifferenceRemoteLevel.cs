@@ -33,7 +33,7 @@ namespace Hotfix.UI
                     if (cancelled) { Error = "加载已取消"; yield break; }
                     if (!Attempt(() =>
                     {
-                        request = step < 2 ? UnityWebRequest.Get(urls[step]) : UnityWebRequestTexture.GetTexture(urls[step], true);
+                        request = UnityWebRequest.Get(urls[step]);
                         request.timeout = 20;
                     })) yield break;
                     using (var current = request)
@@ -57,7 +57,7 @@ namespace Hotfix.UI
                             else if (step == 1) Level = Parse(apiUrl, endpointJson, current.downloadHandler.text, out gameSize, expectedNumber);
                             else
                             {
-                                var texture = DownloadHandlerTexture.GetContent(current);
+                                var texture = DecodeTexture(current.downloadHandler.data, gameSize);
                                 if (step == 2) originalTexture = texture;
                                 else changedTexture = texture;
                                 CheckTexture(texture, gameSize);
@@ -84,6 +84,37 @@ namespace Hotfix.UI
                 request.Abort(); request.Dispose(); request = null;
             }
             if (loading) ReleaseResources();
+        }
+
+        public static Texture2D DecodeTexture(byte[] data, Vector2Int expectedSize)
+        {
+            Require(data != null && data.Length >= 12, "图片数据为空或不完整");
+            Texture2D texture = null;
+            try
+            {
+                // Asset keys can still end in .png when the server returns WebP bytes.
+                var webp = data[0] == 'R' && data[1] == 'I' && data[2] == 'F' && data[3] == 'F' &&
+                    data[8] == 'W' && data[9] == 'E' && data[10] == 'B' && data[11] == 'P';
+                if (webp)
+                {
+                    WebP.Texture2DExt.GetWebPDimensions(data, out var width, out var height);
+                    Require(width == expectedSize.x && height == expectedSize.y &&
+                        width > 0 && height > 0 && width <= SystemInfo.maxTextureSize && height <= SystemInfo.maxTextureSize,
+                        "WebP 图片尺寸与关卡数据不符或超出设备限制");
+                    texture = WebP.Texture2DExt.CreateTexture2DFromWebP(data, false, false, out var error);
+                    Require(error == WebP.Error.Success && texture, "WebP 图片解码失败：" + error);
+                }
+                else
+                {
+                    texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+                    Require(texture.LoadImage(data, true), "图片解码失败，仅支持 WebP、PNG、JPG");
+                }
+                CheckTexture(texture, expectedSize);
+                texture.wrapMode = TextureWrapMode.Clamp;
+                texture.filterMode = FilterMode.Bilinear;
+                return texture;
+            }
+            catch { Destroy(texture); throw; }
         }
 
         public void Dispose()

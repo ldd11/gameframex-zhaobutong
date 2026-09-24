@@ -3,6 +3,7 @@
     "name" : "Unity.HotFix",
     "rootNamespace" : "",
     "references"    : [
+        "unity.webp",
         "GameFrameX.Runtime",
         "GameFrameX.Entry.Runtime",
         "GameFrameX.Web.ProtoBuff.Runtime",

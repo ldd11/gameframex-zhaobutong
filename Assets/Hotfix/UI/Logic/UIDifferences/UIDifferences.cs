@@ -84,7 +84,6 @@ namespace Hotfix.UI
         {
             base.OnInit();
             if (interactionsBound) return;
-            interactionsBound = true;
             if (levels == null || levels.Length == 0 || topRings.Length != 15 || bottomRings.Length != 15)
                 throw new InvalidOperationException("请执行 Tools/Find Differences/Build Game Assets");
             tabPages = new[] { (RectTransform)shop.transform, (RectTransform)home.transform, (RectTransform)ranking.transform };
@@ -176,10 +175,12 @@ namespace Hotfix.UI
             albumNext = AlbumPageButton("NextPage", "下一页", 428, 1);
             Bind("Play/Zoom", () => { if (HintActive) return; var board = upperImage.GetComponent<DifferenceBoard>(); board.SetZoom(upperImage.transform.localScale.x > 1.01f ? 1 : 2); });
             InstallFigmaDesign();
+            interactionsBound = true;
         }
 
         public override void OnOpen(object userData)
         {
+            if (!interactionsBound) return;
             CancelRemoteLoad();
             CancelEndAnimation();
             tabsSliding = tabsDragging = false; currentPage = null;
@@ -206,10 +207,15 @@ namespace Hotfix.UI
 
         void LateUpdate()
         {
+            if (!interactionsBound) return;
             var root = (RectTransform)transform;
             var area = Screen.safeArea;
+            // Canvas layout can be zero-sized while the form is being attached or resized.
+            if (root.rect.width <= 0 || root.rect.height <= 0 || stage.rect.width <= 0 || stage.rect.height <= 0 ||
+                area.width <= 0 || area.height <= 0) return;
             var scale = Mathf.Min(root.rect.width * area.width / Mathf.Max(1, Screen.width) / stage.rect.width,
                 root.rect.height * area.height / Mathf.Max(1, Screen.height) / stage.rect.height);
+            if (float.IsNaN(scale) || float.IsInfinity(scale)) return;
             stage.localScale = Vector3.one * scale;
             stage.anchoredPosition = new Vector2((area.center.x / Mathf.Max(1, Screen.width) - .5f) * root.rect.width,
                 (area.center.y / Mathf.Max(1, Screen.height) - .5f) * root.rect.height);

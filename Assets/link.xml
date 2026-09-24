@@ -1,0 +1,4 @@
+<linker>
+  <!-- Referenced by the HybridCLR hot-update assembly; retain in the player. -->
+  <assembly fullname="unity.webp" preserve="all" />
+</linker>
