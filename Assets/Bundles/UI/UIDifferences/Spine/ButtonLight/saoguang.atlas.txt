@@ -1,0 +1,6 @@
+saoguang.png
+size:128,128
+filter:Linear,Linear
+guang
+bounds:2,2,66,101
+offsets:3,0,72,101

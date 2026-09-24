@@ -27,6 +27,66 @@ public static class DifferenceUiSmokeCheck
 
     static DifferenceUiSmokeCheck() { EditorApplication.update += Tick; }
 
+    [MenuItem("Tools/Find Differences/Check Miss Animation Only")]
+    public static void CheckMissAnimationOnly()
+    {
+        var root = PrefabUtility.LoadPrefabContents("Assets/Bundles/UI/UIDifferences/UIDifferences.prefab");
+        try
+        {
+            var ui = root.GetComponent<UIDifferences>();
+            var show = typeof(UIDifferences).GetMethod("ShowCross", Private);
+            show.Invoke(ui, new object[] { .25f, .75f });
+            show.Invoke(ui, new object[] { .6f, .4f });
+            foreach (var graphic in new[] { ui.crossTop, ui.crossBottom })
+            {
+                var animation = graphic as Spine.Unity.SkeletonGraphic;
+                if (!animation || animation.raycastTarget || animation.rectTransform.anchorMin != new Vector2(.6f, .6f))
+                    throw new Exception("Miss 绑定、点击位置或射线配置不正确");
+                var entry = animation.AnimationState.GetCurrent(0);
+                if (entry.Animation.Name != "cha" || entry.Loop || !animation.gameObject.activeSelf)
+                    throw new Exception("Miss 应播放一次 cha");
+                animation.Update(entry.Animation.Duration + .01f);
+                if (animation.gameObject.activeSelf) throw new Exception("cha 完成后未隐藏");
+            }
+            Debug.Log("PASS: both Miss animations restart cha at the new position and hide on completion");
+        }
+        finally { PrefabUtility.UnloadPrefabContents(root); }
+    }
+
+    [MenuItem("Tools/Find Differences/Check Life Animation Only")]
+    public static void CheckLifeAnimationOnly()
+    {
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Bundles/UI/UIDifferences/UIDifferences.prefab");
+        var root = PrefabUtility.LoadPrefabContents(AssetDatabase.GetAssetPath(prefab));
+        try
+        {
+            var ui = root.GetComponent<UIDifferences>();
+            var heart = ui.play.transform.Find("LifeBadge").GetComponentInChildren<Spine.Unity.SkeletonGraphic>(true);
+            if (!heart) throw new Exception("LifeBadge 缺少 Spine 爱心组件");
+            heart.Initialize(false);
+            typeof(UIDifferences).GetField("lifeAnimation", Private).SetValue(ui, heart);
+            var method = typeof(UIDifferences).GetMethod("PlayLifeAnimation", Private);
+            method.Invoke(ui, new object[] { false });
+            if (heart.AnimationState.GetCurrent(0).Animation.Name != "xin") throw new Exception("正常状态不是 xin");
+            for (var i = 0; i < 2; i++)
+            {
+                method.Invoke(ui, new object[] { true });
+                var entry = heart.AnimationState.GetCurrent(0);
+                if (entry.Animation.Name != "xin2" || entry.Loop || entry.Next?.Animation.Name != "xin")
+                    throw new Exception("扣血应播放一次 xin2，随后回到 xin");
+            }
+            heart.AnimationState.Update(heart.AnimationState.GetCurrent(0).Animation.Duration + .01f);
+            heart.AnimationState.Update(.01f);
+            if (heart.AnimationState.GetCurrent(0).Animation.Name != "xin") throw new Exception("扣血结束未回到 xin");
+            method.Invoke(ui, new object[] { true });
+            method.Invoke(ui, new object[] { false });
+            if (heart.AnimationState.GetCurrent(0).Animation.Name != "xin" || heart.AnimationState.GetCurrent(0).Next != null)
+                throw new Exception("重开/复活未清除扣血动画队列");
+            Debug.Log("PASS: life xin / xin2 / repeated damage / reset");
+        }
+        finally { PrefabUtility.UnloadPrefabContents(root); }
+    }
+
     [MenuItem("Tools/Find Differences/Run UI Smoke Checks")]
     public static void Start()
     {
@@ -138,6 +198,290 @@ public static class DifferenceUiSmokeCheck
             File.WriteAllText(report, result + "\n"); Debug.Log(result);
         }
         catch (Exception error) { File.WriteAllText(report, "FAIL: " + error + "\n"); Debug.LogException(error); }
+    }
+
+    [MenuItem("Tools/Find Differences/Capture Arrival Flash")]
+    public static async void CaptureArrivalFlash()
+    {
+        var ui = UnityEngine.Object.FindObjectOfType<UIDifferences>();
+        if (!EditorApplication.isPlaying || !ui) return;
+        ui.StartLevel();
+        await Wait(() => ui.play.activeInHierarchy && ui.Round != null && !ui.IsLoadingLevel, "level opens");
+        var parent = (RectTransform)ui.play.transform;
+        DifferenceFoundFlight.Clear(ui.play);
+        var source = ui.upperImage.rectTransform;
+        DifferenceFoundFlight.Launch(parent, source.TransformPoint(source.rect.center), ui.progressDots[0].rectTransform, null, ui.foundFlightPrefab);
+        var flight = parent.GetComponentInChildren<DifferenceFoundFlight>();
+        foreach (var particle in flight.GetComponentsInChildren<ParticleSystem>()) particle.Stop(false, ParticleSystemStopBehavior.StopEmittingAndClear);
+        var camera = ui.GetComponentInParent<Canvas>().worldCamera;
+        var oldTarget = camera.targetTexture;
+        var oldActive = RenderTexture.active;
+        var rt = new RenderTexture(Screen.width, Screen.height, 24);
+        var texture = new Texture2D(Screen.width, Screen.height, TextureFormat.RGB24, false);
+        try
+        {
+            foreach (var state in new[] { "before", "flash" })
+            {
+                if (state == "flash") typeof(DifferenceFoundFlight).GetMethod("Advance", Private).Invoke(flight, new object[] { .54f });
+                Canvas.ForceUpdateCanvases();
+                camera.targetTexture = rt; camera.Render(); RenderTexture.active = rt;
+                texture.ReadPixels(new Rect(0, 0, rt.width, rt.height), 0, 0); texture.Apply();
+                File.WriteAllBytes("Temp/arrival-" + state + ".png", texture.EncodeToPNG());
+            }
+            Debug.Log($"Arrival flash: cull={flight.canvasRenderer.cull}, rect={flight.rectTransform.rect}");
+        }
+        finally
+        {
+            camera.targetTexture = oldTarget; RenderTexture.active = oldActive;
+            UnityEngine.Object.Destroy(rt); UnityEngine.Object.Destroy(texture);
+            DifferenceFoundFlight.Clear(ui.play);
+        }
+    }
+
+    [MenuItem("Tools/Find Differences/Check Prefab Flight Only")]
+    public static async void CheckPrefabFlightOnly()
+    {
+        var ui = UnityEngine.Object.FindObjectOfType<UIDifferences>();
+        if (running || !EditorApplication.isPlaying || !ui) return;
+        running = true;
+        var calls = 0;
+        try
+        {
+            ui.StartLevel();
+            await Wait(() => ui.play.activeInHierarchy && ui.Round != null && !ui.IsLoadingLevel, "level opens");
+            var parent = (RectTransform)ui.play.transform;
+            var source = ui.upperImage.rectTransform;
+            var target = ui.progressDots[0].rectTransform;
+            DifferenceFoundFlight.Launch(parent, source.TransformPoint(source.rect.center), target, () => calls++, ui.foundFlightPrefab);
+            var flight = parent.GetComponentInChildren<DifferenceFoundFlight>();
+            if (!flight.GetComponent<CanvasRenderer>()) throw new InvalidOperationException("Arrival flash CanvasRenderer missing.");
+            var systems = flight.GetComponentsInChildren<ParticleSystem>();
+            if (systems.Length != ui.foundFlightPrefab.GetComponentsInChildren<ParticleSystem>(true).Length || systems.Length == 0)
+                throw new InvalidOperationException("Prefab particles missing.");
+            await Task.Delay(220);
+            var count = 0;
+            var canvas = ui.GetComponentInParent<Canvas>();
+            foreach (var system in systems)
+            {
+                count += system.particleCount;
+                var renderer = system.GetComponent<ParticleSystemRenderer>();
+                if (!renderer.sharedMaterial.shader.isSupported || renderer.sortingOrder <= canvas.sortingOrder ||
+                    (canvas.worldCamera.cullingMask & (1 << system.gameObject.layer)) == 0)
+                    throw new InvalidOperationException("Particle shader, sorting or camera layer invalid.");
+            }
+            if (count == 0 || calls != 0) throw new InvalidOperationException("No visible particles or callback too early.");
+            ScreenCapture.CaptureScreenshot("Temp/FindDifferences-prefab-flight.png");
+            await Task.Delay(500);
+            if (calls != 1) throw new InvalidOperationException("Arrival callback did not occur exactly once.");
+            await Task.Delay(3500);
+            if (flight) throw new InvalidOperationException("Flight did not clean up.");
+            DifferenceFoundFlight.Launch(parent, source.position, target, () => calls++, ui.foundFlightPrefab);
+            DifferenceFoundFlight.Clear(ui.play);
+            await Task.Delay(700);
+            if (calls != 1) throw new InvalidOperationException("Cancelled flight invoked callback.");
+            DifferenceFoundFlight.Launch(parent, source.position, target, () => calls++, ui.foundFlightPrefab);
+            flight = parent.GetComponentInChildren<DifferenceFoundFlight>();
+            var advance = typeof(DifferenceFoundFlight).GetMethod("Advance", Private);
+            var arrivalField = typeof(DifferenceFoundFlight).GetField("arrivalEffect", Private);
+            if (arrivalField.GetValue(flight) != null) throw new InvalidOperationException("Arrival effect appeared before arrival.");
+            advance.Invoke(flight, new object[] { .53f });
+            var arrival = (Transform)arrivalField.GetValue(flight);
+            if (!arrival || calls != 1 || !arrival.name.StartsWith(ui.foundArrivalPrefab.name))
+                throw new InvalidOperationException("Missing arrival prefab before progress update.");
+            if (Vector3.Distance(arrival.position, target.TransformPoint(target.rect.center)) > .01f)
+                throw new InvalidOperationException("Arrival effect is not centered on target.");
+            foreach (var particle in arrival.GetComponentsInChildren<ParticleSystem>())
+                if (particle.main.loop || !particle.main.useUnscaledTime || !particle.isPlaying)
+                    throw new InvalidOperationException("Arrival particles must play once with unscaled time.");
+            advance.Invoke(flight, new object[] { .4f });
+            if (arrivalField.GetValue(flight) != arrival || calls != 2)
+                throw new InvalidOperationException("Arrival effect repeated or callback failed.");
+            typeof(DifferenceFoundFlight).GetMethod("Advance", Private).Invoke(flight, new object[] { 10f });
+            if (calls != 2) throw new InvalidOperationException("Long frame lost arrival callback.");
+            File.WriteAllText("Temp/FindDifferences-prefab-flight.txt", $"PASS: {systems.Length} prefab particle systems, {count} particles; shader/camera/sorting, arrival callback and cleanup verified.");
+        }
+        catch (Exception error) { File.WriteAllText("Temp/FindDifferences-prefab-flight.txt", "FAIL: " + error); Debug.LogException(error); }
+        finally { running = false; }
+    }
+
+    [MenuItem("Tools/Find Differences/Check GM Completion Only")]
+    public static async void CheckGMCompletionOnly()
+    {
+        var ui = UnityEngine.Object.FindObjectOfType<UIDifferences>();
+        if (running || !EditorApplication.isPlaying || !ui) return;
+        running = true;
+        var settings = GameApp.Setting;
+        var saved = new Dictionary<string, int>();
+        foreach (var key in IntKeys) if (settings.HasSetting(UIDifferences.Key + key)) saved[key] = settings.GetInt(UIDifferences.Key + key);
+        var hadContent = settings.HasSetting(UIDifferences.Key + "RoundContent");
+        var content = settings.GetString(UIDifferences.Key + "RoundContent", "");
+        var url = ui.levelApiUrl;
+        var testing = (bool)Field(ui, "testing");
+        try
+        {
+            ui.ShowHome();
+            foreach (var key in new[] { "Completed", "RoundLevel", "RoundMask", "RoundLives", "RoundMistakes", "RoundHint", "RoundContent" }) settings.RemoveSetting(UIDifferences.Key + key);
+            ui.levelApiUrl = ""; ui.OnOpen(null); ui.SetTesting(true); ui.StartLevel();
+            var coins = ui.Coins;
+            DifferenceGMWindow.Complete(ui);
+            await Wait(() => Active(ui, "victoryDesign"), "GM completion shows victory");
+            if (!ui.Round.Complete || ui.Completed != 1 || ui.Coins != coins + 10 || DifferenceGMWindow.CanComplete(ui))
+                throw new InvalidOperationException("GM completion did not use normal settlement.");
+            DifferenceGMWindow.Complete(ui);
+            if (ui.Coins != coins + 10) throw new InvalidOperationException("Repeated GM click awarded twice.");
+            File.WriteAllText("Temp/FindDifferences-gm.txt", "PASS: complete round, normal victory/reward/progress; repeated click ignored; original save restored.");
+        }
+        catch (Exception error) { File.WriteAllText("Temp/FindDifferences-gm.txt", "FAIL: " + error); Debug.LogException(error); }
+        finally
+        {
+            if (ui) ui.ShowHome();
+            foreach (var key in IntKeys) { if (saved.TryGetValue(key, out var value)) settings.SetInt(UIDifferences.Key + key, value); else settings.RemoveSetting(UIDifferences.Key + key); }
+            if (hadContent) settings.SetString(UIDifferences.Key + "RoundContent", content); else settings.RemoveSetting(UIDifferences.Key + "RoundContent");
+            settings.Save();
+            if (ui) { ui.levelApiUrl = url; ui.SetTesting(testing); ui.OnOpen(null); }
+            running = false;
+        }
+    }
+
+    [MenuItem("Tools/Find Differences/Check Baked Pages Only")]
+    public static async void CheckBakedPagesOnly()
+    {
+        var ui = UnityEngine.Object.FindObjectOfType<UIDifferences>();
+        if (running || !EditorApplication.isPlaying || !ui) return;
+        running = true;
+        var report = "Temp/FindDifferences-baked-pages.txt";
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Bundles/UI/UIDifferences/UIDifferences.prefab");
+        try
+        {
+            ui.SetTesting(true);
+            var names = new[] { "FigmaHome", "FigmaLoading", "FigmaSettings", "FigmaFail", "FigmaHint", "FigmaVictory" };
+            foreach (var name in names)
+            {
+                var saved = prefab.transform.Find("Stage/" + name);
+                var live = ui.stage.Find(name);
+                if (!saved || !live || saved.GetComponentsInChildren<Transform>(true).Length != live.GetComponentsInChildren<Transform>(true).Length)
+                    throw new InvalidOperationException("Page missing or created at runtime: " + name);
+                var a = (RectTransform)saved; var b = (RectTransform)live;
+                if (a.anchoredPosition != b.anchoredPosition || a.sizeDelta != b.sizeDelta || a.localScale != b.localScale)
+                    throw new InvalidOperationException("Authored page layout overwritten: " + name);
+            }
+            ui.ShowHome();
+            ((Button)Field(ui, "designSettingsButton")).onClick.Invoke();
+            await Task.Delay(400);
+            if (!Active(ui, "settingsDesign")) throw new InvalidOperationException("Settings did not open.");
+            ((Button)Field(ui, "designSettingsClose")).onClick.Invoke();
+            if (Active(ui, "settingsDesign")) throw new InvalidOperationException("Settings did not close.");
+            ui.SetTesting(false);
+            ((Button)Field(ui, "designStartButton")).onClick.Invoke();
+            if (!Active(ui, "loadingDesign")) throw new InvalidOperationException("Loading did not open.");
+            await Wait(() => ui.Round != null && !ui.IsLoadingLevel, "baked loading opens gameplay");
+            ui.SetTesting(true);
+            foreach (var won in new[] { true, false })
+            {
+                typeof(UIDifferences).GetMethod("ShowFigmaResult", Private).Invoke(ui, new object[] { won });
+                await Task.Delay(400);
+                if (!Active(ui, won ? "victoryDesign" : "failDesign")) throw new InvalidOperationException("Result page missing.");
+                typeof(UIDifferences).GetMethod("CloseFigmaResult", Private).Invoke(ui, null);
+            }
+            var hint = (GameObject)Field(ui, "hintDesign");
+            hint.SetActive(true);
+            await Task.Delay(400);
+            ((Button)Field(ui, "designHintClose")).onClick.Invoke();
+            if (hint.activeSelf) throw new InvalidOperationException("Hint did not close.");
+            File.WriteAllText(report, "PASS: six serialized pages, authored root layouts, settings/start/loading/results/hint interactions.");
+        }
+        catch (Exception error) { File.WriteAllText(report, "FAIL: " + error); Debug.LogException(error); }
+        finally { if (ui) { ui.ShowHome(); ui.SetTesting(false); } running = false; }
+    }
+
+    [MenuItem("Tools/Find Differences/Check Wide Screen Controls Only")]
+    public static void CheckWideScreenControlsOnly()
+    {
+        var ui = UnityEngine.Object.FindObjectOfType<UIDifferences>();
+        if (!EditorApplication.isPlaying || !ui) return;
+        var parent = (RectTransform)ui.play.transform;
+        var size = parent.sizeDelta;
+        var controls = (RectTransform[])Field(ui, "widthControls");
+        var baseline = (Vector2[])Field(ui, "widthControlPositions");
+        var anchors = Array.ConvertAll(controls, r => new Vector4(r.anchorMin.x, r.anchorMin.y, r.anchorMax.x, r.anchorMax.y));
+        var align = typeof(UIDifferences).GetMethod("AlignWideScreenControls", Private);
+        var report = "";
+        try
+        {
+            foreach (var width in new[] { 1179f, 1917f, 2048f, 1179f })
+            {
+                parent.sizeDelta += new Vector2(width - parent.rect.width, 0);
+                parent.ForceUpdateRectTransforms();
+                align.Invoke(ui, null); align.Invoke(ui, null);
+                for (var i = 0; i < controls.Length; i++)
+                {
+                    var r = controls[i];
+                    if (anchors[i] != new Vector4(r.anchorMin.x, r.anchorMin.y, r.anchorMax.x, r.anchorMax.y) || r.anchoredPosition.y != baseline[i].y)
+                        throw new InvalidOperationException("Anchors or vertical layout changed.");
+                    var anchor = Mathf.Lerp(r.anchorMin.x, r.anchorMax.x, r.pivot.x);
+                    var movement = (anchor - .5f) * (width - 1179) + r.anchoredPosition.x - baseline[i].x;
+                    var expected = (anchor - .5f) * (width - 1179) * ui.wideScreenControlMovement;
+                    if (Mathf.Abs(movement - expected) > .01f) throw new InvalidOperationException("Incorrect proportional movement or accumulated drift.");
+                    report += $"width={width}, {r.name} movement={movement:F2}\n";
+                }
+            }
+            File.WriteAllText("Temp/FindDifferences-wide-controls.txt", "PASS: baseline, proportional movement, unchanged anchors and repeated resize.\n" + report);
+        }
+        catch (Exception error) { File.WriteAllText("Temp/FindDifferences-wide-controls.txt", "FAIL: " + error); Debug.LogException(error); }
+        finally { parent.sizeDelta = size; parent.ForceUpdateRectTransforms(); align.Invoke(ui, null); }
+    }
+
+    [MenuItem("Tools/Find Differences/Check Zoom Reset Only")]
+    public static async void CheckZoomResetOnly()
+    {
+        var ui = UnityEngine.Object.FindObjectOfType<UIDifferences>();
+        if (running || !EditorApplication.isPlaying || !ui || ui.IsLoadingLevel) return;
+        var report = Path.Combine(Application.dataPath, "../Temp/FindDifferences-zoom-reset.txt");
+        running = true;
+        try
+        {
+            ui.StartLevel();
+            await Wait(() => ui.play.activeInHierarchy && ui.Round != null && !ui.IsLoadingLevel, "real level opens");
+            var board = ui.upperImage.GetComponent<DifferenceBoard>();
+            var button = ui.stage.Find("Play/Zoom").GetComponent<Button>();
+            var update = typeof(UIDifferences).GetMethod("LateUpdate", Private);
+            ui.SetTesting(true);
+            board.ResetView(); update.Invoke(ui, null);
+            if (button.gameObject.activeSelf) throw new InvalidOperationException("Reset button visible at original size.");
+            button.onClick.Invoke();
+            if (board.IsResetting || ui.upperImage.transform.localScale.x != 1)
+                throw new InvalidOperationException("Reset button zoomed in at original size.");
+            board.SetZoom(2); update.Invoke(ui, null);
+            if (!button.gameObject.activeSelf) throw new InvalidOperationException("Reset button hidden while zoomed in.");
+            button.onClick.Invoke();
+            var started = (float)typeof(DifferenceBoard).GetField("resetStarted", Private).GetValue(board);
+            if (!board.IsResetting || ui.upperImage.transform.localScale.x != 2)
+                throw new InvalidOperationException("Reset snapped instead of animating.");
+            button.onClick.Invoke();
+            if ((float)typeof(DifferenceBoard).GetField("resetStarted", Private).GetValue(board) != started)
+                throw new InvalidOperationException("Repeated click restarted reset.");
+            var samples = 0;
+            while (board.IsResetting)
+            {
+                await Task.Delay(30);
+                if (!ui || !EditorApplication.isPlaying) throw new InvalidOperationException("Play stopped.");
+                var zoom = ui.upperImage.transform.localScale.x;
+                var expected = Mathf.Lerp(2, 1, (Time.unscaledTime - started) / .45f);
+                if (Mathf.Abs(zoom - expected) > .12f || Mathf.Abs(zoom - ui.lowerImage.transform.localScale.x) > .0001f)
+                    throw new InvalidOperationException("Reset is not linear or boards are not synchronized.");
+                if (zoom > 1.01f && zoom < 1.99f) samples++;
+                if (Time.unscaledTime - started > 2) throw new InvalidOperationException("Reset did not finish.");
+            }
+            update.Invoke(ui, null);
+            if (samples == 0 || ui.upperImage.transform.localScale.x != 1 || button.gameObject.activeSelf)
+                throw new InvalidOperationException("Reset did not animate to original size and hide the button.");
+            board.SetZoom(2); board.ResetViewAnimated(); board.ResetView();
+            if (board.IsResetting) throw new InvalidOperationException("Immediate level reset did not cancel animation.");
+            var result = $"PASS: {samples} intermediate samples; linear 0.45s reset, synchronized boards, visibility, repeated click and level reset checked.";
+            File.WriteAllText(report, result); Debug.Log(result);
+        }
+        catch (Exception error) { File.WriteAllText(report, "FAIL: " + error); Debug.LogException(error); }
+        finally { if (ui) ui.SetTesting(false); running = false; }
     }
 
     [MenuItem("Tools/Find Differences/Check Gameplay Layout Only")]
@@ -370,7 +714,7 @@ public static class DifferenceUiSmokeCheck
             foreach (var oldButton in ui.home.GetComponentsInChildren<Button>(true))
                 Check(!oldButton.gameObject.activeInHierarchy, "old home button excluded from pointer and keyboard navigation: " + oldButton.name);
 
-            await Click(ui.stage.Find("FigmaHome/Settings").GetComponent<Button>());
+            await Click(((Button)Field(ui, "designSettingsButton")));
             await Task.Delay(350); await Capture("02-settings");
             Check(Active(ui, "settingsDesign"), "new settings visible");
             var oldSound = settings.GetBool(UIDifferences.Key + "Sound", true);
@@ -379,10 +723,10 @@ public static class DifferenceUiSmokeCheck
             await Click(soundButton.GetComponent<Button>());
             Check(settings.GetBool(UIDifferences.Key + "Sound", true) != oldSound, "sound toggle saves new state");
             await Capture("03-settings-toggle");
-            await Click(ui.stage.Find("FigmaSettings/Close").GetComponent<Button>());
+            await Click(((Button)Field(ui, "designSettingsClose")));
 
             ui.SetTesting(false);
-            await Click(ui.stage.Find("FigmaHome/Start").GetComponent<Button>());
+            await Click(((Button)Field(ui, "designStartButton")));
             Check(Active(ui, "loadingDesign"), "local load shows loading page");
             var spinner = (RectTransform)((GameObject)Field(ui, "loadingMagnifier")).transform;
             await Task.Delay(40);
@@ -398,14 +742,14 @@ public static class DifferenceUiSmokeCheck
             await Capture("04-loading");
             ui.ShowHome(); await Task.Delay(1000);
             Check(ui.home.activeSelf && ui.Round == null && !Active(ui, "loadingDesign"), "cancelled load cannot reopen gameplay");
-            await Click(ui.stage.Find("FigmaHome/Start").GetComponent<Button>());
+            await Click(((Button)Field(ui, "designStartButton")));
             await Wait(() => ui.play.activeSelf && ui.Round != null && !Active(ui, "loadingDesign"), "local level opens");
             await Capture("05-gameplay");
             ui.ClickImage(ui.spots[0].x, ui.spots[0].y, true);
             Check(ui.Round.Count == 1 && ui.topRings[0].isActiveAndEnabled && ui.bottomRings[0].isActiveAndEnabled, "correct click adds both rings");
             var flight = ui.play.GetComponentInChildren<DifferenceFoundFlight>();
             Check(flight, "correct click launches progress flight");
-            Check(flight.material.shader.isSupported, "flight shader supports the current graphics device");
+            Check(flight.GetComponentsInChildren<ParticleSystem>().Length > 0, "prefab particles are present");
             var patch = ((Image[])Field(ui, "originalPatchImages"))[0];
             await Task.Delay(200);
             Check(patch.isActiveAndEnabled && patch.color.a > 0, "difference crop visibly flashes after correct click");
@@ -419,7 +763,7 @@ public static class DifferenceUiSmokeCheck
             Check((bool)Field(ui, "figmaResultWon") && Active(ui, "victoryDesign"), "victory visual active");
             await Capture("07-victory");
             var previousLevel = ui.SelectedLevel;
-            await Click(ui.stage.Find("FigmaVictory/Next").GetComponent<Button>());
+            await Click(((Button)Field(ui, "designNextButton")));
             await Wait(() => ui.Round != null && !ui.Round.Finished && !Active(ui, "loadingDesign"), "next level opens");
             Check(ui.SelectedLevel == previousLevel + 1 && !(bool)Field(ui, "figmaResultActive"), "victory next level advances once");
             for (var i = 0; i < 3; i++) { ui.ClickImage(.99f, .02f); await Task.Delay(400); }
@@ -427,7 +771,7 @@ public static class DifferenceUiSmokeCheck
             Check(ui.Round.Lives == 0 && !(bool)Field(ui, "figmaResultWon") && Active(ui, "failDesign"), "failure visual active");
             await Task.Delay(350); await Capture("08-failure");
             var failedLevel = ui.SelectedLevel;
-            await Click(ui.stage.Find("FigmaFail/Card/Retry").GetComponent<Button>());
+            await Click(((Button)Field(ui, "designRetryButton")));
             await Wait(() => ui.Round != null && !ui.Round.Finished && !Active(ui, "loadingDesign"), "retry opens");
             Check(ui.SelectedLevel == failedLevel && ui.Round.Count == 0 && ui.Round.Lives == 3, "failure retry resets the same level");
             await Capture("09-retry");
@@ -435,7 +779,7 @@ public static class DifferenceUiSmokeCheck
             settings.SetInt(UIDifferences.Key + "Hints", 0);
             settings.SetString(UIDifferences.Key + "GiftDate", "");
             ui.OnOpen(null);
-            await Click(ui.stage.Find("FigmaHome/Start").GetComponent<Button>());
+            await Click(((Button)Field(ui, "designStartButton")));
             await Wait(() => ui.Round != null && !Active(ui, "loadingDesign"), "hint test level opens");
             await Click(ui.hintButton);
             Check(Active(ui, "hintDesign"), "empty hints open new hint popup");
@@ -467,7 +811,7 @@ public static class DifferenceUiSmokeCheck
             settings.SetInt(UIDifferences.Key + "Completed", ui.levels.Length);
             settings.SetInt(UIDifferences.Key + "RoundLevel", -1);
             ui.OnOpen(null);
-            await Click(ui.stage.Find("FigmaHome/Start").GetComponent<Button>());
+            await Click(((Button)Field(ui, "designStartButton")));
             await Wait(() => ui.Round != null && !Active(ui, "loadingDesign"), "completed game can restart");
             Check(ui.SelectedLevel == 0 && ui.Round.Count == 0 && !ui.album.activeSelf,
                 "Start after all local levels replays level zero without opening the hidden album");
@@ -527,6 +871,7 @@ public static class DifferenceUiSmokeCheck
     static bool Active(UIDifferences ui, string name) => Field(ui, name) is GameObject go && go.activeInHierarchy;
     static void Check(bool success, string message)
     {
+        Directory.CreateDirectory(Folder);
         File.AppendAllText(Path.Combine(Folder, "report.txt"), (success ? "OK: " : "FAILED: ") + message + "\n");
         if (!success) throw new InvalidOperationException(message);
     }

@@ -95,8 +95,26 @@ public static class DifferenceGameBuilder
 
     static Sprite[] LoadDesignSprites()
     {
-        return Directory.GetFiles(Folder + "Art/Figma", "*.png").OrderBy(path => path)
-            .Select(path => AssetDatabase.LoadAssetAtPath<Sprite>(path.Replace('\\', '/'))).ToArray();
+        var paths = Directory.GetFiles(Folder + "Art/Figma", "*.png").OrderBy(path => path).ToArray();
+        if (paths.Length == 0) throw new InvalidOperationException("Art/Figma 中没有 PNG 图片");
+        return paths.Select(file =>
+        {
+            var path = file.Replace('\\', '/');
+            var importer = AssetImporter.GetAtPath(path) as TextureImporter;
+            // Newly added UI images use Unity's Default texture settings until explicitly imported as sprites.
+            if (importer && importer.textureType == TextureImporterType.Default && importer.spriteImportMode == SpriteImportMode.None)
+            {
+                importer.textureType = TextureImporterType.Sprite;
+                importer.spriteImportMode = SpriteImportMode.Single;
+                importer.mipmapEnabled = false;
+                importer.alphaIsTransparency = true;
+                importer.npotScale = TextureImporterNPOTScale.None;
+                importer.SaveAndReimport();
+            }
+            var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+            if (!sprite) throw new InvalidOperationException("无法加载 UI Sprite：" + path + "。请检查图片是否有效及 Sprite 导入设置。");
+            return sprite;
+        }).ToArray();
     }
 
     [MenuItem("Tools/Find Differences/Refresh Current Prefab Data")]
@@ -105,14 +123,13 @@ public static class DifferenceGameBuilder
         if (EditorApplication.isPlaying) throw new InvalidOperationException("请先退出 Play 模式");
         var path = Folder + "UIDifferences.prefab";
         var sprites = LoadDesignSprites();
-        if (sprites.Length == 0 || sprites.Any(sprite => !sprite))
-            throw new InvalidOperationException("Art/Figma 中有尚未正确导入的 Sprite，请先检查图片导入设置");
         var prefabStage = UnityEditor.SceneManagement.PrefabStageUtility.GetCurrentPrefabStage();
         var editingCurrent = prefabStage != null && prefabStage.assetPath == path;
         var root = editingCurrent ? prefabStage.prefabContentsRoot : PrefabUtility.LoadPrefabContents(path);
         try
         {
             var ui = root.GetComponent<UIDifferences>();
+            RefreshFigmaBindings(ui);
             ui.designSprites = sprites;
             if (!ui.crossTop) ui.crossTop = ui.upperImage.transform.Find("Miss").GetComponent<UnityEngine.UI.Graphic>();
             if (!ui.crossBottom) ui.crossBottom = ui.lowerImage.transform.Find("Miss").GetComponent<UnityEngine.UI.Graphic>();
@@ -126,6 +143,87 @@ public static class DifferenceGameBuilder
         Verify();
         GameFrameX.UI.UGUI.Editor.UGUICodeGenerator.Generate(AssetDatabase.LoadAssetAtPath<GameObject>(path));
         Debug.Log($"当前预制体数据已更新：{sprites.Length} 张 UI 图片，已按现有节点重新生成 UI 代码；布局保留。");
+    }
+
+    [MenuItem("Tools/Find Differences/Refresh UI Bindings Only")]
+    public static void RefreshUIBindingsOnly()
+    {
+        if (EditorApplication.isPlaying) throw new InvalidOperationException("请先退出 Play 模式");
+        var path = Folder + "UIDifferences.prefab";
+        var stage = UnityEditor.SceneManagement.PrefabStageUtility.GetCurrentPrefabStage();
+        var editing = stage != null && stage.assetPath == path;
+        var root = editing ? stage.prefabContentsRoot : PrefabUtility.LoadPrefabContents(path);
+        try
+        {
+            RefreshFigmaBindings(root.GetComponent<UIDifferences>());
+            PrefabUtility.SaveAsPrefabAsset(root, path);
+        }
+        finally { if (!editing) PrefabUtility.UnloadPrefabContents(root); }
+        GameFrameX.UI.UGUI.Editor.UGUICodeGenerator.Generate(AssetDatabase.LoadAssetAtPath<GameObject>(path));
+    }
+
+    [MenuItem("Tools/Find Differences/Disable Scene UI Preview")]
+    public static void DisableSceneUIPreview()
+    {
+        if (EditorApplication.isPlaying) throw new InvalidOperationException("请先退出 Play 模式");
+        for (var i = 0; i < UnityEngine.SceneManagement.SceneManager.sceneCount; i++)
+        {
+            var scene = UnityEngine.SceneManagement.SceneManager.GetSceneAt(i);
+            if (scene.path != "Assets/Scenes/Launcher.unity") continue;
+            foreach (var root in scene.GetRootGameObjects())
+                foreach (var ui in root.GetComponentsInChildren<UIDifferences>(true))
+                {
+                    if (!ui.gameObject.activeSelf) continue;
+                    Undo.RecordObject(ui.gameObject, "Disable duplicate scene UI preview");
+                    ui.gameObject.SetActive(false);
+                    PrefabUtility.RecordPrefabInstancePropertyModifications(ui.gameObject);
+                    UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(scene);
+                }
+            UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene);
+        }
+    }
+
+    static void RefreshFigmaBindings(UIDifferences ui)
+    {
+        if (!ui.foundFlightPrefab)
+            ui.foundFlightPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(Folder + "Effect/SelectEffect/a1a1/xingxingtuowei2.prefab");
+        if (!ui.foundArrivalPrefab)
+            ui.foundArrivalPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(Folder + "Effect/SelectEffect/a1a1/dagoufaguang.prefab");
+        if (!ui.stage.Find("FigmaHome")) return;
+        var data = new SerializedObject(ui);
+        foreach (var binding in new[] {
+            "designSettingsButton|FigmaHome|Settings", "designStartButton|FigmaHome|Start",
+            "designSettingsClose|FigmaSettings|Close", "designMusicButton|FigmaSettings|Music",
+            "designSoundButton|FigmaSettings|Sound", "designVibrationButton|FigmaSettings|Vibration",
+            "designFailClose|FigmaFail|Close", "designContinueButton|FigmaFail|Continue", "designRetryButton|FigmaFail|Retry",
+            "designHintClose|FigmaHint|Close", "designFreeButton|FigmaHint|Free", "designBuyButton|FigmaHint|Buy",
+            "designNextButton|FigmaVictory|Next" })
+        {
+            var parts = binding.Split('|');
+            var property = data.FindProperty(parts[0]);
+            if (property.objectReferenceValue) continue;
+            var page = ui.stage.Find(parts[1]);
+            property.objectReferenceValue = UniqueChild<UnityEngine.UI.Button>(page, parts[2]);
+        }
+        data.ApplyModifiedPropertiesWithoutUndo();
+        foreach (var motion in ui.GetComponentsInChildren<DifferencePopupMotion>(true))
+        {
+            var popup = new SerializedObject(motion);
+            if (!popup.FindProperty("card").objectReferenceValue)
+                popup.FindProperty("card").objectReferenceValue = UniqueChild<RectTransform>(motion.transform, "Card");
+            if (!popup.FindProperty("close").objectReferenceValue)
+                popup.FindProperty("close").objectReferenceValue = UniqueChild<RectTransform>(motion.transform, "Close");
+            if (!popup.FindProperty("scrim").objectReferenceValue)
+                popup.FindProperty("scrim").objectReferenceValue = UniqueChild<UnityEngine.UI.Image>(motion.transform, "Scrim");
+            popup.ApplyModifiedPropertiesWithoutUndo();
+        }
+    }
+
+    static T UniqueChild<T>(Transform root, string name) where T : Component
+    {
+        var matches = root.GetComponentsInChildren<T>(true).Where(item => item.name == name).ToArray();
+        if (matches.Length != 1) throw new InvalidOperationException($"{root.name} 中需要唯一的 {name} ({typeof(T).Name})，找到 {matches.Length} 个，请检查绑定。");
+        return matches[0];
     }
 
     [MenuItem("Tools/Find Differences/Update Gameplay Art")]

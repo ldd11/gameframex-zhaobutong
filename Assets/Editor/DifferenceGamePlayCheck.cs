@@ -52,7 +52,7 @@ public static class DifferenceGamePlayCheck
         var oldSprite = dot.sprite; var oldText = label.text;
         dot.sprite = ui.progressQuestion; label.text = "?";
         DifferenceFoundFlight.Launch((RectTransform)ui.play.transform, source.TransformPoint(source.rect.center),
-            dot.rectTransform, () => { dot.sprite = oldSprite; label.text = oldText; }, ui.foundFlightMaterial);
+            dot.rectTransform, () => { dot.sprite = oldSprite; label.text = oldText; }, ui.foundFlightPrefab);
     }
 
     [MenuItem("Tools/Find Differences/Run Popup Motion Checks")]
@@ -502,11 +502,7 @@ public static class DifferenceGamePlayCheck
             flightStep.Invoke(firstFlight, new object[] { .14f });
             Check(Text(ui, "Play/Progress/Dot0/Text") == "✓" && Text(ui, "Play/Progress/Dot1/Text") == "?" && ui.progressLabel.text == "1 / 10" && ui.progressDots[0].transform.localScale.x > 1, "先闪亮再显示当前圆点的勾，其他飞行不受影响");
             Check(ui.progressDots[0].sprite == ui.progressCheck && ui.progressDots[1].sprite == ui.progressQuestion, "实际图标与延迟进度同步");
-            using (var trailMesh = new UnityEngine.UI.VertexHelper())
-            {
-                typeof(DifferenceFoundFlight).GetMethod("Trail", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).Invoke(firstFlight, new object[] { trailMesh });
-                Check(trailMesh.currentVertCount > 0, "抵达后仍有独立存活的拖尾星点");
-            }
+            Check(firstFlight.GetComponentsInChildren<ParticleSystem>().Length > 0, "抵达后保留预制体拖尾粒子");
             flightStep.Invoke(firstFlight, new object[] { .17f });
             Check(firstFlight.isActiveAndEnabled && ui.progressDots[0].transform.localScale == Vector3.one, "短拖尾结束前勾已落稳");
             flightStep.Invoke(firstFlight, new object[] { DifferenceFoundFlight.Duration });
@@ -942,31 +938,10 @@ public static class DifferenceGamePlayCheck
             Check(offset * (i % 2 == 0 ? 1 : -1) > 1, "波浪线交替向两侧摆动");
         }
         Check(!flight.raycastTarget && flight.transform.parent.name == "Play", "星光不拦截点击且不受图片视口裁切");
-        var ui = flight.GetComponentInParent<UIDifferences>();
-        Check(flight.material == ui.foundFlightMaterial && flight.material.shader.name == "Differences/UI Additive Glow" &&
-            flight.material.shader.isSupported && flight.material.HasProperty("_Stencil") && flight.material.HasProperty("_UseUIAlphaClip"), "实际飞行使用支持 UI 裁切的加法发光材质");
-        var step = typeof(DifferenceFoundFlight).GetMethod("Advance", flags);
-        var positions = typeof(DifferenceFoundFlight).GetField("emissionPositions", flags);
-        var count = typeof(DifferenceFoundFlight).GetField("emitted", flags);
-        step.Invoke(flight, new object[] { .1f });
-        var born = (Vector2[])((Vector2[])positions.GetValue(flight)).Clone();
-        var bornCount = (int)count.GetValue(flight);
-        step.Invoke(flight, new object[] { .15f });
-        var current = (Vector2[])positions.GetValue(flight);
-        Check(bornCount > 5 && (int)count.GetValue(flight) > 20, "低帧率时补齐沿途发射的星点");
-        for (var i = 0; i < bornCount; i++)
-            Check(current[i] == born[i], "已出生星点保留原位置，不跟随头部整体前移");
-        using (var mesh = new UnityEngine.UI.VertexHelper())
-        {
-            typeof(DifferenceFoundFlight).GetMethod("Ribbon", flags).Invoke(flight, new object[] { mesh });
-            Check(mesh.currentVertCount > 50, "飞行前端有连续短光束");
-            var edge = new UIVertex(); var core = new UIVertex();
-            mesh.PopulateUIVertex(ref edge, mesh.currentVertCount - 1);
-            mesh.PopulateUIVertex(ref core, mesh.currentVertCount - 3);
-            Check(edge.color.a == 0 && core.color.a > 200, "光束保留白亮核心与透明柔边");
-            typeof(DifferenceFoundFlight).GetMethod("OnPopulateMesh", flags | System.Reflection.BindingFlags.DeclaredOnly).Invoke(flight, new object[] { mesh });
-            Check(mesh.currentVertCount > 100, "飞行星光与多段拖尾已生成");
-        }
+        var systems = flight.GetComponentsInChildren<ParticleSystem>();
+        Check(systems.Length > 0, "飞行使用预制体粒子");
+        foreach (var system in systems)
+            Check(system.GetComponent<ParticleSystemRenderer>().sharedMaterial.shader.isSupported, "粒子材质可用");
     }
 
     static UnityEngine.UI.Button Button(UIDifferences ui, string path)

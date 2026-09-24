@@ -20,7 +20,7 @@ namespace Hotfix.UI
             var rect = (RectTransform)root.transform;
             rect.SetParent(button.transform, false);
             rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(.5f, .5f);
-            rect.anchoredPosition = Vector2.zero;
+            rect.anchoredPosition = new Vector2(10, 6.3f);
             rect.sizeDelta = ((RectTransform)button.transform).rect.size;
             var guide = root.GetComponent<DifferenceHintHand>();
             guide.raycastTarget = false;
@@ -32,7 +32,7 @@ namespace Hotfix.UI
             handRect.anchorMin = handRect.anchorMax = new Vector2(.5f, .5f);
             // The pivot sits on the fingertip, so a press stays on the bulb at any Canvas scale.
             handRect.pivot = new Vector2(.145f, .875f);
-            handRect.sizeDelta = Vector2.one * 132;
+            handRect.sizeDelta = new Vector2(220,234); //Vector2.one * 132;
             guide.hand = visual.GetComponent<UnityEngine.UI.Image>();
             guide.hand.sprite = sprite;
             guide.hand.preserveAspect = true;

@@ -13,6 +13,9 @@ namespace Hotfix.UI
         bool dragging, pinching;
         float blockedUntil, pinchDistance;
         Vector2 pinchMidpoint;
+        bool resetting;
+        float resetStarted, resetZoom;
+        public bool IsResetting => resetting || (peer && peer.resetting);
         RectTransform Content => (RectTransform)transform;
         RectTransform Viewport => transform.parent as RectTransform;
         float Zoom => Content.localScale.x;
@@ -27,7 +30,7 @@ namespace Hotfix.UI
 
         public void OnPointerClick(PointerEventData data)
         {
-            if (data.button != PointerEventData.InputButton.Left || dragging || pinching ||
+            if (data.button != PointerEventData.InputButton.Left || IsResetting || dragging || pinching ||
                 Time.unscaledTime < blockedUntil || !Inside(data.position, data.pressEventCamera)) return;
             if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(Content, data.position, data.pressEventCamera, out var local)) return;
             var rect = Content.rect;
@@ -45,12 +48,14 @@ namespace Hotfix.UI
 
         public void SetZoom(float zoom)
         {
+            CancelReset();
             if (!Viewport || float.IsNaN(zoom) || float.IsInfinity(zoom)) return;
             ZoomAround(zoom, Content.InverseTransformPoint(Viewport.TransformPoint(Viewport.rect.center)));
         }
 
         public void FocusSpot(Vector2 point, float zoom)
         {
+            CancelReset();
             Content.localScale = new Vector3(Mathf.Clamp(zoom, 1, 2.5f), Mathf.Clamp(zoom, 1, 2.5f), 1);
             var local = new Vector2(Content.rect.xMin + point.x * Content.rect.width, Content.rect.yMax - point.y * Content.rect.height);
             Content.anchoredPosition += Viewport.rect.center - (Vector2)Viewport.InverseTransformPoint(Content.TransformPoint(local));
@@ -59,6 +64,7 @@ namespace Hotfix.UI
 
         public void SetView(float zoom, Vector2 position)
         {
+            CancelReset();
             Content.localScale = new Vector3(Mathf.Clamp(zoom, 1, 2.5f), Mathf.Clamp(zoom, 1, 2.5f), 1);
             Content.anchoredPosition = position;
             ClampAndSync();
@@ -66,7 +72,7 @@ namespace Hotfix.UI
 
         public void OnScroll(PointerEventData data)
         {
-            if (owner && owner.HintActive) return;
+            if (IsResetting || (owner && owner.HintActive)) return;
             if (!Inside(data.position, data.enterEventCamera)) return;
             BlockClick();
             if (RectTransformUtility.ScreenPointToLocalPointInRectangle(Content, data.position, data.enterEventCamera, out var local))
@@ -75,7 +81,7 @@ namespace Hotfix.UI
 
         public void OnBeginDrag(PointerEventData data)
         {
-            if (owner && owner.HintActive) return;
+            if (IsResetting || (owner && owner.HintActive)) return;
             if (data.button != PointerEventData.InputButton.Left || !Inside(data.pressPosition, data.pressEventCamera)) return;
             dragging = true;
             BlockClick();
@@ -83,7 +89,7 @@ namespace Hotfix.UI
 
         public void OnDrag(PointerEventData data)
         {
-            if (owner && owner.HintActive) return;
+            if (IsResetting || (owner && owner.HintActive)) return;
             if (!dragging || pinching || Input.touchCount > 1 || Zoom <= 1) return;
             if (RectTransformUtility.ScreenPointToLocalPointInRectangle(Viewport, data.position, data.pressEventCamera, out var current) &&
                 RectTransformUtility.ScreenPointToLocalPointInRectangle(Viewport, data.position - data.delta, data.pressEventCamera, out var previous))
@@ -102,6 +108,15 @@ namespace Hotfix.UI
         void Update()
         {
             if (owner && owner.HintActive) { dragging = pinching = false; return; }
+            if (resetting)
+            {
+                var t = Mathf.Clamp01((Time.unscaledTime - resetStarted) / .45f);
+                ZoomAround(Mathf.Lerp(resetZoom, 1, t), Content.InverseTransformPoint(Viewport.TransformPoint(Viewport.rect.center)));
+                BlockClick();
+                if (t >= 1) resetting = false;
+                return;
+            }
+            if (IsResetting) return;
             if (Input.touchCount < 2)
             {
                 if (pinching) { pinching = false; BlockClick(); }
@@ -130,6 +145,23 @@ namespace Hotfix.UI
 
         bool Inside(Vector2 point, Camera camera)
         { return Viewport && RectTransformUtility.RectangleContainsScreenPoint(Viewport, point, camera); }
+
+        public void ResetViewAnimated()
+        {
+            if (!Viewport || IsResetting || Zoom <= 1 || (owner && owner.HintActive)) return;
+            dragging = pinching = false;
+            if (peer) peer.dragging = peer.pinching = false;
+            resetZoom = Zoom;
+            resetStarted = Time.unscaledTime;
+            resetting = true;
+            BlockClick();
+        }
+
+        void CancelReset()
+        {
+            resetting = false;
+            if (peer) peer.resetting = false;
+        }
 
         void ZoomAround(float zoom, Vector2 localPoint)
         {
@@ -186,6 +218,7 @@ namespace Hotfix.UI
 
         void OnDisable()
         {
+            CancelReset();
             dragging = pinching = false;
         }
     }

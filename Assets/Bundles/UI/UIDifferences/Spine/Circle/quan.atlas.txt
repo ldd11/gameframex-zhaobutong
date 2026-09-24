@@ -1,0 +1,9 @@
+quan.png
+size:1024,512
+filter:Linear,Linear
+Codex 图像 2026年9月22日 09_05_36-2
+bounds:363,29,332,331
+offsets:22,26,376,376
+quan
+bounds:2,2,359,358
+offsets:1,1,361,360

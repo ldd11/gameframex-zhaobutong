@@ -1,0 +1,11 @@
+dingdan.png
+size:256,128
+filter:Linear,Linear
+Codex 图像 2026年9月21日 17_15_51-1 2
+bounds:171,34,67,66
+offsets:0,1,67,68
+Codex 图像 2026年9月21日 17_15_54-2 9
+bounds:101,32,68,68
+guang
+bounds:2,2,97,98
+offsets:8,8,113,114

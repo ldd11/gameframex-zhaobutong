@@ -1,0 +1,12 @@
+logo.png
+size:1024,512
+filter:Linear,Linear
+guang
+bounds:826,334,97,98
+offsets:8,8,113,114
+logo
+bounds:2,102,822,330
+offsets:5,1,841,334
+xingxing2
+bounds:2,2,98,98
+offsets:1,0,99,99

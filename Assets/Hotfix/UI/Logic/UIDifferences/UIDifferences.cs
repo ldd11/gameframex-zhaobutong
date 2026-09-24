@@ -35,6 +35,7 @@ namespace Hotfix.UI
         public Sprite[] avatarSprites;
         public Sprite progressQuestion, progressCheck, hintHandSprite;
         public Material foundFlightMaterial, hintSpotlightMaterial;
+        public GameObject foundFlightPrefab, foundArrivalPrefab;
         public UnityEngine.UI.Image upperImage, lowerImage, profileAvatar, homeAvatar, profileFrame, homeFrame, resultIcon;
         public UnityEngine.UI.InputField nicknameInput;
         public UnityEngine.UI.Graphic crossTop, crossBottom;
@@ -70,6 +71,13 @@ namespace Hotfix.UI
         readonly bool[] pendingProgress = new bool[DifferenceRound.MaxSpots];
         DifferenceHintSpotlight hintSpotlight;
         DifferenceHintHand hintHand;
+        Spine.Unity.SkeletonGraphic lifeAnimation;
+        float lifeLossDuration;
+        UnityEngine.UI.Button resetZoomButton;
+        [Range(0, 1), Tooltip("屏幕宽于 1179 时，返回、生命值、缩回按钮向两侧移动的比例。0 不移动，1 跟随原锚点。")]
+        public float wideScreenControlMovement = .5f;
+        RectTransform[] widthControls;
+        Vector2[] widthControlPositions;
         float hintIdle;
         int pendingHint = -1;
         public bool HintActive => hintSpotlight && hintSpotlight.isActiveAndEnabled;
@@ -173,8 +181,24 @@ namespace Hotfix.UI
             }
             albumPrevious = AlbumPageButton("PreviousPage", "上一页", 24, -1);
             albumNext = AlbumPageButton("NextPage", "下一页", 428, 1);
-            Bind("Play/Zoom", () => { if (HintActive) return; var board = upperImage.GetComponent<DifferenceBoard>(); board.SetZoom(upperImage.transform.localScale.x > 1.01f ? 1 : 2); });
-            InstallFigmaDesign();
+            resetZoomButton = At<UnityEngine.UI.Button>("Play/Zoom");
+            widthControls = new[] { (RectTransform)backButton.transform, At<RectTransform>("Play/LifeBadge"), (RectTransform)resetZoomButton.transform };
+            widthControlPositions = Array.ConvertAll(widthControls, rect => rect.anchoredPosition);
+            Bind("Play/Zoom", () => upperImage.GetComponent<DifferenceBoard>().ResetViewAnimated());
+            resetZoomButton.gameObject.SetActive(false);
+            BindFigmaDesign();
+            var lifeBadge = play.transform.Find("LifeBadge");
+            lifeAnimation = lifeBadge ? lifeBadge.GetComponentInChildren<Spine.Unity.SkeletonGraphic>(true) : null;
+            if (lifeAnimation)
+            {
+                lifeAnimation.Initialize(false);
+                var data = lifeAnimation.SkeletonDataAsset.GetSkeletonData(false);
+                if (data.FindAnimation("xin") == null || data.FindAnimation("xin2") == null)
+                    throw new InvalidOperationException("生命值 Spine 缺少 xin 或 xin2 动画");
+                lifeLossDuration = data.FindAnimation("xin2").Duration;
+                lifeAnimation.UnscaledTime = true;
+                PlayLifeAnimation(false);
+            }
             interactionsBound = true;
         }
 
@@ -205,9 +229,25 @@ namespace Hotfix.UI
             ShowHome(); PlayMusic();
         }
 
+        void AlignWideScreenControls()
+        {
+            for (var i = 0; i < widthControls.Length; i++)
+            {
+                var rect = widthControls[i];
+                var extraWidth = Mathf.Max(0, ((RectTransform)rect.parent).rect.width - 1179);
+                var anchor = Mathf.Lerp(rect.anchorMin.x, rect.anchorMax.x, rect.pivot.x);
+                var position = widthControlPositions[i];
+                position.x -= (anchor - .5f) * extraWidth * (1 - wideScreenControlMovement);
+                rect.anchoredPosition = position;
+            }
+        }
+
         void LateUpdate()
         {
             if (!interactionsBound) return;
+            AlignWideScreenControls();
+            resetZoomButton.gameObject.SetActive(upperImage.transform.localScale.x > 1.0001f);
+            resetZoomButton.interactable = !HintActive && !upperImage.GetComponent<DifferenceBoard>().IsResetting;
             var root = (RectTransform)transform;
             var area = Screen.safeArea;
             // Canvas layout can be zero-sized while the form is being attached or resized.
@@ -438,6 +478,7 @@ namespace Hotfix.UI
                 GameApp.Setting.GetString(Key + "RoundContent", "") == roundContent)
             { mask = GetInt("RoundMask", 0); lives = GetInt("RoundLives", 3); roundMistakes = Mathf.Max(3 - lives, GetInt("RoundMistakes", 0)); pendingHint = GetInt("RoundHint", -1); }
             Round = new DifferenceRound(spots, ImageAspect, mask, lives);
+            PlayLifeAnimation(false);
             if (pendingHint < 0 || pendingHint >= Round.Total || Round.IsFound(pendingHint) || Round.Finished) pendingHint = -1;
             settled = Round.Finished;
             ShowPage(play);
@@ -565,10 +606,10 @@ namespace Hotfix.UI
                         if (Round != foundRound || !play.activeSelf) return;
                         pendingProgress[slot] = false;
                         UpdateHUD();
-                    }, foundFlightMaterial);
+                    }, foundFlightPrefab);
                 PlayTone(foundSound); noticeLabel.transform.parent.gameObject.SetActive(false);
             }
-            else { roundMistakes++; PlayTone(missSound); StartCoroutine(Pulse(heartsLabel.transform)); }
+            else { roundMistakes++; PlayLifeAnimation(true); PlayTone(missSound); StartCoroutine(Pulse(heartsLabel.transform)); }
             UpdateHUD(); SaveRound(); Save();
             if (!Round.Finished) return;
             settled = true;
@@ -582,10 +623,18 @@ namespace Hotfix.UI
             else endRoutine = StartCoroutine(EndRound(false, 0));
         }
 
+        void PlayLifeAnimation(bool lostLife)
+        {
+            if (!lifeAnimation) return;
+            var state = lifeAnimation.AnimationState;
+            state.SetAnimation(0, lostLife ? "xin2" : "xin", false);
+            if (lostLife) state.AddAnimation(0, "xin", false, 0);
+        }
+
         IEnumerator EndRound(bool won, int reward)
         {
             var finishedRound = Round;
-            if (!testing) yield return new WaitForSecondsRealtime(won ? Mathf.Max(DifferenceFoundFlight.Duration + .06f, PatchFlashDuration + .05f) : .25f);
+            if (!testing) yield return new WaitForSecondsRealtime(won ? Mathf.Max(DifferenceFoundFlight.Duration + .06f, PatchFlashDuration + .05f) : Mathf.Max(.25f, lifeLossDuration));
             if (!play.activeSelf || Round != finishedRound) { endRoutine = null; yield break; }
             ShowRoundResult(won, reward);
             endRoutine = null;
@@ -609,6 +658,7 @@ namespace Hotfix.UI
                 return;
             }
             if (!Round.Revive()) return;
+            PlayLifeAnimation(false);
             coins -= 30; settled = false; modal.SetActive(false); CloseFigmaResult(); SaveRound(); Save(); UpdateHUD();
         }
 
@@ -867,7 +917,21 @@ namespace Hotfix.UI
                 label.rectTransform.anchorMin = label.rectTransform.anchorMax = new Vector2(x, 1 - y);
                 label.rectTransform.pivot = new Vector2(.5f, .5f);
                 label.rectTransform.anchoredPosition = Vector2.zero;
-                label.gameObject.SetActive(true); StartCoroutine(HideCross(label));
+                label.gameObject.SetActive(true);
+                var animation = label as Spine.Unity.SkeletonGraphic;
+                if (animation)
+                {
+                    animation.Initialize(false);
+                    animation.UnscaledTime = true;
+                    animation.raycastTarget = false;
+                    // A new track replaces the previous miss; only the completed track hides it.
+                    animation.AnimationState.SetAnimation(0, "cha", false).Complete += entry =>
+                    {
+                        if (animation && animation.AnimationState.GetCurrent(0) == entry)
+                            animation.gameObject.SetActive(false);
+                    };
+                }
+                else StartCoroutine(HideCross(label));
             }
         }
         IEnumerator HideCross(UnityEngine.UI.Graphic label) { yield return new WaitForSecondsRealtime(.6f); label.gameObject.SetActive(false); }

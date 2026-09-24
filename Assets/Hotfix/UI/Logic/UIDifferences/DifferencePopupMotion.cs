@@ -1,4 +1,5 @@
 #if ENABLE_UI_UGUI
+using System.Linq;
 using UnityEngine;
 
 namespace Hotfix.UI
@@ -6,31 +7,29 @@ namespace Hotfix.UI
     public sealed class DifferencePopupMotion : MonoBehaviour
     {
         const float Duration = .32f;
-        RectTransform card, close;
+        [SerializeField] RectTransform card, close;
         CanvasGroup cardFade, closeFade;
-        UnityEngine.UI.Image scrim;
+        [SerializeField] UnityEngine.UI.Image scrim;
+        bool initialized, closeInsideCard;
         Color scrimColor;
         Vector3 closePosition;
+        Vector3 cardScale, closeScale;
         float elapsed;
 
         void Awake()
         {
-            card = (RectTransform)transform.Find("Card");
-            close = (RectTransform)transform.Find("Close");
-            scrim = transform.Find("Scrim").GetComponent<UnityEngine.UI.Image>();
+            // Legacy dialogs add this component at runtime; prefab dialogs retain direct references.
+            if (!card) card = (RectTransform)transform.Find("Card");
+            if (!close) close = GetComponentsInChildren<RectTransform>(true).FirstOrDefault(item => item.name == "Close");
+            if (!scrim) scrim = GetComponentsInChildren<UnityEngine.UI.Image>(true).FirstOrDefault(item => item.name == "Scrim");
+            if (!card || !close || !scrim) { enabled = false; return; }
+            closeInsideCard = close.IsChildOf(card);
             scrimColor = scrim.color;
-            CenterPivot(card); CenterPivot(close);
             closePosition = close.localPosition;
-            cardFade = card.gameObject.AddComponent<CanvasGroup>();
-            closeFade = close.gameObject.AddComponent<CanvasGroup>();
-        }
-
-        static void CenterPivot(RectTransform rect)
-        {
-            var pivot = new Vector2(.5f, .5f);
-            var offset = Vector2.Scale(pivot - rect.pivot, rect.rect.size);
-            rect.pivot = pivot;
-            rect.anchoredPosition += offset;
+            cardScale = card.localScale; closeScale = close.localScale;
+            cardFade = card.GetComponent<CanvasGroup>() ?? card.gameObject.AddComponent<CanvasGroup>();
+            closeFade = close.GetComponent<CanvasGroup>() ?? close.gameObject.AddComponent<CanvasGroup>();
+            initialized = true;
         }
 
         void OnEnable() { elapsed = 0; Apply(); }
@@ -46,12 +45,18 @@ namespace Hotfix.UI
 
         void Apply()
         {
+            if (!initialized) return;
             var t = elapsed / Duration;
             var p = t - 1;
             var eased = 1 + 2.70158f * p * p * p + 1.70158f * p * p;
             var scale = Mathf.LerpUnclamped(.78f, 1, eased);
-            card.localScale = close.localScale = Vector3.one * scale;
-            close.localPosition = card.localPosition + (closePosition - card.localPosition) * scale;
+            card.localScale = cardScale * scale;
+            if (!closeInsideCard)
+            {
+                close.localScale = closeScale * scale;
+                var center = close.parent.InverseTransformPoint(card.position);
+                close.localPosition = center + (closePosition - center) * scale;
+            }
             cardFade.alpha = closeFade.alpha = Mathf.Clamp01(elapsed / .12f);
             cardFade.interactable = closeFade.interactable = t >= 1;
             cardFade.blocksRaycasts = closeFade.blocksRaycasts = t >= 1;

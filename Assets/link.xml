@@ -1,4 +1,6 @@
 <linker>
   <!-- Referenced by the HybridCLR hot-update assembly; retain in the player. -->
   <assembly fullname="unity.webp" preserve="all" />
+  <assembly fullname="spine-csharp" preserve="all" />
+  <assembly fullname="spine-unity" preserve="all" />
 </linker>

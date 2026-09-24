@@ -4,6 +4,8 @@
     "rootNamespace" : "",
     "references"    : [
         "unity.webp",
+        "spine-csharp",
+        "spine-unity",
         "GameFrameX.Runtime",
         "GameFrameX.Entry.Runtime",
         "GameFrameX.Web.ProtoBuff.Runtime",
