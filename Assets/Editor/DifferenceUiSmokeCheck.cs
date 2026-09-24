@@ -27,6 +27,155 @@ public static class DifferenceUiSmokeCheck
 
     static DifferenceUiSmokeCheck() { EditorApplication.update += Tick; }
 
+    [MenuItem("Tools/Find Differences/Check Reward Coins Only")]
+    public static async void CheckRewardCoinsOnly()
+    {
+        if (running) return;
+        running = true;
+        UIDifferences ui = null;
+        GameObject page = null;
+        var wasActive = false;
+        var wasResult = false;
+        var wasWon = false;
+        var background = Application.runInBackground;
+        try
+        {
+            Application.runInBackground = true;
+            ui = UnityEngine.Object.FindObjectOfType<UIDifferences>();
+            if (!Application.isPlaying || !ui) throw new Exception("请先运行游戏");
+            page = (GameObject)typeof(UIDifferences).GetField("victoryDesign", Private).GetValue(ui);
+            wasActive = page.activeSelf;
+            wasResult = (bool)Field(ui, "figmaResultActive");
+            wasWon = (bool)Field(ui, "figmaResultWon");
+            typeof(UIDifferences).GetMethod("CancelRemoteLoad", Private).Invoke(ui, null);
+            typeof(UIDifferences).GetField("figmaResultActive", Private).SetValue(ui, true);
+            typeof(UIDifferences).GetField("figmaResultWon", Private).SetValue(ui, true);
+            typeof(UIDifferences).GetMethod("UpdateFigmaDesign", Private).Invoke(ui, new object[] { Field(ui, "currentPage") });
+            await Task.Delay(400); // Let the editor menu close before measuring frame time.
+            page.SetActive(true);
+            page.transform.SetAsLastSibling();
+            var start = typeof(UIDifferences).GetMethod("StartRewardCoins", Private);
+            var cancel = typeof(UIDifferences).GetMethod("CancelRewardCoins", Private);
+            var wallet = (RectTransform)typeof(UIDifferences).GetField("rewardWallet", Private).GetValue(ui);
+            var origin = (RectTransform)typeof(UIDifferences).GetField("rewardCoinOrigin", Private).GetValue(ui);
+            if (!origin || origin.anchorMin.y > .2f) throw new Exception("金币应从结算图片底部产生");
+            var label = (Text)typeof(UIDifferences).GetField("rewardCoinsLabel", Private).GetValue(ui);
+            var balance = ui.Coins;
+            var source = new Vector3(0, -100, 0);
+            var target = new Vector3(-250, 500, 0);
+            var atStart = DifferenceRewardCoin.Position(source, target, 100, 0, 0, out var flight);
+            var atEnd = DifferenceRewardCoin.Position(source, target, 100, 5, 0, out flight);
+            if (atStart != source || Vector3.Distance(atEnd, target) > .001f || flight != 1)
+                throw new Exception("金币轨迹起点或终点不正确");
+            start.Invoke(ui, new object[] { 10 });
+            if (!wallet.gameObject.activeSelf || label.text != (balance - 10).ToString()) throw new Exception("奖励起始数字不正确");
+            await RewardFrames(.45f);
+            var sample = page.GetComponentInChildren<DifferenceRewardCoin>();
+            if (!sample) throw new Exception("未生成金币: page=" + page.activeInHierarchy + ", all=" + page.GetComponentsInChildren<DifferenceRewardCoin>(true).Length + ", routine=" + (Field(ui, "rewardRoutine") != null));
+            sample.SetAppearance(Mathf.PI / 2 / 10.5f, 0, 0);
+            var rim = sample.GetComponentsInChildren<Image>();
+            if (rim.Length < 2 || rim[0].rectTransform.anchoredPosition.x == rim[rim.Length - 1].rectTransform.anchoredPosition.x)
+                throw new Exception("侧面缺少厚度");
+            ScreenCapture.CaptureScreenshot("Temp/reward-coins-pop.png");
+            await RewardFrames(.6f);
+            ScreenCapture.CaptureScreenshot("Temp/reward-coins-flight.png");
+            await RewardFrames(2.2f);
+            if (wallet.gameObject.activeSelf || label.text != balance.ToString() || ui.Coins != balance)
+                throw new Exception("结算显示/隐藏不正确，或动画重复发奖");
+            start.Invoke(ui, new object[] { 10 });
+            cancel.Invoke(ui, null);
+            if (wallet.gameObject.activeSelf || ui.Coins != balance) throw new Exception("取消结算未清理");
+            File.WriteAllText("Temp/reward-coins-check.txt", "PASS: bottom origin, trajectory, edge thickness, count, hide, cancellation; balance unchanged");
+            Debug.Log("PASS: reward coin motion and lifecycle");
+        }
+        catch (Exception error)
+        {
+            File.WriteAllText("Temp/reward-coins-check.txt", "FAIL: " + error);
+            Debug.LogException(error);
+        }
+        finally
+        {
+            Application.runInBackground = background;
+            if (ui) typeof(UIDifferences).GetMethod("CancelRewardCoins", Private).Invoke(ui, null);
+            if (ui)
+            {
+                typeof(UIDifferences).GetField("figmaResultActive", Private).SetValue(ui, wasResult);
+                typeof(UIDifferences).GetField("figmaResultWon", Private).SetValue(ui, wasWon);
+                typeof(UIDifferences).GetMethod("UpdateFigmaDesign", Private).Invoke(ui, new object[] { Field(ui, "currentPage") });
+            }
+            if (page) page.SetActive(wasActive);
+            running = false;
+        }
+    }
+
+    static async Task RewardFrames(float seconds)
+    {
+        var until = Time.unscaledTime + seconds;
+        var deadline = DateTime.UtcNow.AddSeconds(15);
+        while (EditorApplication.isPlaying && Time.unscaledTime < until && DateTime.UtcNow < deadline)
+        {
+            EditorApplication.QueuePlayerLoopUpdate();
+            await Task.Delay(16);
+        }
+        if (!EditorApplication.isPlaying || Time.unscaledTime < until) throw new Exception("游戏没有推进帧，请取消暂停后检查");
+    }
+
+    [MenuItem("Tools/Find Differences/Check Toast Only")]
+    public static void CheckToastOnly()
+    {
+        var root = new GameObject("Toast check", typeof(RectTransform));
+        try
+        {
+            var rect = (RectTransform)root.transform;
+            rect.anchoredPosition = new Vector2(0, -288.7f);
+            var text = new GameObject("Text", typeof(RectTransform), typeof(Text));
+            text.transform.SetParent(root.transform, false);
+            var toast = root.AddComponent<CommonToast>();
+            toast.Show("first", 2);
+            var advance = typeof(CommonToast).GetMethod("Advance", Private);
+            advance.Invoke(toast, new object[] { 1.7f });
+            var group = root.GetComponent<CanvasGroup>();
+            if (rect.anchoredPosition.y <= -288.7f || group.alpha <= 0 || group.alpha >= 1 || group.blocksRaycasts)
+                throw new Exception("Toast must rise, fade and allow clicks through");
+            toast.Show("replacement", 2);
+            if (rect.anchoredPosition.y != -288.7f || group.alpha != 1 || text.GetComponent<Text>().text != "replacement")
+                throw new Exception("Replacement must reset toast");
+            advance.Invoke(toast, new object[] { 3f });
+            if (root.activeSelf) throw new Exception("Toast must hide after duration");
+            Debug.Log("PASS: Toast rise, fade, replace and hide");
+        }
+        finally { UnityEngine.Object.DestroyImmediate(root); }
+    }
+
+    [MenuItem("Tools/Find Differences/Check Found Ring Only")]
+    public static void CheckFoundRingOnly()
+    {
+        if (!Application.isPlaying) throw new Exception("请进入 Play 并打开关卡后检查");
+        var ui = UnityEngine.Object.FindObjectOfType<UIDifferences>();
+        if (!ui || ui.Round == null || !ui.play.activeInHierarchy) throw new Exception("请先打开关卡");
+        var node = UnityEngine.Object.Instantiate(ui.topRings[0].gameObject, ui.topRings[0].transform.parent);
+        try
+        {
+            node.SetActive(true);
+            var marker = node.GetComponent<Image>();
+            var show = typeof(UIDifferences).GetMethod("ShowFoundRing", Private);
+            show.Invoke(ui, new object[] { marker, true });
+            var spine = marker.GetComponentInChildren<Spine.Unity.SkeletonGraphic>();
+            var track = spine.AnimationState.GetCurrent(0);
+            if (track.Animation.Name != "a2" || track.Loop || track.Next?.Animation.Name != "a1" || marker.enabled)
+                throw new Exception("命中应由 Spine a2 切换到 a1，替换旧圆圈");
+            var particles = marker.GetComponentsInChildren<ParticleSystem>();
+            if (particles.Length == 0) throw new Exception("缺少命中粒子");
+            foreach (var particle in particles)
+                if (particle.main.loop || !particle.isPlaying) throw new Exception("粒子必须播放一次");
+            show.Invoke(ui, new object[] { marker, false });
+            if (spine.AnimationState.GetCurrent(0).Animation.Name != "a1" || marker.GetComponentsInChildren<ParticleSystem>().Length != particles.Length)
+                throw new Exception("恢复进度不应再次生成粒子");
+            Debug.Log("PASS: found ring particles + a2, restored a1");
+        }
+        finally { UnityEngine.Object.Destroy(node); }
+    }
+
     [MenuItem("Tools/Find Differences/Check Miss Animation Only")]
     public static void CheckMissAnimationOnly()
     {
@@ -665,7 +814,13 @@ public static class DifferenceUiSmokeCheck
     static void Tick()
     {
         if (running || EditorApplication.isCompiling || EditorApplication.isUpdating) return;
-        if (File.Exists(Request)) { File.Delete(Request); Start(); }
+        if (File.Exists(Request))
+        {
+            var check = File.ReadAllText(Request).Trim();
+            File.Delete(Request);
+            if (check == "reward") { CheckRewardCoinsOnly(); return; }
+            Start();
+        }
         if (!SessionState.GetBool(Pending, false)) return;
         if (deadline == 0) deadline = EditorApplication.timeSinceStartup + 90;
         var ui = UnityEngine.Object.FindObjectOfType<UIDifferences>();

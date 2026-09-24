@@ -15,6 +15,11 @@ namespace Hotfix.UI
         [SerializeField] Text designCoins, failProgress;
         [SerializeField] Sprite designRound, toggleOn, toggleOff;
         [SerializeField] Button designSettingsButton, designStartButton, designSettingsClose, designMusicButton, designSoundButton, designVibrationButton, designFailClose, designContinueButton, designRetryButton, designHintClose, designFreeButton, designBuyButton, designNextButton;
+        [SerializeField] RectTransform rewardWallet, rewardCoinOrigin;
+        [SerializeField] Text rewardCoinsLabel;
+        [SerializeField] Image rewardCoinIcon;
+        Coroutine rewardRoutine;
+        GameObject rewardFlights;
         bool figmaResultActive, figmaResultWon, localLoading;
         Coroutine localLoadRoutine;
         float loadingStarted, loadingFillWidth;
@@ -81,13 +86,134 @@ namespace Hotfix.UI
             UpdateFigmaDesign(currentPage);
         }
 
-        void CloseFigmaResult() { figmaResultActive = false; UpdateFigmaDesign(currentPage); }
+        void CloseFigmaResult() { CancelRewardCoins(); figmaResultActive = false; UpdateFigmaDesign(currentPage); }
         void OnFigmaResultPrimary()
         {
             if (figmaResultWon) { CloseFigmaResult(); if (level + 1 < LevelLimit) BeginLevel(level + 1, false); else ShowHome(); }
             else Revive();
         }
         void OnFigmaResultSecondary() { CloseFigmaResult(); BeginLevel(level, false); }
+
+        IEnumerator ReplayCompletedProgress()
+        {
+            var count = Mathf.Min(Round.Total, progressDots.Length);
+            var ringOrder = new int[Mathf.Min(Round.Total, Mathf.Min(topRings.Length, bottomRings.Length))];
+            for (var i = 0; i < ringOrder.Length; i++) ringOrder[i] = i;
+            Array.Sort(ringOrder, (a, b) =>
+            {
+                var horizontal = spots[a].x.CompareTo(spots[b].x);
+                return horizontal != 0 ? horizontal : spots[a].y.CompareTo(spots[b].y);
+            });
+            // One root allows cancellation to remove all replay particles immediately.
+            var root = new GameObject("CompletionSweep", typeof(RectTransform));
+            root.transform.SetParent(play.transform, false);
+            try
+            {
+                for (var i = 0; i < count; i++)
+                {
+                    if (i < ringOrder.Length)
+                    {
+                        var index = ringOrder[i];
+                        ClearRingParticlesNow(topRings[index]);
+                        ClearRingParticlesNow(bottomRings[index]);
+                        ShowFoundRing(topRings[index], true);
+                        ShowFoundRing(bottomRings[index], true);
+                    }
+                    var target = progressDots[i].rectTransform;
+                    StartCoroutine(Pulse(target));
+                    if (foundArrivalPrefab)
+                    {
+                        var effect = Instantiate(foundArrivalPrefab, root.transform, false);
+                        effect.transform.position = target.TransformPoint(target.rect.center);
+                        var canvas = play.GetComponentInParent<Canvas>();
+                        foreach (var child in effect.GetComponentsInChildren<Transform>(true)) child.gameObject.layer = play.layer;
+                        foreach (var particle in effect.GetComponentsInChildren<ParticleSystem>(true))
+                        {
+                            particle.Stop(false, ParticleSystemStopBehavior.StopEmittingAndClear);
+                            var main = particle.main;
+                            main.loop = false; main.useUnscaledTime = true;
+                            var renderer = particle.GetComponent<ParticleSystemRenderer>();
+                            renderer.sortingLayerID = canvas.sortingLayerID;
+                            renderer.sortingOrder = canvas.sortingOrder + 2;
+                            particle.Play(false);
+                        }
+                    }
+                    yield return new WaitForSecondsRealtime(.065f);
+                }
+                var ringAnimation = foundRingSpine ? foundRingSpine.GetSkeletonData(false).FindAnimation("a2") : null;
+                yield return new WaitForSecondsRealtime(Mathf.Max(.4f, ringAnimation == null ? 0 : ringAnimation.Duration));
+            }
+            finally { if (root) Destroy(root); }
+        }
+
+        void StartRewardCoins(int reward)
+        {
+            CancelRewardCoins();
+            if (reward <= 0 || !rewardWallet || !rewardCoinsLabel || !rewardCoinIcon) return;
+            rewardRoutine = StartCoroutine(AnimateRewardCoins(reward));
+        }
+
+        IEnumerator AnimateRewardCoins(int reward)
+        {
+            var finalBalance = coins;
+            rewardWallet.gameObject.SetActive(true);
+            rewardWallet.SetAsLastSibling();
+            rewardCoinsLabel.text = (finalBalance - reward).ToString();
+            rewardFlights = new GameObject("RewardCoinFlights", typeof(RectTransform));
+            var parent = (RectTransform)rewardFlights.transform;
+            parent.SetParent(victoryDesign.transform, false);
+            parent.anchorMin = Vector2.zero; parent.anchorMax = Vector2.one;
+            parent.offsetMin = parent.offsetMax = Vector2.zero;
+            var count = Mathf.Min(reward, 20);
+            parent.gameObject.layer = rewardWallet.gameObject.layer;
+            Canvas.ForceUpdateCanvases();
+            var originRect = rewardCoinOrigin ? rewardCoinOrigin : victoryPreview.rectTransform;
+            var originPoint = rewardCoinOrigin ? originRect.rect.center : new Vector2(originRect.rect.center.x, originRect.rect.yMin + originRect.rect.height * .08f);
+            var origin = parent.InverseTransformPoint(originRect.TransformPoint(originPoint));
+            var preview = victoryPreview.rectTransform;
+            var corners = new Vector3[4];
+            preview.GetWorldCorners(corners);
+            var width = Vector3.Distance(parent.InverseTransformPoint(corners[0]), parent.InverseTransformPoint(corners[3]));
+            var spread = width * .18f;
+            var icons = new DifferenceRewardCoin[count];
+            var arrived = 0;
+            for (var i = 0; i < count; i++)
+            {
+                icons[i] = DifferenceRewardCoin.Create(parent, rewardCoinIcon.sprite, width * .075f);
+                icons[i].gameObject.SetActive(false);
+            }
+            for (var time = 0f; arrived < count; time += Time.unscaledDeltaTime)
+            {
+                var target = parent.InverseTransformPoint(rewardCoinIcon.rectTransform.TransformPoint(rewardCoinIcon.rectTransform.rect.center));
+                for (var i = arrived; i < count; i++)
+                {
+                    var age = time - DifferenceRewardCoin.SpawnDelay - i * DifferenceRewardCoin.Stagger;
+                    if (age < 0) continue;
+                    var coin = icons[i];
+                    coin.gameObject.SetActive(true);
+                    coin.transform.localPosition = DifferenceRewardCoin.Position(origin, target, spread, age, i, out var flight);
+                    coin.SetAppearance(age, i, flight);
+                    if (flight >= 1)
+                    {
+                        coin.gameObject.SetActive(false);
+                        arrived++;
+                        rewardCoinsLabel.text = (finalBalance - reward + reward * arrived / count).ToString();
+                    }
+                }
+                yield return null;
+            }
+            rewardCoinsLabel.text = finalBalance.ToString();
+            yield return new WaitForSecondsRealtime(.3f);
+            rewardWallet.gameObject.SetActive(false);
+            Destroy(rewardFlights); rewardFlights = null; rewardRoutine = null;
+        }
+
+        void CancelRewardCoins()
+        {
+            if (rewardRoutine != null) { StopCoroutine(rewardRoutine); rewardRoutine = null; }
+            if (rewardFlights) { Destroy(rewardFlights); rewardFlights = null; }
+            if (rewardWallet) rewardWallet.gameObject.SetActive(false);
+        }
 
         void ToggleVibration()
         {

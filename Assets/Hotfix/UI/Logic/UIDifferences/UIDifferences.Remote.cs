@@ -51,7 +51,8 @@ namespace Hotfix.UI
             {
                 Debug.LogWarning("后台关卡加载失败：" + request.Error);
                 request.Dispose();
-                ShowDialog("关卡加载失败", "第 " + (index + 1) + " 关暂时无法加载，请稍后重试。", "重试", () => BeginLevel(index, resume), "返回首页", ShowHome);
+                ShowHome();
+                Notice("第 " + (index + 1) + " 关加载失败，请稍后重试。", 3f);
                 yield break;
             }
             ReleaseRemoteLevel();

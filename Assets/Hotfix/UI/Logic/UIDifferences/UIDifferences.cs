@@ -36,13 +36,16 @@ namespace Hotfix.UI
         public Sprite progressQuestion, progressCheck, hintHandSprite;
         public Material foundFlightMaterial, hintSpotlightMaterial;
         public GameObject foundFlightPrefab, foundArrivalPrefab;
+        public GameObject foundRingEffectPrefab;
+        public Spine.Unity.SkeletonDataAsset foundRingSpine;
+        public Material foundRingMaterial;
         public UnityEngine.UI.Image upperImage, lowerImage, profileAvatar, homeAvatar, profileFrame, homeFrame, resultIcon;
         public UnityEngine.UI.InputField nicknameInput;
         public UnityEngine.UI.Graphic crossTop, crossBottom;
         public AudioSource audioSource, musicSource;
         public AudioClip foundSound, missSound, winSound;
         public AudioClip[] musicTracks;
-        public RectTransform[] confetti;
+        //public RectTransform[] confetti;
         public DifferenceRound Round { get; private set; }
         public int SelectedLevel => level;
         public int Hints => hints;
@@ -57,7 +60,8 @@ namespace Hotfix.UI
         bool vibration = true;
         string nickname, giftDate, roundContent;
         Action dialogAction, secondaryAction, tertiaryAction;
-        Coroutine noticeRoutine, endRoutine;
+        Coroutine endRoutine;
+        CommonToast toast;
         const float TabSlideDuration = .18f;
         RectTransform[] tabPages, tabButtons;
         RectTransform tabHighlight;
@@ -186,6 +190,8 @@ namespace Hotfix.UI
             widthControlPositions = Array.ConvertAll(widthControls, rect => rect.anchoredPosition);
             Bind("Play/Zoom", () => upperImage.GetComponent<DifferenceBoard>().ResetViewAnimated());
             resetZoomButton.gameObject.SetActive(false);
+            toast = noticeLabel.transform.parent.GetComponent<CommonToast>();
+            if (!toast) toast = noticeLabel.transform.parent.gameObject.AddComponent<CommonToast>();
             BindFigmaDesign();
             var lifeBadge = play.transform.Find("LifeBadge");
             lifeAnimation = lifeBadge ? lifeBadge.GetComponentInChildren<Spine.Unity.SkeletonGraphic>(true) : null;
@@ -489,6 +495,7 @@ namespace Hotfix.UI
                 var found = i < Round.Total && Round.IsFound(i);
                 topRings[i].gameObject.SetActive(found); bottomRings[i].gameObject.SetActive(found);
                 topRings[i].transform.localScale = bottomRings[i].transform.localScale = Vector3.one;
+                if (found) { ShowFoundRing(topRings[i], false); ShowFoundRing(bottomRings[i], false); }
             }
             levelLabel.text = "第" + (level + 1) + "关";
             UpdateHUD(); SaveRound();
@@ -570,7 +577,6 @@ namespace Hotfix.UI
         {
             if (pendingHint < 0 || !play.activeSelf || Round == null || Round.Finished || HintActive) return;
             hintIdle = 0; hintHand.Show(false);
-            noticeLabel.transform.parent.gameObject.SetActive(false);
             var spot = spots[pendingHint];
             hintSpotlight.Show(upperImage.GetComponent<DifferenceBoard>(), upperImage.rectTransform, lowerImage.rectTransform,
                 new Vector2(spot.x, spot.y), pendingHint);
@@ -596,7 +602,7 @@ namespace Hotfix.UI
                 changedFlashImages[result].transform.parent.gameObject.SetActive(true);
                 totalFound++;
                 topRings[result].gameObject.SetActive(true); bottomRings[result].gameObject.SetActive(true);
-                StartCoroutine(Pulse(topRings[result].transform)); StartCoroutine(Pulse(bottomRings[result].transform));
+                ShowFoundRing(topRings[result], true); ShowFoundRing(bottomRings[result], true);
                 var slot = Round.Count - 1;
                 var foundRound = Round;
                 pendingProgress[slot] = true;
@@ -607,7 +613,7 @@ namespace Hotfix.UI
                         pendingProgress[slot] = false;
                         UpdateHUD();
                     }, foundFlightPrefab);
-                PlayTone(foundSound); noticeLabel.transform.parent.gameObject.SetActive(false);
+                PlayTone(foundSound);
             }
             else { roundMistakes++; PlayLifeAnimation(true); PlayTone(missSound); StartCoroutine(Pulse(heartsLabel.transform)); }
             UpdateHUD(); SaveRound(); Save();
@@ -623,6 +629,62 @@ namespace Hotfix.UI
             else endRoutine = StartCoroutine(EndRound(false, 0));
         }
 
+        void ShowFoundRing(UnityEngine.UI.Image marker, bool animate)
+        {
+            if (!foundRingSpine) return;
+            var ring = marker.GetComponentInChildren<Spine.Unity.SkeletonGraphic>(true);
+            if (!ring)
+            {
+                ring = Spine.Unity.SkeletonGraphic.NewSkeletonGraphicGameObject(foundRingSpine, marker.transform, foundRingMaterial);
+                ring.name = "FoundSpine";
+                ring.gameObject.layer = marker.gameObject.layer;
+                ring.raycastTarget = false;
+                ring.UnscaledTime = true;
+            }
+            marker.enabled = false;
+            var oldRing = marker.GetComponent<DifferenceFoundRing>();
+            if (oldRing) oldRing.enabled = false;
+            ring.rectTransform.anchoredPosition = Vector2.zero;
+            var data = foundRingSpine.GetSkeletonData(false);
+            var diameter = Mathf.Min(marker.rectTransform.rect.width, marker.rectTransform.rect.height);
+            ring.transform.localScale = Vector3.one * (diameter / Mathf.Max(.001f, Mathf.Max(data.Width, data.Height)));
+            ring.AnimationState.SetAnimation(0, animate ? "a2" : "a1", false);
+            if (animate) ring.AnimationState.AddAnimation(0, "a1", false, 0);
+            if (!animate || !foundRingEffectPrefab) return;
+            var effect = Instantiate(foundRingEffectPrefab, marker.transform, false);
+            effect.name = "FoundRingParticles";
+            effect.transform.localPosition = Vector3.zero;
+            var canvas = marker.GetComponentInParent<Canvas>();
+            var duration = 0f;
+            foreach (var child in effect.GetComponentsInChildren<Transform>(true)) child.gameObject.layer = marker.gameObject.layer;
+            foreach (var particle in effect.GetComponentsInChildren<ParticleSystem>(true))
+            {
+                particle.Stop(false, ParticleSystemStopBehavior.StopEmittingAndClear);
+                var main = particle.main;
+                main.loop = false; main.useUnscaledTime = true;
+                duration = Mathf.Max(duration, main.startDelay.constantMax + main.duration + main.startLifetime.constantMax);
+                var renderer = particle.GetComponent<ParticleSystemRenderer>();
+                renderer.sortingLayerID = canvas.sortingLayerID;
+                renderer.sortingOrder = canvas.sortingOrder + 1;
+                particle.Play(false);
+            }
+            StartCoroutine(ClearRingParticles(effect, duration + .1f));
+        }
+
+        IEnumerator ClearRingParticles(GameObject effect, float duration)
+        {
+            yield return new WaitForSecondsRealtime(duration);
+            if (effect) Destroy(effect);
+        }
+
+        static void ClearRingParticlesNow(UnityEngine.UI.Image marker)
+        {
+            var effect = marker.transform.Find("FoundRingParticles");
+            if (!effect) return;
+            effect.gameObject.SetActive(false);
+            Destroy(effect.gameObject);
+        }
+
         void PlayLifeAnimation(bool lostLife)
         {
             if (!lifeAnimation) return;
@@ -636,6 +698,8 @@ namespace Hotfix.UI
             var finishedRound = Round;
             if (!testing) yield return new WaitForSecondsRealtime(won ? Mathf.Max(DifferenceFoundFlight.Duration + .06f, PatchFlashDuration + .05f) : Mathf.Max(.25f, lifeLossDuration));
             if (!play.activeSelf || Round != finishedRound) { endRoutine = null; yield break; }
+            if (won && !testing) yield return ReplayCompletedProgress();
+            if (!play.activeSelf || Round != finishedRound) { endRoutine = null; yield break; }
             ShowRoundResult(won, reward);
             endRoutine = null;
         }
@@ -643,10 +707,7 @@ namespace Hotfix.UI
         void ShowRoundResult(bool won, int reward)
         {
             ShowFigmaResult(won);
-            if (won)
-            {
-                StartCoroutine(Celebrate());
-            }
+            if (won) StartRewardCoins(reward);
         }
 
         public void Revive()
@@ -664,6 +725,8 @@ namespace Hotfix.UI
 
         void ClearFoundFeedback()
         {
+            foreach (var marker in topRings) ClearRingParticlesNow(marker);
+            foreach (var marker in bottomRings) ClearRingParticlesNow(marker);
             for (var i = 0; i < patchElapsed.Length; i++)
             {
                 patchElapsed[i] = -1;
@@ -907,7 +970,13 @@ namespace Hotfix.UI
         void OnApplicationPause(bool paused) { if (paused && Round != null) SaveRound(); }
         public override void OnClose(bool isShutdown, object userData)
         { SaveRound(); CancelRemoteLoad(); CancelEndAnimation(); ClearFoundFeedback(); ReleaseRemoteLevel(); FinishTabTransition(); base.OnClose(isShutdown, userData); }
-        void CancelEndAnimation() { if (endRoutine != null) { StopCoroutine(endRoutine); endRoutine = null; } }
+        void CancelEndAnimation()
+        {
+            CancelRewardCoins();
+            if (endRoutine != null) { StopCoroutine(endRoutine); endRoutine = null; }
+            var sweep = play ? play.transform.Find("CompletionSweep") : null;
+            if (sweep) { sweep.gameObject.SetActive(false); Destroy(sweep.gameObject); }
+        }
         public void SetTesting(bool value) { testing = value; if (value) FinishTabTransition(); }
         void PlayTone(AudioClip clip) { if (sound && clip) audioSource.PlayOneShot(clip, .4f); }
         void ShowCross(float x, float y)
@@ -941,28 +1010,7 @@ namespace Hotfix.UI
             { target.localScale = Vector3.one * (1 + amount * Mathf.Sin(elapsed / .32f * Mathf.PI)); yield return null; }
             target.localScale = Vector3.one;
         }
-        IEnumerator Celebrate()
-        {
-            for (var i = 0; i < confetti.Length; i++) confetti[i].gameObject.SetActive(true);
-            for (var elapsed = 0f; elapsed < 2f && (modal.activeSelf || (victoryDesign && victoryDesign.activeSelf)); elapsed += Time.unscaledDeltaTime)
-            {
-                for (var i = 0; i < confetti.Length; i++)
-                {
-                    confetti[i].anchoredPosition = new Vector2(50 + i * 619f / confetti.Length + Mathf.Sin(elapsed * 4 + i) * 50, -(180 + elapsed * (300 + i % 5 * 40)));
-                    confetti[i].localEulerAngles = new Vector3(0, 0, elapsed * 180 + i * 37);
-                }
-                yield return null;
-            }
-            foreach (var piece in confetti) piece.gameObject.SetActive(false);
-        }
-        void Notice(string message, float seconds)
-        {
-            if (noticeRoutine != null) StopCoroutine(noticeRoutine);
-            ((RectTransform)noticeLabel.transform.parent).anchoredPosition = new Vector2(120, play.activeSelf && Round != null && Round.Total > 15 ? -1210 : -144);
-            noticeLabel.text = message; noticeLabel.transform.parent.gameObject.SetActive(true); noticeLabel.transform.parent.SetAsLastSibling();
-            noticeRoutine = StartCoroutine(ClearNotice(seconds));
-        }
-        IEnumerator ClearNotice(float seconds) { yield return new WaitForSecondsRealtime(seconds); noticeLabel.transform.parent.gameObject.SetActive(false); noticeRoutine = null; }
+        void Notice(string message, float seconds) { toast.Show(message, seconds); }
         T At<T>(string path) where T : Component
         {
             var found = stage.Find(path); if (!found) throw new InvalidOperationException("缺少 UI 节点：" + path);

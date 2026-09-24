@@ -509,8 +509,8 @@ public static class DifferenceGameBuilder
         ui.modalAction=Button(c,"Action",57,404,468,91,"继续",34,Green);ui.modalActionLabel=ui.modalAction.GetComponentInChildren<UnityEngine.UI.Text>();
         ui.modalSecondary=Button(c,"Secondary",87,520,408,78,"返回首页",29,new Color(.17f,.35f,.70f));
         ui.modalTertiary=Button(c,"Tertiary",122,622,338,65,"返回首页",25,new Color(.23f,.40f,.73f));
-        ui.confetti=new RectTransform[30];
-        for(var i=0;i<ui.confetti.Length;i++){var piece=Image(ui.modal.transform,"Confetti"+i,0,0,8+i%3*4,14+i%2*5,Color.HSVToRGB(i/30f,.8f,1));ui.confetti[i]=piece.rectTransform;piece.gameObject.SetActive(false);}
+
+        //for(var i=0;i<ui.confetti.Length;i++){var piece=Image(ui.modal.transform,"Confetti"+i,0,0,8+i%3*4,14+i%2*5,Color.HSVToRGB(i/30f,.8f,1));ui.confetti[i]=piece.rectTransform;piece.gameObject.SetActive(false);}
     }
     static GameObject Overlay(UIDifferences ui,string name)
     {var root=Rect(ui.stage,name,0,0,720,1280);Image(root,"Scrim",0,0,720,1280,new Color(0,.02f,.07f,.76f)).raycastTarget=true;return root.gameObject;}

@@ -1110,9 +1110,9 @@ namespace Hotfix.UI
 		}
 
 		[UGUIElementProperty("Stage/Play/UpperViewport/Image/Miss")]
-		private UnityEngine.UI.Image Stage_Play_UpperViewport_Image_Miss;
+		private UnityEngine.RectTransform Stage_Play_UpperViewport_Image_Miss;
 
-		public UnityEngine.UI.Image m_Stage_Play_UpperViewport_Image_Miss
+		public UnityEngine.RectTransform m_Stage_Play_UpperViewport_Image_Miss
 		{
 			get { return Stage_Play_UpperViewport_Image_Miss;}
 		}
@@ -1614,9 +1614,9 @@ namespace Hotfix.UI
 		}
 
 		[UGUIElementProperty("Stage/Play/LowerViewport/Image/Miss")]
-		private UnityEngine.UI.Image Stage_Play_LowerViewport_Image_Miss;
+		private UnityEngine.RectTransform Stage_Play_LowerViewport_Image_Miss;
 
-		public UnityEngine.UI.Image m_Stage_Play_LowerViewport_Image_Miss
+		public UnityEngine.RectTransform m_Stage_Play_LowerViewport_Image_Miss
 		{
 			get { return Stage_Play_LowerViewport_Image_Miss;}
 		}
@@ -3493,6 +3493,14 @@ namespace Hotfix.UI
 			get { return Stage_FigmaHome_Artwork;}
 		}
 
+		[UGUIElementProperty("Stage/FigmaHome/xue")]
+		private UnityEngine.RectTransform Stage_FigmaHome_xue;
+
+		public UnityEngine.RectTransform m_Stage_FigmaHome_xue
+		{
+			get { return Stage_FigmaHome_xue;}
+		}
+
 		[UGUIElementProperty("Stage/FigmaHome/Logo/Image")]
 		private UnityEngine.UI.Image Stage_FigmaHome_Logo_Image;
 
@@ -4141,246 +4149,6 @@ namespace Hotfix.UI
 			get { return Stage_FigmaVictory_Next;}
 		}
 
-		[UGUIElementProperty("Stage/FigmaVictory/Confetti0")]
-		private UnityEngine.UI.Image Stage_FigmaVictory_Confetti0;
-
-		public UnityEngine.UI.Image m_Stage_FigmaVictory_Confetti0
-		{
-			get { return Stage_FigmaVictory_Confetti0;}
-		}
-
-		[UGUIElementProperty("Stage/FigmaVictory/Confetti1")]
-		private UnityEngine.UI.Image Stage_FigmaVictory_Confetti1;
-
-		public UnityEngine.UI.Image m_Stage_FigmaVictory_Confetti1
-		{
-			get { return Stage_FigmaVictory_Confetti1;}
-		}
-
-		[UGUIElementProperty("Stage/FigmaVictory/Confetti2")]
-		private UnityEngine.UI.Image Stage_FigmaVictory_Confetti2;
-
-		public UnityEngine.UI.Image m_Stage_FigmaVictory_Confetti2
-		{
-			get { return Stage_FigmaVictory_Confetti2;}
-		}
-
-		[UGUIElementProperty("Stage/FigmaVictory/Confetti3")]
-		private UnityEngine.UI.Image Stage_FigmaVictory_Confetti3;
-
-		public UnityEngine.UI.Image m_Stage_FigmaVictory_Confetti3
-		{
-			get { return Stage_FigmaVictory_Confetti3;}
-		}
-
-		[UGUIElementProperty("Stage/FigmaVictory/Confetti4")]
-		private UnityEngine.UI.Image Stage_FigmaVictory_Confetti4;
-
-		public UnityEngine.UI.Image m_Stage_FigmaVictory_Confetti4
-		{
-			get { return Stage_FigmaVictory_Confetti4;}
-		}
-
-		[UGUIElementProperty("Stage/FigmaVictory/Confetti5")]
-		private UnityEngine.UI.Image Stage_FigmaVictory_Confetti5;
-
-		public UnityEngine.UI.Image m_Stage_FigmaVictory_Confetti5
-		{
-			get { return Stage_FigmaVictory_Confetti5;}
-		}
-
-		[UGUIElementProperty("Stage/FigmaVictory/Confetti6")]
-		private UnityEngine.UI.Image Stage_FigmaVictory_Confetti6;
-
-		public UnityEngine.UI.Image m_Stage_FigmaVictory_Confetti6
-		{
-			get { return Stage_FigmaVictory_Confetti6;}
-		}
-
-		[UGUIElementProperty("Stage/FigmaVictory/Confetti7")]
-		private UnityEngine.UI.Image Stage_FigmaVictory_Confetti7;
-
-		public UnityEngine.UI.Image m_Stage_FigmaVictory_Confetti7
-		{
-			get { return Stage_FigmaVictory_Confetti7;}
-		}
-
-		[UGUIElementProperty("Stage/FigmaVictory/Confetti8")]
-		private UnityEngine.UI.Image Stage_FigmaVictory_Confetti8;
-
-		public UnityEngine.UI.Image m_Stage_FigmaVictory_Confetti8
-		{
-			get { return Stage_FigmaVictory_Confetti8;}
-		}
-
-		[UGUIElementProperty("Stage/FigmaVictory/Confetti9")]
-		private UnityEngine.UI.Image Stage_FigmaVictory_Confetti9;
-
-		public UnityEngine.UI.Image m_Stage_FigmaVictory_Confetti9
-		{
-			get { return Stage_FigmaVictory_Confetti9;}
-		}
-
-		[UGUIElementProperty("Stage/FigmaVictory/Confetti10")]
-		private UnityEngine.UI.Image Stage_FigmaVictory_Confetti10;
-
-		public UnityEngine.UI.Image m_Stage_FigmaVictory_Confetti10
-		{
-			get { return Stage_FigmaVictory_Confetti10;}
-		}
-
-		[UGUIElementProperty("Stage/FigmaVictory/Confetti11")]
-		private UnityEngine.UI.Image Stage_FigmaVictory_Confetti11;
-
-		public UnityEngine.UI.Image m_Stage_FigmaVictory_Confetti11
-		{
-			get { return Stage_FigmaVictory_Confetti11;}
-		}
-
-		[UGUIElementProperty("Stage/FigmaVictory/Confetti12")]
-		private UnityEngine.UI.Image Stage_FigmaVictory_Confetti12;
-
-		public UnityEngine.UI.Image m_Stage_FigmaVictory_Confetti12
-		{
-			get { return Stage_FigmaVictory_Confetti12;}
-		}
-
-		[UGUIElementProperty("Stage/FigmaVictory/Confetti13")]
-		private UnityEngine.UI.Image Stage_FigmaVictory_Confetti13;
-
-		public UnityEngine.UI.Image m_Stage_FigmaVictory_Confetti13
-		{
-			get { return Stage_FigmaVictory_Confetti13;}
-		}
-
-		[UGUIElementProperty("Stage/FigmaVictory/Confetti14")]
-		private UnityEngine.UI.Image Stage_FigmaVictory_Confetti14;
-
-		public UnityEngine.UI.Image m_Stage_FigmaVictory_Confetti14
-		{
-			get { return Stage_FigmaVictory_Confetti14;}
-		}
-
-		[UGUIElementProperty("Stage/FigmaVictory/Confetti15")]
-		private UnityEngine.UI.Image Stage_FigmaVictory_Confetti15;
-
-		public UnityEngine.UI.Image m_Stage_FigmaVictory_Confetti15
-		{
-			get { return Stage_FigmaVictory_Confetti15;}
-		}
-
-		[UGUIElementProperty("Stage/FigmaVictory/Confetti16")]
-		private UnityEngine.UI.Image Stage_FigmaVictory_Confetti16;
-
-		public UnityEngine.UI.Image m_Stage_FigmaVictory_Confetti16
-		{
-			get { return Stage_FigmaVictory_Confetti16;}
-		}
-
-		[UGUIElementProperty("Stage/FigmaVictory/Confetti17")]
-		private UnityEngine.UI.Image Stage_FigmaVictory_Confetti17;
-
-		public UnityEngine.UI.Image m_Stage_FigmaVictory_Confetti17
-		{
-			get { return Stage_FigmaVictory_Confetti17;}
-		}
-
-		[UGUIElementProperty("Stage/FigmaVictory/Confetti18")]
-		private UnityEngine.UI.Image Stage_FigmaVictory_Confetti18;
-
-		public UnityEngine.UI.Image m_Stage_FigmaVictory_Confetti18
-		{
-			get { return Stage_FigmaVictory_Confetti18;}
-		}
-
-		[UGUIElementProperty("Stage/FigmaVictory/Confetti19")]
-		private UnityEngine.UI.Image Stage_FigmaVictory_Confetti19;
-
-		public UnityEngine.UI.Image m_Stage_FigmaVictory_Confetti19
-		{
-			get { return Stage_FigmaVictory_Confetti19;}
-		}
-
-		[UGUIElementProperty("Stage/FigmaVictory/Confetti20")]
-		private UnityEngine.UI.Image Stage_FigmaVictory_Confetti20;
-
-		public UnityEngine.UI.Image m_Stage_FigmaVictory_Confetti20
-		{
-			get { return Stage_FigmaVictory_Confetti20;}
-		}
-
-		[UGUIElementProperty("Stage/FigmaVictory/Confetti21")]
-		private UnityEngine.UI.Image Stage_FigmaVictory_Confetti21;
-
-		public UnityEngine.UI.Image m_Stage_FigmaVictory_Confetti21
-		{
-			get { return Stage_FigmaVictory_Confetti21;}
-		}
-
-		[UGUIElementProperty("Stage/FigmaVictory/Confetti22")]
-		private UnityEngine.UI.Image Stage_FigmaVictory_Confetti22;
-
-		public UnityEngine.UI.Image m_Stage_FigmaVictory_Confetti22
-		{
-			get { return Stage_FigmaVictory_Confetti22;}
-		}
-
-		[UGUIElementProperty("Stage/FigmaVictory/Confetti23")]
-		private UnityEngine.UI.Image Stage_FigmaVictory_Confetti23;
-
-		public UnityEngine.UI.Image m_Stage_FigmaVictory_Confetti23
-		{
-			get { return Stage_FigmaVictory_Confetti23;}
-		}
-
-		[UGUIElementProperty("Stage/FigmaVictory/Confetti24")]
-		private UnityEngine.UI.Image Stage_FigmaVictory_Confetti24;
-
-		public UnityEngine.UI.Image m_Stage_FigmaVictory_Confetti24
-		{
-			get { return Stage_FigmaVictory_Confetti24;}
-		}
-
-		[UGUIElementProperty("Stage/FigmaVictory/Confetti25")]
-		private UnityEngine.UI.Image Stage_FigmaVictory_Confetti25;
-
-		public UnityEngine.UI.Image m_Stage_FigmaVictory_Confetti25
-		{
-			get { return Stage_FigmaVictory_Confetti25;}
-		}
-
-		[UGUIElementProperty("Stage/FigmaVictory/Confetti26")]
-		private UnityEngine.UI.Image Stage_FigmaVictory_Confetti26;
-
-		public UnityEngine.UI.Image m_Stage_FigmaVictory_Confetti26
-		{
-			get { return Stage_FigmaVictory_Confetti26;}
-		}
-
-		[UGUIElementProperty("Stage/FigmaVictory/Confetti27")]
-		private UnityEngine.UI.Image Stage_FigmaVictory_Confetti27;
-
-		public UnityEngine.UI.Image m_Stage_FigmaVictory_Confetti27
-		{
-			get { return Stage_FigmaVictory_Confetti27;}
-		}
-
-		[UGUIElementProperty("Stage/FigmaVictory/Confetti28")]
-		private UnityEngine.UI.Image Stage_FigmaVictory_Confetti28;
-
-		public UnityEngine.UI.Image m_Stage_FigmaVictory_Confetti28
-		{
-			get { return Stage_FigmaVictory_Confetti28;}
-		}
-
-		[UGUIElementProperty("Stage/FigmaVictory/Confetti29")]
-		private UnityEngine.UI.Image Stage_FigmaVictory_Confetti29;
-
-		public UnityEngine.UI.Image m_Stage_FigmaVictory_Confetti29
-		{
-			get { return Stage_FigmaVictory_Confetti29;}
-		}
-
 		[UGUIElementProperty("Stage/FigmaVictory")]
 		private UnityEngine.UI.Image Stage_FigmaVictory;
 
@@ -4568,7 +4336,7 @@ namespace Hotfix.UI
 			Stage_Play_UpperViewport_Image_Found13 = gameObject.transform.FindChildName("Stage/Play/UpperViewport/Image/Found13").GetComponent<UnityEngine.UI.Image>();
 			Stage_Play_UpperViewport_Image_Found14_Outline = gameObject.transform.FindChildName("Stage/Play/UpperViewport/Image/Found14/Outline").GetComponent<UnityEngine.RectTransform>();
 			Stage_Play_UpperViewport_Image_Found14 = gameObject.transform.FindChildName("Stage/Play/UpperViewport/Image/Found14").GetComponent<UnityEngine.UI.Image>();
-			Stage_Play_UpperViewport_Image_Miss = gameObject.transform.FindChildName("Stage/Play/UpperViewport/Image/Miss").GetComponent<UnityEngine.UI.Image>();
+			Stage_Play_UpperViewport_Image_Miss = gameObject.transform.FindChildName("Stage/Play/UpperViewport/Image/Miss").GetComponent<UnityEngine.RectTransform>();
 			Stage_Play_UpperViewport_Image = gameObject.transform.FindChildName("Stage/Play/UpperViewport/Image").GetComponent<UnityEngine.UI.Image>();
 			Stage_Play_UpperViewport = gameObject.transform.FindChildName("Stage/Play/UpperViewport").GetComponent<UnityEngine.RectTransform>();
 			Stage_Play_LowerViewport_Image_Difference0_Picture = gameObject.transform.FindChildName("Stage/Play/LowerViewport/Image/Difference0/Picture").GetComponent<UnityEngine.UI.Image>();
@@ -4631,7 +4399,7 @@ namespace Hotfix.UI
 			Stage_Play_LowerViewport_Image_Found13 = gameObject.transform.FindChildName("Stage/Play/LowerViewport/Image/Found13").GetComponent<UnityEngine.UI.Image>();
 			Stage_Play_LowerViewport_Image_Found14_Outline = gameObject.transform.FindChildName("Stage/Play/LowerViewport/Image/Found14/Outline").GetComponent<UnityEngine.RectTransform>();
 			Stage_Play_LowerViewport_Image_Found14 = gameObject.transform.FindChildName("Stage/Play/LowerViewport/Image/Found14").GetComponent<UnityEngine.UI.Image>();
-			Stage_Play_LowerViewport_Image_Miss = gameObject.transform.FindChildName("Stage/Play/LowerViewport/Image/Miss").GetComponent<UnityEngine.UI.Image>();
+			Stage_Play_LowerViewport_Image_Miss = gameObject.transform.FindChildName("Stage/Play/LowerViewport/Image/Miss").GetComponent<UnityEngine.RectTransform>();
 			Stage_Play_LowerViewport_Image = gameObject.transform.FindChildName("Stage/Play/LowerViewport/Image").GetComponent<UnityEngine.UI.Image>();
 			Stage_Play_LowerViewport_LineMiddle = gameObject.transform.FindChildName("Stage/Play/LowerViewport/LineMiddle").GetComponent<UnityEngine.UI.Image>();
 			Stage_Play_LowerViewport = gameObject.transform.FindChildName("Stage/Play/LowerViewport").GetComponent<UnityEngine.RectTransform>();
@@ -4866,6 +4634,7 @@ namespace Hotfix.UI
 			Stage_Toast_Text = gameObject.transform.FindChildName("Stage/Toast/Text").GetComponent<UnityEngine.UI.Text>();
 			Stage_Toast = gameObject.transform.FindChildName("Stage/Toast").GetComponent<UnityEngine.RectTransform>();
 			Stage_FigmaHome_Artwork = gameObject.transform.FindChildName("Stage/FigmaHome/Artwork").GetComponent<UnityEngine.UI.Image>();
+			Stage_FigmaHome_xue = gameObject.transform.FindChildName("Stage/FigmaHome/xue").GetComponent<UnityEngine.RectTransform>();
 			Stage_FigmaHome_Logo_Image = gameObject.transform.FindChildName("Stage/FigmaHome/Logo/Image").GetComponent<UnityEngine.UI.Image>();
 			Stage_FigmaHome_Logo = gameObject.transform.FindChildName("Stage/FigmaHome/Logo").GetComponent<UnityEngine.RectTransform>();
 			Stage_FigmaHome_Wallet_Coin = gameObject.transform.FindChildName("Stage/FigmaHome/Wallet/Coin").GetComponent<UnityEngine.UI.Image>();
@@ -4947,36 +4716,6 @@ namespace Hotfix.UI
 			Stage_FigmaVictory_Next_Label = gameObject.transform.FindChildName("Stage/FigmaVictory/Next/Label").GetComponent<UnityEngine.UI.Text>();
 			Stage_FigmaVictory_Next_anim = gameObject.transform.FindChildName("Stage/FigmaVictory/Next/anim").GetComponent<UnityEngine.RectTransform>();
 			Stage_FigmaVictory_Next = gameObject.transform.FindChildName("Stage/FigmaVictory/Next").GetComponent<UnityEngine.UI.Button>();
-			Stage_FigmaVictory_Confetti0 = gameObject.transform.FindChildName("Stage/FigmaVictory/Confetti0").GetComponent<UnityEngine.UI.Image>();
-			Stage_FigmaVictory_Confetti1 = gameObject.transform.FindChildName("Stage/FigmaVictory/Confetti1").GetComponent<UnityEngine.UI.Image>();
-			Stage_FigmaVictory_Confetti2 = gameObject.transform.FindChildName("Stage/FigmaVictory/Confetti2").GetComponent<UnityEngine.UI.Image>();
-			Stage_FigmaVictory_Confetti3 = gameObject.transform.FindChildName("Stage/FigmaVictory/Confetti3").GetComponent<UnityEngine.UI.Image>();
-			Stage_FigmaVictory_Confetti4 = gameObject.transform.FindChildName("Stage/FigmaVictory/Confetti4").GetComponent<UnityEngine.UI.Image>();
-			Stage_FigmaVictory_Confetti5 = gameObject.transform.FindChildName("Stage/FigmaVictory/Confetti5").GetComponent<UnityEngine.UI.Image>();
-			Stage_FigmaVictory_Confetti6 = gameObject.transform.FindChildName("Stage/FigmaVictory/Confetti6").GetComponent<UnityEngine.UI.Image>();
-			Stage_FigmaVictory_Confetti7 = gameObject.transform.FindChildName("Stage/FigmaVictory/Confetti7").GetComponent<UnityEngine.UI.Image>();
-			Stage_FigmaVictory_Confetti8 = gameObject.transform.FindChildName("Stage/FigmaVictory/Confetti8").GetComponent<UnityEngine.UI.Image>();
-			Stage_FigmaVictory_Confetti9 = gameObject.transform.FindChildName("Stage/FigmaVictory/Confetti9").GetComponent<UnityEngine.UI.Image>();
-			Stage_FigmaVictory_Confetti10 = gameObject.transform.FindChildName("Stage/FigmaVictory/Confetti10").GetComponent<UnityEngine.UI.Image>();
-			Stage_FigmaVictory_Confetti11 = gameObject.transform.FindChildName("Stage/FigmaVictory/Confetti11").GetComponent<UnityEngine.UI.Image>();
-			Stage_FigmaVictory_Confetti12 = gameObject.transform.FindChildName("Stage/FigmaVictory/Confetti12").GetComponent<UnityEngine.UI.Image>();
-			Stage_FigmaVictory_Confetti13 = gameObject.transform.FindChildName("Stage/FigmaVictory/Confetti13").GetComponent<UnityEngine.UI.Image>();
-			Stage_FigmaVictory_Confetti14 = gameObject.transform.FindChildName("Stage/FigmaVictory/Confetti14").GetComponent<UnityEngine.UI.Image>();
-			Stage_FigmaVictory_Confetti15 = gameObject.transform.FindChildName("Stage/FigmaVictory/Confetti15").GetComponent<UnityEngine.UI.Image>();
-			Stage_FigmaVictory_Confetti16 = gameObject.transform.FindChildName("Stage/FigmaVictory/Confetti16").GetComponent<UnityEngine.UI.Image>();
-			Stage_FigmaVictory_Confetti17 = gameObject.transform.FindChildName("Stage/FigmaVictory/Confetti17").GetComponent<UnityEngine.UI.Image>();
-			Stage_FigmaVictory_Confetti18 = gameObject.transform.FindChildName("Stage/FigmaVictory/Confetti18").GetComponent<UnityEngine.UI.Image>();
-			Stage_FigmaVictory_Confetti19 = gameObject.transform.FindChildName("Stage/FigmaVictory/Confetti19").GetComponent<UnityEngine.UI.Image>();
-			Stage_FigmaVictory_Confetti20 = gameObject.transform.FindChildName("Stage/FigmaVictory/Confetti20").GetComponent<UnityEngine.UI.Image>();
-			Stage_FigmaVictory_Confetti21 = gameObject.transform.FindChildName("Stage/FigmaVictory/Confetti21").GetComponent<UnityEngine.UI.Image>();
-			Stage_FigmaVictory_Confetti22 = gameObject.transform.FindChildName("Stage/FigmaVictory/Confetti22").GetComponent<UnityEngine.UI.Image>();
-			Stage_FigmaVictory_Confetti23 = gameObject.transform.FindChildName("Stage/FigmaVictory/Confetti23").GetComponent<UnityEngine.UI.Image>();
-			Stage_FigmaVictory_Confetti24 = gameObject.transform.FindChildName("Stage/FigmaVictory/Confetti24").GetComponent<UnityEngine.UI.Image>();
-			Stage_FigmaVictory_Confetti25 = gameObject.transform.FindChildName("Stage/FigmaVictory/Confetti25").GetComponent<UnityEngine.UI.Image>();
-			Stage_FigmaVictory_Confetti26 = gameObject.transform.FindChildName("Stage/FigmaVictory/Confetti26").GetComponent<UnityEngine.UI.Image>();
-			Stage_FigmaVictory_Confetti27 = gameObject.transform.FindChildName("Stage/FigmaVictory/Confetti27").GetComponent<UnityEngine.UI.Image>();
-			Stage_FigmaVictory_Confetti28 = gameObject.transform.FindChildName("Stage/FigmaVictory/Confetti28").GetComponent<UnityEngine.UI.Image>();
-			Stage_FigmaVictory_Confetti29 = gameObject.transform.FindChildName("Stage/FigmaVictory/Confetti29").GetComponent<UnityEngine.UI.Image>();
 			Stage_FigmaVictory = gameObject.transform.FindChildName("Stage/FigmaVictory").GetComponent<UnityEngine.UI.Image>();
 			Stage = gameObject.transform.FindChildName("Stage").GetComponent<UnityEngine.RectTransform>();
 		}
