@@ -15,6 +15,14 @@ namespace Hotfix.UI
         [SerializeField] Text designCoins, failProgress;
         [SerializeField] Sprite designRound, toggleOn, toggleOff;
         [SerializeField] Button designSettingsButton, designStartButton, designSettingsClose, designMusicButton, designSoundButton, designVibrationButton, designFailClose, designContinueButton, designRetryButton, designHintClose, designFreeButton, designBuyButton, designNextButton;
+        [SerializeField] Button designContactButton, designTermsButton, designPrivacyButton;
+        [Header("Settings Links")]
+        [SerializeField] string contactUrl = "mailto:contact@joystar.pro";
+        [SerializeField] string termsOfServiceUrl = "https://joystar.pro/terms";
+        [SerializeField] string privacyPolicyUrl = "https://joystar.pro/privacy.html";
+        [Header("Vibration")]
+        [SerializeField, Min(1)] int foundVibrationMilliseconds = 30, missVibrationMilliseconds = 60;
+        [SerializeField, Range(1, 255)] int foundVibrationAmplitude = 100, missVibrationAmplitude = 200;
         [SerializeField] RectTransform rewardWallet, rewardCoinOrigin;
         [SerializeField] Text rewardCoinsLabel;
         [SerializeField] Image rewardCoinIcon;
@@ -36,6 +44,9 @@ namespace Hotfix.UI
             designMusicButton.onClick.AddListener(() => { musicEnabled = !musicEnabled; Save(); PlayMusic(); RefreshSettings(); });
             designSoundButton.onClick.AddListener(() => { sound = !sound; Save(); RefreshSettings(); });
             designVibrationButton.onClick.AddListener(ToggleVibration);
+            if (designContactButton) designContactButton.onClick.AddListener(() => OpenSettingsLink(contactUrl));
+            if (designTermsButton) designTermsButton.onClick.AddListener(() => OpenSettingsLink(termsOfServiceUrl));
+            if (designPrivacyButton) designPrivacyButton.onClick.AddListener(() => OpenSettingsLink(privacyPolicyUrl));
             designFailClose.onClick.AddListener(ShowHome);
             designContinueButton.onClick.AddListener(OnFigmaResultPrimary);
             designRetryButton.onClick.AddListener(OnFigmaResultSecondary);
@@ -235,7 +246,36 @@ namespace Hotfix.UI
         void ToggleVibration()
         {
             vibration = !vibration; Save(); RefreshSettings();
-            if (vibration && !Application.isEditor) Handheld.Vibrate();
+            PlayResultVibration(0);
+        }
+
+        Vector2Int GetVibrationFeedback(int result)
+        {
+            if (!vibration || (result < 0 && result != Hotfix.Manager.DifferenceRound.Miss)) return Vector2Int.zero;
+            return result >= 0
+                ? new Vector2Int(Mathf.Max(1, foundVibrationMilliseconds), Mathf.Clamp(foundVibrationAmplitude, 1, 255))
+                : new Vector2Int(Mathf.Max(1, missVibrationMilliseconds), Mathf.Clamp(missVibrationAmplitude, 1, 255));
+        }
+
+        void PlayResultVibration(int result)
+        {
+            if (testing) return;
+            var feedback = GetVibrationFeedback(result);
+            if (feedback.x > 0) GameFrameX.Startup.Application.DifferenceHaptics.Play(feedback.x, feedback.y);
+        }
+
+        async void OpenSettingsLink(string url)
+        {
+            if (!Uri.TryCreate(url, UriKind.Absolute, out var address) ||
+                (address.Scheme != "https" && address.Scheme != "http" && address.Scheme != "mailto"))
+            {
+                Notice("链接暂时不可用，请稍后重试。", 2);
+                return;
+            }
+            if (UnityEngine.EventSystems.EventSystem.current)
+                UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(null);
+            await System.Threading.Tasks.Task.Delay(500);
+            Application.OpenURL(address.AbsoluteUri);
         }
         void CloseDesignHint() { if (hintDesign) hintDesign.SetActive(false); }
         void AcquireDesignHint(bool free)

@@ -28,6 +28,59 @@ public static class DifferenceUiSmokeCheck
 
     static DifferenceUiSmokeCheck() { EditorApplication.update += Tick; }
 
+    [MenuItem("Tools/Find Differences/Check Settings Actions Only")]
+    public static void CheckSettingsActionsOnly()
+    {
+        var root = PrefabUtility.LoadPrefabContents("Assets/Bundles/UI/UIDifferences/UIDifferences.prefab");
+        try
+        {
+            var ui = root.GetComponent<UIDifferences>();
+            foreach (var name in new[] { "designContactButton", "designTermsButton", "designPrivacyButton" })
+            {
+                var button = (Button)Field(ui, name);
+                if (!button || !button.interactable || !button.targetGraphic || !button.targetGraphic.raycastTarget)
+                    throw new Exception(name + " 未接入可点击控件");
+            }
+            if ((string)Field(ui, "contactUrl") != "mailto:contact@joystar.pro" ||
+                (string)Field(ui, "termsOfServiceUrl") != "https://joystar.pro/terms" ||
+                (string)Field(ui, "privacyPolicyUrl") != "https://joystar.pro/privacy.html")
+                throw new Exception("设置链接与拼图使用的官方地址不一致");
+            var feedback = typeof(UIDifferences).GetMethod("GetVibrationFeedback", Private);
+            var enabled = typeof(UIDifferences).GetField("vibration", Private);
+            enabled.SetValue(ui, true);
+            var found = (Vector2Int)feedback.Invoke(ui, new object[] { 0 });
+            var miss = (Vector2Int)feedback.Invoke(ui, new object[] { Hotfix.Manager.DifferenceRound.Miss });
+            if (found != new Vector2Int(30, 100) || miss != new Vector2Int(60, 200))
+                throw new Exception("点中应沿用拼图震动，点错应更强");
+            if ((Vector2Int)feedback.Invoke(ui, new object[] { Hotfix.Manager.DifferenceRound.Ignored }) != Vector2Int.zero)
+                throw new Exception("重复点击已找到位置不应震动");
+            enabled.SetValue(ui, false);
+            foreach (var result in new[] { 0, Hotfix.Manager.DifferenceRound.Miss })
+                if ((Vector2Int)feedback.Invoke(ui, new object[] { result }) != Vector2Int.zero)
+                    throw new Exception("关闭震动后仍触发反馈");
+
+            const string gradle = "Temp/SettingsPermissionCheck";
+            Directory.CreateDirectory(gradle + "/src/main");
+            var manifestPath = gradle + "/src/main/AndroidManifest.xml";
+            File.WriteAllText(manifestPath, "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"><application /></manifest>");
+            var build = new DifferenceAndroidBuild();
+            build.OnPostGenerateGradleAndroidProject(gradle);
+            build.OnPostGenerateGradleAndroidProject(gradle);
+            var manifest = new System.Xml.XmlDocument(); manifest.Load(manifestPath);
+            if (manifest.SelectNodes("/manifest/uses-permission").Count != 1 ||
+                ((System.Xml.XmlElement)manifest.SelectSingleNode("/manifest/uses-permission")).GetAttribute("name", "http://schemas.android.com/apk/res/android") != "android.permission.VIBRATE")
+                throw new Exception("Android 震动权限缺失或重复");
+            File.WriteAllText("Temp/settings-actions-check.txt", "PASS: links bound; hit/miss strengths; ignored clicks and mute; Android permission is idempotent");
+            Debug.Log("PASS: settings actions and vibration checks");
+        }
+        catch (Exception error)
+        {
+            File.WriteAllText("Temp/settings-actions-check.txt", "FAIL: " + error);
+            Debug.LogException(error);
+        }
+        finally { PrefabUtility.UnloadPrefabContents(root); }
+    }
+
     static TaskCompletionSource<bool> startupGate;
     public static Task DelayedStartupForCheck() => startupGate.Task;
 
@@ -935,6 +988,8 @@ public static class DifferenceUiSmokeCheck
             if (check == "reward") { CheckRewardCoinsOnly(); return; }
             if (check == "spine-alpha") { BuildAndroidSpineShaderCheck(); return; }
             if (check == "startup-await") { CheckStartupAwaitOnly(); return; }
+            if (check == "settings-connect") { DifferenceGameBuilder.ConnectSettingsActions(); CheckSettingsActionsOnly(); return; }
+            if (check == "settings") { CheckSettingsActionsOnly(); return; }
             Start();
         }
         if (!SessionState.GetBool(Pending, false)) return;

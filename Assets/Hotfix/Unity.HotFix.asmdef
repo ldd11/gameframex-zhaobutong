@@ -3,6 +3,7 @@
     "name" : "Unity.HotFix",
     "rootNamespace" : "",
     "references"    : [
+        "GameFrameX.Startup.Application",
         "unity.webp",
         "spine-csharp",
         "spine-unity",

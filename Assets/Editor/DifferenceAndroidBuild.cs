@@ -10,9 +10,24 @@ using UnityEngine;
 using YooAsset.Editor;
 
 // GameFrameX calls this before BuildPlayer, while asset bundle builds are still allowed.
-public sealed class DifferenceAndroidBuild : IBuilderPreHookHandler
+public sealed class DifferenceAndroidBuild : IBuilderPreHookHandler, UnityEditor.Android.IPostGenerateGradleAndroidProject
 {
     public int Priority => 0;
+    public int callbackOrder => 0;
+
+    public void OnPostGenerateGradleAndroidProject(string path)
+    {
+        var manifestPath = Path.Combine(path, "src/main/AndroidManifest.xml");
+        var manifest = new System.Xml.XmlDocument();
+        manifest.Load(manifestPath);
+        const string android = "http://schemas.android.com/apk/res/android";
+        foreach (System.Xml.XmlElement permission in manifest.DocumentElement.SelectNodes("uses-permission"))
+            if (permission.GetAttribute("name", android) == "android.permission.VIBRATE") return;
+        var vibration = manifest.CreateElement("uses-permission");
+        vibration.SetAttribute("name", android, "android.permission.VIBRATE");
+        manifest.DocumentElement.AppendChild(vibration);
+        manifest.Save(manifestPath);
+    }
 
     public void Run(BuildTarget target, string path)
     {

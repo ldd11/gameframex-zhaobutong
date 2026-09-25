@@ -599,6 +599,7 @@ namespace Hotfix.UI
         void ApplyResult(int result, Vector3? worldOrigin = null)
         {
             if (result == DifferenceRound.Ignored) return;
+            PlayResultVibration(result);
             if (result >= 0)
             {
                 patchElapsed[result] = 0;

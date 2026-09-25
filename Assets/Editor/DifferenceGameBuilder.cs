@@ -182,6 +182,52 @@ public static class DifferenceGameBuilder
         }
     }
 
+    [MenuItem("Tools/Find Differences/Connect Settings Actions")]
+    public static void ConnectSettingsActions()
+    {
+        if (EditorApplication.isPlaying) throw new InvalidOperationException("请先退出 Play 模式");
+        var path = Folder + "UIDifferences.prefab";
+        var stage = UnityEditor.SceneManagement.PrefabStageUtility.GetCurrentPrefabStage();
+        var editing = stage != null && stage.assetPath == path;
+        var root = editing ? stage.prefabContentsRoot : PrefabUtility.LoadPrefabContents(path);
+        try
+        {
+            var ui = root.GetComponent<UIDifferences>();
+            var card = ui.stage.Find("FigmaSettings/Card");
+            var contact = card.Find("Contact").GetComponent<UnityEngine.UI.Button>();
+            contact.interactable = true;
+            contact.targetGraphic = contact.transform.Find("Surface").GetComponent<UnityEngine.UI.Image>();
+            contact.targetGraphic.raycastTarget = true;
+            var policies = card.Find("Policies");
+            var data = new SerializedObject(ui);
+            data.FindProperty("designContactButton").objectReferenceValue = contact;
+            data.FindProperty("designTermsButton").objectReferenceValue = SettingsLinkButton(policies, "Terms", 0, .54f);
+            data.FindProperty("designPrivacyButton").objectReferenceValue = SettingsLinkButton(policies, "Privacy", .58f, 1);
+            data.ApplyModifiedPropertiesWithoutUndo();
+            PrefabUtility.SaveAsPrefabAsset(root, path);
+        }
+        finally { if (!editing) PrefabUtility.UnloadPrefabContents(root); }
+    }
+
+    static UnityEngine.UI.Button SettingsLinkButton(Transform parent, string name, float left, float right)
+    {
+        var existing = parent.Find(name);
+        if (existing) return existing.GetComponent<UnityEngine.UI.Button>();
+        // Add click areas over the authored text; keep its font, position and size.
+        var node = new GameObject(name, typeof(RectTransform), typeof(UnityEngine.UI.Image), typeof(UnityEngine.UI.Button));
+        node.layer = parent.gameObject.layer;
+        node.transform.SetParent(parent, false);
+        var rect = (RectTransform)node.transform;
+        rect.anchorMin = new Vector2(left, 0); rect.anchorMax = new Vector2(right, 1);
+        rect.offsetMin = rect.offsetMax = Vector2.zero;
+        var image = node.GetComponent<UnityEngine.UI.Image>();
+        image.color = Color.clear;
+        var button = node.GetComponent<UnityEngine.UI.Button>();
+        button.targetGraphic = image;
+        button.transition = UnityEngine.UI.Selectable.Transition.None;
+        return button;
+    }
+
     static void RefreshFigmaBindings(UIDifferences ui)
     {
         BindAudio(ui);
@@ -195,6 +241,7 @@ public static class DifferenceGameBuilder
             "designSettingsButton|FigmaHome|Settings", "designStartButton|FigmaHome|Start",
             "designSettingsClose|FigmaSettings|Close", "designMusicButton|FigmaSettings|Music",
             "designSoundButton|FigmaSettings|Sound", "designVibrationButton|FigmaSettings|Vibration",
+            "designContactButton|FigmaSettings|Contact", "designTermsButton|FigmaSettings|Terms", "designPrivacyButton|FigmaSettings|Privacy",
             "designFailClose|FigmaFail|Close", "designContinueButton|FigmaFail|Continue", "designRetryButton|FigmaFail|Retry",
             "designHintClose|FigmaHint|Close", "designFreeButton|FigmaHint|Free", "designBuyButton|FigmaHint|Buy",
             "designNextButton|FigmaVictory|Next" })
