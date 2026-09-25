@@ -44,6 +44,7 @@ namespace Hotfix.UI
         public UnityEngine.UI.Graphic crossTop, crossBottom;
         public AudioSource audioSource, musicSource;
         public AudioClip foundSound, missSound, winSound;
+        public AudioClip buttonSound, failSound, tipsSound, homeMusic, gameMusic;
         public AudioClip[] musicTracks;
         //public RectTransform[] confetti;
         public DifferenceRound Round { get; private set; }
@@ -136,6 +137,8 @@ namespace Hotfix.UI
             hintSpotlight = DifferenceHintSpotlight.Create((RectTransform)play.transform, hintSpotlightMaterial);
             foreach (var popup in new[] { modal, profile, musicPanel, achievements, album })
                 popup.AddComponent<DifferencePopupMotion>();
+            foreach (var button in GetComponentsInChildren<UnityEngine.UI.Button>(true))
+                button.onClick.AddListener(PlayButtonSound);
             startButton.onClick.AddListener(StartLevel);
             settingsButton.onClick.AddListener(ShowSettings);
             shopButton.onClick.AddListener(ShowShop);
@@ -287,6 +290,7 @@ namespace Hotfix.UI
 
         void ShowPage(GameObject page)
         {
+            PlayMusicForPage(page);
             var wasDragging = tabsDragging;
             tabsDragging = false;
             if (play.activeSelf && page != play) { SaveRound(); CancelEndAnimation(); ClearFoundFeedback(); }
@@ -562,24 +566,25 @@ namespace Hotfix.UI
         public void UseHint()
         {
             if (!play.activeSelf || modal.activeSelf || settings.activeSelf || (hintDesign && hintDesign.activeSelf) || IsLoadingLevel || Round == null || Round.Finished || settled || HintActive) return;
-            if (pendingHint >= 0) { RestoreHint(); return; }
+            if (pendingHint >= 0) { RestoreHint(true); return; }
             if (hints == 0) { hintDesign.SetActive(true); hintDesign.transform.SetAsLastSibling(); return; }
             var result = Round.Hint();
             if (result < 0) return;
             pendingHint = result;
             GameApp.Setting.SetInt(Key + "RoundHint", pendingHint);
             hints--; Save();
-            RestoreHint();
+            RestoreHint(true);
             UpdateHUD();
         }
 
-        void RestoreHint()
+        void RestoreHint(bool playSound = false)
         {
             if (pendingHint < 0 || !play.activeSelf || Round == null || Round.Finished || HintActive) return;
             hintIdle = 0; hintHand.Show(false);
             var spot = spots[pendingHint];
             hintSpotlight.Show(upperImage.GetComponent<DifferenceBoard>(), upperImage.rectTransform, lowerImage.rectTransform,
                 new Vector2(spot.x, spot.y), pendingHint);
+            if (playSound && HintActive) PlayTone(tipsSound);
         }
 
         void AdvanceHintGuide(float deltaTime)
@@ -623,7 +628,7 @@ namespace Hotfix.UI
             {
                 var reward = completed <= level ? 10 : 0;
                 if (reward > 0) { completed = Mathf.Max(completed, level + 1); coins += reward; if (roundMistakes == 0) perfect++; }
-                ClearRound(); Save(); PlayTone(winSound);
+                ClearRound(); Save();
                 endRoutine = StartCoroutine(EndRound(true, reward));
             }
             else endRoutine = StartCoroutine(EndRound(false, 0));
@@ -784,8 +789,15 @@ namespace Hotfix.UI
         }
         void PlayMusic()
         {
+            PlayMusicForPage(currentPage);
+        }
+
+        void PlayMusicForPage(GameObject page)
+        {
             if (!musicEnabled) { musicSource.Stop(); return; }
-            if (musicSource.clip != musicTracks[music]) { musicSource.Stop(); musicSource.clip = musicTracks[music]; }
+            var clip = page == play ? gameMusic : homeMusic;
+            if (!clip) { musicSource.Stop(); return; }
+            if (musicSource.clip != clip) { musicSource.Stop(); musicSource.clip = clip; }
             if (!musicSource.isPlaying) musicSource.Play();
         }
 
@@ -1016,7 +1028,8 @@ namespace Hotfix.UI
             var found = stage.Find(path); if (!found) throw new InvalidOperationException("缺少 UI 节点：" + path);
             return found.GetComponent<T>();
         }
-        void Bind(string path, Action action) { At<UnityEngine.UI.Button>(path).onClick.AddListener(() => { PlayTone(foundSound); action(); }); }
+        void PlayButtonSound() { PlayTone(buttonSound); }
+        void Bind(string path, Action action) { At<UnityEngine.UI.Button>(path).onClick.AddListener(() => action()); }
         void SetText(string path, string value) { At<UnityEngine.UI.Text>(path).text = value; }
     }
 }

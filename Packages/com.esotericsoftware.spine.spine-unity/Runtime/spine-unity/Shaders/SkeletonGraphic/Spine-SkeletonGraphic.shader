@@ -65,7 +65,8 @@ Shader "Spine/SkeletonGraphic"
 			Name "Normal"
 
 		CGPROGRAM
-			#pragma shader_feature _ _STRAIGHT_ALPHA_INPUT
+			// YooAsset packs shaders separately from materials: retain both alpha modes in players.
+			#pragma multi_compile _ _STRAIGHT_ALPHA_INPUT
 			#pragma shader_feature _ _CANVAS_GROUP_COMPATIBLE
 			#pragma vertex vert
 			#pragma fragment frag

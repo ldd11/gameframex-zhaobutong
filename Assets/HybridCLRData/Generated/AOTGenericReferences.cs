@@ -285,6 +285,7 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// System.Comparison<int>
 	// System.Comparison<long>
 	// System.Comparison<object>
+	// System.Converter<object,UnityEngine.Vector2>
 	// System.EventHandler<object>
 	// System.Func<System.Threading.Tasks.VoidTaskResult>
 	// System.Func<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>>>
@@ -308,7 +309,6 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// System.Func<object,object,object>
 	// System.Func<object,object>
 	// System.Func<object>
-	// System.Nullable<UnityEngine.Color>
 	// System.Nullable<UnityEngine.Vector3>
 	// System.Nullable<long>
 	// System.Predicate<Hotfix.Events.PlayerAttributeChangeItem>
@@ -522,27 +522,34 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 		// System.Threading.Tasks.Task<object> GameFrameX.Web.ProtoBuff.Runtime.WebProtoBuffComponent.Post<object>(string,GameFrameX.Network.Runtime.MessageObject)
 		// string LuBan.Runtime.StringUtil.CollectionToString<int>(System.Collections.Generic.IEnumerable<int>)
 		// object System.Activator.CreateInstance<object>()
+		// UnityEngine.Vector2[] System.Array.ConvertAll<object,UnityEngine.Vector2>(object[],System.Converter<object,UnityEngine.Vector2>)
 		// object[] System.Array.Empty<object>()
 		// System.Void System.Array.Resize<object>(object[]&,int)
+		// System.Void System.Array.Sort<int>(int[],System.Comparison<int>)
 		// bool System.Linq.Enumerable.All<object>(System.Collections.Generic.IEnumerable<object>,System.Func<object,bool>)
 		// object System.Linq.Enumerable.FirstOrDefault<object>(System.Collections.Generic.IEnumerable<object>,System.Func<object,bool>)
 		// System.Collections.Generic.List<object> System.Linq.Enumerable.ToList<object>(System.Collections.Generic.IEnumerable<object>)
+		// System.Void System.Runtime.CompilerServices.AsyncTaskMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,Hotfix.HotfixLauncher.<LaunchDifferences>d__1>(Cysharp.Threading.Tasks.UniTask.Awaiter&,Hotfix.HotfixLauncher.<LaunchDifferences>d__1&)
 		// System.Void System.Runtime.CompilerServices.AsyncTaskMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter,Hotfix.Config.TablesComponent.<LoadAsync>d__22>(System.Runtime.CompilerServices.TaskAwaiter&,Hotfix.Config.TablesComponent.<LoadAsync>d__22&)
 		// System.Void System.Runtime.CompilerServices.AsyncTaskMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter<object>,Hotfix.Config.Local.TbLocalization.<LoadAsync>d__2>(System.Runtime.CompilerServices.TaskAwaiter<object>&,Hotfix.Config.Local.TbLocalization.<LoadAsync>d__2&)
 		// System.Void System.Runtime.CompilerServices.AsyncTaskMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter<object>,Hotfix.Config.Tables.TbAchievementConfig.<LoadAsync>d__2>(System.Runtime.CompilerServices.TaskAwaiter<object>&,Hotfix.Config.Tables.TbAchievementConfig.<LoadAsync>d__2&)
 		// System.Void System.Runtime.CompilerServices.AsyncTaskMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter<object>,Hotfix.Config.Tables.TbItemConfig.<LoadAsync>d__2>(System.Runtime.CompilerServices.TaskAwaiter<object>&,Hotfix.Config.Tables.TbItemConfig.<LoadAsync>d__2&)
 		// System.Void System.Runtime.CompilerServices.AsyncTaskMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter<object>,Hotfix.Config.Tables.TbSoundsConfig.<LoadAsync>d__2>(System.Runtime.CompilerServices.TaskAwaiter<object>&,Hotfix.Config.Tables.TbSoundsConfig.<LoadAsync>d__2&)
+		// System.Void System.Runtime.CompilerServices.AsyncTaskMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter<object>,Hotfix.HotfixLauncher.<LaunchDifferences>d__1>(System.Runtime.CompilerServices.TaskAwaiter<object>&,Hotfix.HotfixLauncher.<LaunchDifferences>d__1&)
+		// System.Void System.Runtime.CompilerServices.AsyncTaskMethodBuilder<System.Threading.Tasks.VoidTaskResult>.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,Hotfix.HotfixLauncher.<LaunchDifferences>d__1>(Cysharp.Threading.Tasks.UniTask.Awaiter&,Hotfix.HotfixLauncher.<LaunchDifferences>d__1&)
 		// System.Void System.Runtime.CompilerServices.AsyncTaskMethodBuilder<System.Threading.Tasks.VoidTaskResult>.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter,Hotfix.Config.TablesComponent.<LoadAsync>d__22>(System.Runtime.CompilerServices.TaskAwaiter&,Hotfix.Config.TablesComponent.<LoadAsync>d__22&)
 		// System.Void System.Runtime.CompilerServices.AsyncTaskMethodBuilder<System.Threading.Tasks.VoidTaskResult>.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter<object>,Hotfix.Config.Local.TbLocalization.<LoadAsync>d__2>(System.Runtime.CompilerServices.TaskAwaiter<object>&,Hotfix.Config.Local.TbLocalization.<LoadAsync>d__2&)
 		// System.Void System.Runtime.CompilerServices.AsyncTaskMethodBuilder<System.Threading.Tasks.VoidTaskResult>.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter<object>,Hotfix.Config.Tables.TbAchievementConfig.<LoadAsync>d__2>(System.Runtime.CompilerServices.TaskAwaiter<object>&,Hotfix.Config.Tables.TbAchievementConfig.<LoadAsync>d__2&)
 		// System.Void System.Runtime.CompilerServices.AsyncTaskMethodBuilder<System.Threading.Tasks.VoidTaskResult>.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter<object>,Hotfix.Config.Tables.TbItemConfig.<LoadAsync>d__2>(System.Runtime.CompilerServices.TaskAwaiter<object>&,Hotfix.Config.Tables.TbItemConfig.<LoadAsync>d__2&)
 		// System.Void System.Runtime.CompilerServices.AsyncTaskMethodBuilder<System.Threading.Tasks.VoidTaskResult>.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter<object>,Hotfix.Config.Tables.TbSoundsConfig.<LoadAsync>d__2>(System.Runtime.CompilerServices.TaskAwaiter<object>&,Hotfix.Config.Tables.TbSoundsConfig.<LoadAsync>d__2&)
+		// System.Void System.Runtime.CompilerServices.AsyncTaskMethodBuilder<System.Threading.Tasks.VoidTaskResult>.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter<object>,Hotfix.HotfixLauncher.<LaunchDifferences>d__1>(System.Runtime.CompilerServices.TaskAwaiter<object>&,Hotfix.HotfixLauncher.<LaunchDifferences>d__1&)
 		// System.Void System.Runtime.CompilerServices.AsyncTaskMethodBuilder<object>.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter<object>,Hotfix.HotfixLauncher.<ConfigLoader>d__6>(System.Runtime.CompilerServices.TaskAwaiter<object>&,Hotfix.HotfixLauncher.<ConfigLoader>d__6&)
 		// System.Void System.Runtime.CompilerServices.AsyncTaskMethodBuilder.Start<Hotfix.Config.Local.TbLocalization.<LoadAsync>d__2>(Hotfix.Config.Local.TbLocalization.<LoadAsync>d__2&)
 		// System.Void System.Runtime.CompilerServices.AsyncTaskMethodBuilder.Start<Hotfix.Config.Tables.TbAchievementConfig.<LoadAsync>d__2>(Hotfix.Config.Tables.TbAchievementConfig.<LoadAsync>d__2&)
 		// System.Void System.Runtime.CompilerServices.AsyncTaskMethodBuilder.Start<Hotfix.Config.Tables.TbItemConfig.<LoadAsync>d__2>(Hotfix.Config.Tables.TbItemConfig.<LoadAsync>d__2&)
 		// System.Void System.Runtime.CompilerServices.AsyncTaskMethodBuilder.Start<Hotfix.Config.Tables.TbSoundsConfig.<LoadAsync>d__2>(Hotfix.Config.Tables.TbSoundsConfig.<LoadAsync>d__2&)
 		// System.Void System.Runtime.CompilerServices.AsyncTaskMethodBuilder.Start<Hotfix.Config.TablesComponent.<LoadAsync>d__22>(Hotfix.Config.TablesComponent.<LoadAsync>d__22&)
+		// System.Void System.Runtime.CompilerServices.AsyncTaskMethodBuilder.Start<Hotfix.HotfixLauncher.<LaunchDifferences>d__1>(Hotfix.HotfixLauncher.<LaunchDifferences>d__1&)
 		// System.Void System.Runtime.CompilerServices.AsyncTaskMethodBuilder<object>.Start<GameFrameX.UI.Runtime.UIComponent.<OpenAsync>d__110<object>>(GameFrameX.UI.Runtime.UIComponent.<OpenAsync>d__110<object>&)
 		// System.Void System.Runtime.CompilerServices.AsyncTaskMethodBuilder<object>.Start<GameFrameX.UI.Runtime.UIComponent.<OpenFullScreenAsync>d__103<object>>(GameFrameX.UI.Runtime.UIComponent.<OpenFullScreenAsync>d__103<object>&)
 		// System.Void System.Runtime.CompilerServices.AsyncTaskMethodBuilder<object>.Start<GameFrameX.UI.Runtime.UIComponent.<OpenFullScreenAsync>d__104<object>>(GameFrameX.UI.Runtime.UIComponent.<OpenFullScreenAsync>d__104<object>&)
@@ -550,7 +557,6 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,Hotfix.UI.UIPlayerList.<Login>d__7>(Cysharp.Threading.Tasks.UniTask.Awaiter&,Hotfix.UI.UIPlayerList.<Login>d__7&)
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,Hotfix.UI.UIRoomListPanel.<OnOpen>d__14>(Cysharp.Threading.Tasks.UniTask.Awaiter&,Hotfix.UI.UIRoomListPanel.<OnOpen>d__14&)
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter,Hotfix.HotfixLauncher.<LoadConfig>d__3>(System.Runtime.CompilerServices.TaskAwaiter&,Hotfix.HotfixLauncher.<LoadConfig>d__3&)
-		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter<object>,Hotfix.HotfixLauncher.<LaunchDifferences>d__1>(System.Runtime.CompilerServices.TaskAwaiter<object>&,Hotfix.HotfixLauncher.<LaunchDifferences>d__1&)
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter<object>,Hotfix.HotfixLauncher.<LoadUI>d__2>(System.Runtime.CompilerServices.TaskAwaiter<object>&,Hotfix.HotfixLauncher.<LoadUI>d__2&)
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter<object>,Hotfix.UI.UILogin.<Login>d__3>(System.Runtime.CompilerServices.TaskAwaiter<object>&,Hotfix.UI.UILogin.<Login>d__3&)
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter<object>,Hotfix.UI.UIMain.<OnBagBtnClick>d__2>(System.Runtime.CompilerServices.TaskAwaiter<object>&,Hotfix.UI.UIMain.<OnBagBtnClick>d__2&)
@@ -560,7 +566,6 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter<object>,Hotfix.UI.UIPlayerList.<Login>d__7>(System.Runtime.CompilerServices.TaskAwaiter<object>&,Hotfix.UI.UIPlayerList.<Login>d__7&)
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter<object>,Hotfix.UI.UIPlayerList.<OnOpen>d__5>(System.Runtime.CompilerServices.TaskAwaiter<object>&,Hotfix.UI.UIPlayerList.<OnOpen>d__5&)
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter<object>,Hotfix.UI.UIPlayerList.<OnPlayerListItemClick>d__9>(System.Runtime.CompilerServices.TaskAwaiter<object>&,Hotfix.UI.UIPlayerList.<OnPlayerListItemClick>d__9&)
-		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Start<Hotfix.HotfixLauncher.<LaunchDifferences>d__1>(Hotfix.HotfixLauncher.<LaunchDifferences>d__1&)
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Start<Hotfix.HotfixLauncher.<LoadConfig>d__3>(Hotfix.HotfixLauncher.<LoadConfig>d__3&)
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Start<Hotfix.HotfixLauncher.<LoadUI>d__2>(Hotfix.HotfixLauncher.<LoadUI>d__2&)
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Start<Hotfix.UI.UILogin.<Login>d__3>(Hotfix.UI.UILogin.<Login>d__3&)
@@ -579,10 +584,12 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 		// object[] UnityEngine.Component.GetComponentsInChildren<object>(bool)
 		// object UnityEngine.GameObject.AddComponent<object>()
 		// object UnityEngine.GameObject.GetComponent<object>()
+		// object UnityEngine.GameObject.GetComponentInParent<object>()
+		// object UnityEngine.GameObject.GetComponentInParent<object>(bool)
+		// object[] UnityEngine.GameObject.GetComponentsInChildren<object>()
 		// object[] UnityEngine.GameObject.GetComponentsInChildren<object>(bool)
 		// object UnityEngine.Object.Instantiate<object>(object,UnityEngine.Transform)
 		// object UnityEngine.Object.Instantiate<object>(object,UnityEngine.Transform,bool)
-		// object UnityEngine.Resources.Load<object>(string)
 		// object YooAsset.AssetHandle.GetAssetObject<object>()
 		// string string.Join<int>(string,System.Collections.Generic.IEnumerable<int>)
 		// string string.JoinCore<int>(System.Char*,int,System.Collections.Generic.IEnumerable<int>)

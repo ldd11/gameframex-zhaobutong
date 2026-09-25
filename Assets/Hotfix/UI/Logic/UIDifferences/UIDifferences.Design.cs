@@ -84,6 +84,22 @@ namespace Hotfix.UI
             victoryPreview.sprite = upperImage.sprite;
             failProgress.text = "You completed " + Mathf.RoundToInt(100f * Round.Count / Mathf.Max(1, Round.Total)) + "%.";
             UpdateFigmaDesign(currentPage);
+            if (won) ReplayVictoryAnimation();
+            PlayTone(won ? winSound : failSound);
+        }
+
+        void ReplayVictoryAnimation()
+        {
+            foreach (var animation in victoryDesign.GetComponentsInChildren<Spine.Unity.SkeletonGraphic>())
+            {
+                animation.Initialize(false);
+                animation.UnscaledTime = true;
+                animation.freeze = false;
+                animation.AnimationState.ClearTracks();
+                animation.Skeleton.SetToSetupPose();
+                animation.AnimationState.SetAnimation(0, animation.startingAnimation, false);
+                animation.Update(0);
+            }
         }
 
         void CloseFigmaResult() { CancelRewardCoins(); figmaResultActive = false; UpdateFigmaDesign(currentPage); }
@@ -121,6 +137,7 @@ namespace Hotfix.UI
                     }
                     var target = progressDots[i].rectTransform;
                     StartCoroutine(Pulse(target));
+                    PlayTone(foundSound);
                     if (foundArrivalPrefab)
                     {
                         var effect = Instantiate(foundArrivalPrefab, root.transform, false);

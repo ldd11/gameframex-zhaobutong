@@ -587,10 +587,8 @@ public static class DifferenceGamePlayCheck
             Click(ui, "Settings/Scroll/Viewport/Content/Sound");
             Click(ui, "Settings/Scroll/Viewport/Content/Music");
             Check(!settings.GetBool(key + "Sound") && !settings.GetBool(key + "Music"), "音效和音乐开关保存");
-            Click(ui, "Settings/Scroll/Viewport/Content/SelectMusic");
-            Click(ui, "MusicPanel/Card/Track2");
-            Check(settings.GetInt(key + "MusicTrack") == 2 && settings.GetBool(key + "Music") && ui.musicSource.clip == ui.musicTracks[2], "选择音乐并启用");
-            Click(ui, "MusicPanel/Close");
+            Click(ui, "Settings/Scroll/Viewport/Content/Music");
+            Check(settings.GetBool(key + "Music") && ui.musicSource.clip == (ui.play.activeSelf ? ui.gameMusic : ui.homeMusic), "启用当前页面背景音乐");
             Click(ui, "Settings/Scroll/Viewport/Content/Music");
             Click(ui, "Settings/Close");
             ui.OnOpen(null);
@@ -598,7 +596,7 @@ public static class DifferenceGamePlayCheck
             Click(ui.settingsButton);
             Click(ui, "Settings/Scroll/Viewport/Content/Sound");
             Click(ui, "Settings/Scroll/Viewport/Content/Music");
-            Check(settings.GetBool(key + "Sound") && settings.GetBool(key + "Music") && ui.musicSource.clip == ui.musicTracks[2], "重载后开关与选曲一致");
+            Check(settings.GetBool(key + "Sound") && settings.GetBool(key + "Music") && ui.musicSource.clip == ui.homeMusic, "重载后开关与主页音乐一致");
             Click(ui, "Settings/Scroll/Viewport/Content/Achievements");
             Check(ui.achievements.activeSelf && Text(ui, "Achievements/Card/Row3/State") == "已达成", "成就页面进度");
             Click(ui, "Achievements/Close");

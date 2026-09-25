@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Hotfix.UI;
@@ -26,6 +27,119 @@ public static class DifferenceUiSmokeCheck
     static double deadline;
 
     static DifferenceUiSmokeCheck() { EditorApplication.update += Tick; }
+
+    static TaskCompletionSource<bool> startupGate;
+    public static Task DelayedStartupForCheck() => startupGate.Task;
+
+    [MenuItem("Tools/Find Differences/Check Startup Await Only")]
+    public static async void CheckStartupAwaitOnly()
+    {
+        try
+        {
+            var helper = AppDomain.CurrentDomain.GetAssemblies().Select(assembly => assembly.GetType("GameFrameX.Startup.Application.HotfixHelper")).First(type => type != null);
+            var invoke = helper.GetMethod("InvokeEntry", BindingFlags.Static | BindingFlags.NonPublic);
+            for (var fail = 0; fail < 2; fail++)
+            {
+                startupGate = new TaskCompletionSource<bool>();
+                var result = invoke.Invoke(null, new object[] { typeof(DifferenceUiSmokeCheck), nameof(DelayedStartupForCheck) });
+                var asTask = result.GetType().Assembly.GetType("Cysharp.Threading.Tasks.UniTaskExtensions").GetMethod("AsTask", new[] { result.GetType() });
+                var pending = (Task)asTask.Invoke(null, new[] { result });
+                if (pending.IsCompleted) throw new Exception("主页未就绪时启动流程提前完成");
+                if (fail == 0) { startupGate.SetResult(true); await pending; }
+                else
+                {
+                    startupGate.SetException(new InvalidOperationException("expected startup failure"));
+                    try { await pending; throw new Exception("启动错误被吞掉"); }
+                    catch (InvalidOperationException error) when (error.Message == "expected startup failure") { }
+                }
+            }
+            File.WriteAllText("Temp/startup-await-check.txt", "PASS: waits for home readiness; startup errors propagate");
+        }
+        catch (Exception error) { File.WriteAllText("Temp/startup-await-check.txt", "FAIL: " + error); Debug.LogException(error); }
+    }
+
+    [MenuItem("Tools/Find Differences/Build Android Spine Shader Check")]
+    public static void BuildAndroidSpineShaderCheck()
+    {
+        if (EditorApplication.isPlaying) throw new Exception("请先退出 Play 模式");
+        const string folder = "Temp/SpineAlphaCheck";
+        const string shaders = "Packages/com.esotericsoftware.spine.spine-unity/Runtime/spine-unity/Shaders/SkeletonGraphic/";
+        Directory.CreateDirectory(folder);
+        var build = new AssetBundleBuild { assetBundleName = "spine-alpha.bundle", assetNames = new[] {
+            shaders + "Spine-SkeletonGraphic.shader", shaders + "Spine-SkeletonGraphic-Additive.shader",
+            shaders + "Spine-SkeletonGraphic-Multiply.shader", shaders + "Spine-SkeletonGraphic-Screen.shader" } };
+        var result = BuildPipeline.BuildAssetBundles(folder, new[] { build },
+            BuildAssetBundleOptions.ForceRebuildAssetBundle | BuildAssetBundleOptions.ChunkBasedCompression, BuildTarget.Android);
+        if (!result) throw new Exception("Android Spine Shader 编译失败");
+        Debug.Log("Android Spine shader check bundle: " + folder + "/spine-alpha.bundle");
+    }
+
+    [MenuItem("Tools/Find Differences/Check Victory Replay Only")]
+    public static void CheckVictoryReplayOnly()
+    {
+        var root = PrefabUtility.LoadPrefabContents("Assets/Bundles/UI/UIDifferences/UIDifferences.prefab");
+        try
+        {
+            var ui = root.GetComponent<UIDifferences>();
+            var page = (GameObject)Field(ui, "victoryDesign");
+            var replay = typeof(UIDifferences).GetMethod("ReplayVictoryAnimation", Private);
+            var spine = page.GetComponentInChildren<Spine.Unity.SkeletonGraphic>(true);
+            if (!spine) throw new Exception("成功页缺少 Spine");
+            for (var i = 0; i < 2; i++)
+            {
+                page.SetActive(true);
+                replay.Invoke(ui, null);
+                var track = spine.AnimationState.GetCurrent(0);
+                if (track == null || track.Animation.Name != "animation" || track.TrackTime != 0 || track.Loop || !spine.UnscaledTime)
+                    throw new Exception("成功页动画未从头播放");
+                spine.Update(track.Animation.Duration + .1f);
+                page.SetActive(false);
+            }
+            Debug.Log("PASS: victory Spine restarts on first and subsequent openings");
+        }
+        finally { PrefabUtility.UnloadPrefabContents(root); }
+    }
+
+    [MenuItem("Tools/Find Differences/Check Audio Only")]
+    public static void CheckAudioOnly()
+    {
+        var ui = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Bundles/UI/UIDifferences/UIDifferences.prefab").GetComponent<UIDifferences>();
+        foreach (var binding in new[] { "buttonSound|Click_Btn.wav", "failSound|False.wav", "foundSound|Found.wav", "missSound|Miss.wav", "winSound|Win.wav", "tipsSound|Tips.WAV", "homeMusic|MusicHome.wav", "gameMusic|MusicGame.wav" })
+        {
+            var pair = binding.Split('|');
+            var clip = (AudioClip)typeof(UIDifferences).GetField(pair[0]).GetValue(ui);
+            if (!clip || AssetDatabase.GetAssetPath(clip) != "Assets/Bundles/UI/UIDifferences/Audio/" + pair[1])
+                throw new Exception("音频绑定错误：" + binding);
+        }
+        if (!ui.musicSource.loop || ui.audioSource == ui.musicSource) throw new Exception("背景音乐应循环，并与音效使用独立声源");
+        if (Application.isPlaying)
+        {
+            ui = UnityEngine.Object.FindObjectOfType<UIDifferences>();
+            if (!ui) throw new Exception("请先打开游戏主页");
+            var enabled = (bool)Field(ui, "musicEnabled");
+            var toggle = typeof(UIDifferences).GetField("musicEnabled", Private);
+            var method = typeof(UIDifferences).GetMethod("PlayMusicForPage", Private);
+            try
+            {
+                toggle.SetValue(ui, true);
+                foreach (var page in new[] { ui.home, ui.play, ui.home })
+                {
+                    method.Invoke(ui, new object[] { page });
+                    if (ui.musicSource.clip != (page == ui.play ? ui.gameMusic : ui.homeMusic) || !ui.musicSource.isPlaying)
+                        throw new Exception("页面背景音乐切换失败");
+                }
+                toggle.SetValue(ui, false);
+                method.Invoke(ui, new object[] { ui.play });
+                if (ui.musicSource.isPlaying) throw new Exception("关闭音乐后仍在播放");
+            }
+            finally
+            {
+                toggle.SetValue(ui, enabled);
+                method.Invoke(ui, new object[] { Field(ui, "currentPage") });
+            }
+        }
+        Debug.Log("PASS: all 8 audio bindings; in Play mode also checks home/game music switching and mute");
+    }
 
     [MenuItem("Tools/Find Differences/Check Reward Coins Only")]
     public static async void CheckRewardCoinsOnly()
@@ -819,6 +933,8 @@ public static class DifferenceUiSmokeCheck
             var check = File.ReadAllText(Request).Trim();
             File.Delete(Request);
             if (check == "reward") { CheckRewardCoinsOnly(); return; }
+            if (check == "spine-alpha") { BuildAndroidSpineShaderCheck(); return; }
+            if (check == "startup-await") { CheckStartupAwaitOnly(); return; }
             Start();
         }
         if (!SessionState.GetBool(Pending, false)) return;

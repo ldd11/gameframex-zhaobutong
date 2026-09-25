@@ -51,13 +51,7 @@ namespace GameFrameX.Startup.Application
             }
         }
 
-        private static
-#if ENABLE_GAME_FRAME_X_HYBRID_CLR && !DISABLE_HYBRIDCLR
-            async UniTask
-#else
-            UniTask
-#endif
-            StartHotfixInternalAsync(StartupOptions options)
+        private static async UniTask StartHotfixInternalAsync(StartupOptions options)
         {
             var assemblyName = options == null || string.IsNullOrEmpty(options.HotfixAssemblyName)
                 ? "Unity.Hotfix"
@@ -77,12 +71,12 @@ namespace GameFrameX.Startup.Application
                 {
                     if (assembly.GetName().Name.Equals(assemblyName, StringComparison.OrdinalIgnoreCase))
                     {
-                        Run(assembly, entryTypeName, entryMethodName);
-                        break;
+                        await Run(assembly, entryTypeName, entryMethodName);
+                        return;
                     }
                 }
 
-                return;
+                throw new TypeLoadException("未找到热更程序集：" + assemblyName);
             }
 
             Log.Info("开始加载AOT DLL");
@@ -102,32 +96,34 @@ namespace GameFrameX.Startup.Application
             var assemblyDataHotfixDll = assetHotfixDllOperationHandle.GetAssetObject<UnityEngine.TextAsset>().bytes;
             Log.Info("开始加载程序集Hotfix");
             var hotfixAssembly = Assembly.Load(assemblyDataHotfixDll, null);
-            Run(hotfixAssembly, entryTypeName, entryMethodName);
+            await Run(hotfixAssembly, entryTypeName, entryMethodName);
 
 #else
-            RunNative(entryTypeName, entryMethodName);
-            return UniTask.CompletedTask;
+            await RunNative(entryTypeName, entryMethodName);
 #endif
         }
 #if ENABLE_GAME_FRAME_X_HYBRID_CLR && !DISABLE_HYBRIDCLR
-        private static void Run(Assembly assembly, string entryTypeName, string entryMethodName)
+        private static UniTask Run(Assembly assembly, string entryTypeName, string entryMethodName)
         {
             Log.Info("加载程序集Hotfix 结束 Assembly " + assembly.FullName);
-            var entryType = assembly.GetType(entryTypeName);
-            Log.Info("加载程序集Hotfix 结束 EntryType " + entryType.FullName);
-            var method = entryType.GetMethod(entryMethodName);
-            Log.Info("加载程序集Hotfix 结束 EntryType=>method " + method?.Name);
-            method?.Invoke(null, null);
+            return InvokeEntry(assembly.GetType(entryTypeName, true), entryMethodName);
         }
 #else
-        private static void RunNative(string entryTypeName, string entryMethodName)
+        private static UniTask RunNative(string entryTypeName, string entryMethodName)
         {
             var entryType = Utility.Assembly.GetType(entryTypeName);
-            Log.Info("加载程序集Hotfix 结束 EntryType " + entryType.FullName);
-            var method = entryType.GetMethod(entryMethodName);
-            Log.Info("加载程序集Hotfix 结束 EntryType=>method " + method?.Name);
-            method?.Invoke(null, null);
+            if (entryType == null) throw new TypeLoadException(entryTypeName);
+            return InvokeEntry(entryType, entryMethodName);
         }
 #endif
+        private static async UniTask InvokeEntry(Type entryType, string entryMethodName)
+        {
+            Log.Info("加载程序集Hotfix 结束 EntryType " + entryType.FullName);
+            var method = entryType.GetMethod(entryMethodName);
+            if (method == null) throw new MissingMethodException(entryType.FullName, entryMethodName);
+            var result = method.Invoke(null, null);
+            if (result is System.Threading.Tasks.Task task) await task;
+            else if (result is UniTask uniTask) await uniTask;
+        }
     }
 }

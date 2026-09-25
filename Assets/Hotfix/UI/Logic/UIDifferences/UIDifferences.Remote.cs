@@ -132,7 +132,7 @@ namespace Hotfix.UI
             label.rectTransform.anchoredPosition = new Vector2(x, -794);
             label.rectTransform.sizeDelta = new Vector2(160, 49);
             var button = label.gameObject.AddComponent<UnityEngine.UI.Button>();
-            button.targetGraphic = label; button.onClick.AddListener(() => ChangeAlbumPage(step));
+            button.targetGraphic = label; button.onClick.AddListener(PlayButtonSound); button.onClick.AddListener(() => ChangeAlbumPage(step));
             return button;
         }
 

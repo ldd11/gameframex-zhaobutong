@@ -81,8 +81,7 @@ public static class DifferenceGameBuilder
             ui.noticeLabel=Label(toast,"Text",4,0,472,52,"",24,Color.white);toast.gameObject.SetActive(false);
             ui.audioSource=root.AddComponent<AudioSource>();ui.audioSource.playOnAwake=false;
             ui.musicSource=root.AddComponent<AudioSource>();ui.musicSource.playOnAwake=false;ui.musicSource.loop=true;ui.musicSource.volume=.16f;
-            ui.foundSound=Tone("Found",880);ui.missSound=Tone("Miss",190);ui.winSound=Tone("Win",1320);
-            ui.musicTracks=new AudioClip[4];for(var i=0;i<4;i++)ui.musicTracks[i]=Music(i);
+            BindAudio(ui);
             foreach(var page in new[]{ui.play,ui.shop,ui.ranking,ui.settings,ui.profile,ui.musicPanel,ui.achievements,ui.album,ui.modal})page.SetActive(false);
             ApplyGameplayArt(ui);
             PrefabUtility.SaveAsPrefabAsset(root,Folder+"UIDifferences.prefab");
@@ -185,6 +184,7 @@ public static class DifferenceGameBuilder
 
     static void RefreshFigmaBindings(UIDifferences ui)
     {
+        BindAudio(ui);
         if (!ui.foundFlightPrefab)
             ui.foundFlightPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(Folder + "Effect/SelectEffect/a1a1/xingxingtuowei2.prefab");
         if (!ui.foundArrivalPrefab)
@@ -612,24 +612,25 @@ public static class DifferenceGameBuilder
         t.Apply();File.WriteAllBytes(Folder+"Art/"+name+".png",t.EncodeToPNG());UnityEngine.Object.DestroyImmediate(t);var sprite=ImportSprite("Art/"+name+".png");
         if(kind==0){var imp=(TextureImporter)AssetImporter.GetAtPath(Folder+"Art/"+name+".png");imp.spriteBorder=new Vector4(24,24,24,24);imp.SaveAndReimport();sprite=AssetDatabase.LoadAssetAtPath<Sprite>(Folder+"Art/"+name+".png");}return sprite;
     }
-    static AudioClip Tone(string name,float frequency)
-    {return WriteWave(name,.23f,(i,rate)=>Math.Sin(i*2*Math.PI*frequency/rate)*Math.Sin(Math.PI*i/(rate*.23))* .35);}
-    static AudioClip Music(int track)
+    static void BindAudio(UIDifferences ui)
     {
-        var notes=new[]{0,4,7,12,7,4,2,7,11,14,11,7,5,9,12,17,12,9,4,7,12,16,12,7};
-        return WriteWave("Music"+track,12,(i,rate)=>{
-            var time=i/(double)rate;var beat=time/.5;var step=(int)beat;var local=(beat-step)*.5;
-            var midi=60+track*2+notes[(step+track*3)%notes.Length];var frequency=440*Math.Pow(2,(midi-69)/12.0);
-            var envelope=(1-Math.Exp(-local*55))*Math.Exp(-local*7);
-            var note=(Math.Sin(2*Math.PI*frequency*local)+.24*Math.Sin(4*Math.PI*frequency*local))*envelope*.16;
-            var bass=110*Math.Pow(2,track*2/12.0);return note+Math.Sin(time*2*Math.PI*bass)*.035*Math.Pow(Math.Sin(Math.PI*time/12),2);
-        });
+        AudioClip Clip(string name)
+        {
+            var path = Folder + "Audio/" + name;
+            var clip = AssetDatabase.LoadAssetAtPath<AudioClip>(path);
+            if (!clip) throw new InvalidOperationException("缺少音频：" + path);
+            return clip;
+        }
+        ui.buttonSound = Clip("Click_Btn.wav");
+        ui.failSound = Clip("False.wav");
+        ui.foundSound = Clip("Found.wav");
+        ui.missSound = Clip("Miss.wav");
+        ui.winSound = Clip("Win.wav");
+        ui.tipsSound = Clip("Tips.WAV");
+        ui.homeMusic = Clip("MusicHome.wav");
+        ui.gameMusic = Clip("MusicGame.wav");
+        ui.musicTracks = Array.Empty<AudioClip>();
     }
-    static AudioClip WriteWave(string name,float seconds,Func<int,int,double> sample)
-    {
-        var path=Folder+"Art/"+name+".wav";const int rate=22050;var count=(int)(rate*seconds);
-        using(var w=new BinaryWriter(File.Create(path))){w.Write(System.Text.Encoding.ASCII.GetBytes("RIFF"));w.Write(36+count*2);w.Write(System.Text.Encoding.ASCII.GetBytes("WAVEfmt "));w.Write(16);w.Write((short)1);w.Write((short)1);w.Write(rate);w.Write(rate*2);w.Write((short)2);w.Write((short)16);w.Write(System.Text.Encoding.ASCII.GetBytes("data"));w.Write(count*2);for(var i=0;i<count;i++)w.Write((short)(Math.Max(-1,Math.Min(1,sample(i,rate)))*32767));}
-        AssetDatabase.ImportAsset(path,ImportAssetOptions.ForceSynchronousImport);return AssetDatabase.LoadAssetAtPath<AudioClip>(path);
-    }
+
 }
 #endif

@@ -25,24 +25,27 @@ namespace Hotfix
 {
     public static class HotfixLauncher
     {
-        public static void Main()
+        public static Task Main()
         {
 #if ENABLE_UI_UGUI
             GameApp.Base.FrameRate = 60;
-            LaunchDifferences();
+            return LaunchDifferences();
 #else
             Log.Info("Hello World HybridCLR");
             ProtoMessageIdHandler.Init(HotfixProtoHandler.CurrentAssembly);
             LoadConfig();
             LoadUI();
+            return Task.CompletedTask;
 #endif
         }
 
 #if ENABLE_UI_UGUI
-        private static async void LaunchDifferences()
+        private static async Task LaunchDifferences()
         {
-            try { await GameApp.UI.OpenFullScreenAsync<UIDifferences>(); }
-            catch (System.Exception error) { Log.Error("找不同启动失败：" + error); }
+            await GameApp.UI.OpenFullScreenAsync<UIDifferences>();
+            // Keep the launcher visible through the home's first layout/update frame.
+            await UniTask.NextFrame();
+            Canvas.ForceUpdateCanvases();
         }
 #endif
 
