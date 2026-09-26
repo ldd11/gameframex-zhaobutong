@@ -28,6 +28,81 @@ public static class DifferenceUiSmokeCheck
 
     static DifferenceUiSmokeCheck() { EditorApplication.update += Tick; }
 
+    [MenuItem("Tools/Find Differences/Check Responsive Play Layout Only")]
+    public static void CheckResponsivePlayLayoutOnly()
+    {
+        var root = PrefabUtility.LoadPrefabContents("Assets/Bundles/UI/UIDifferences/UIDifferences.prefab");
+        try
+        {
+            var ui = root.GetComponent<UIDifferences>();
+            var layout = ui.play.GetComponent<DifferencePlayLayout>();
+            if (!layout) throw new Exception("游戏页没有绑定适配组件");
+            var rect = (RectTransform)root.transform;
+            rect.anchorMin = rect.anchorMax = rect.pivot = Vector2.one * .5f;
+            var items = new[] { layout.upper, layout.lower, layout.frame, layout.progress, layout.back, layout.life, layout.hint, layout.zoom };
+            var anchors = items.Select(r => new Vector4(r.anchorMin.x, r.anchorMin.y, r.anchorMax.x, r.anchorMax.y)).ToArray();
+            var guide = DifferenceHintHand.Create(ui.hintButton, ui.hintHandSprite);
+            guide.Show(true);
+            var hand = (RectTransform)guide.transform.Find("Hand");
+            var advanceHand = typeof(DifferenceHintHand).GetMethod("Advance", Private);
+            var report = new System.Text.StringBuilder();
+            foreach (var adHeight in new[] { 0f, 120f, 240f })
+            foreach (var screen in new[] { new Vector2(1179,2556), new Vector2(1080,1920), new Vector2(1080,2400),
+                         new Vector2(1536,2048), new Vector2(2048,1536), new Vector2(720,1280) })
+            {
+                layout.bottomAdHeight = adHeight;
+                rect.sizeDelta = new Vector2(screen.x * 2556 / screen.y, 2556);
+                rect.ForceUpdateRectTransforms();
+                layout.ApplyLayout();
+                foreach (var item in items) item.ForceUpdateRectTransforms();
+                Rect Bounds(RectTransform item)
+                {
+                    var min = (Vector2)ui.play.transform.InverseTransformPoint(item.TransformPoint(item.rect.min));
+                    var max = (Vector2)ui.play.transform.InverseTransformPoint(item.TransformPoint(item.rect.max));
+                    return Rect.MinMaxRect(min.x,min.y,max.x,max.y);
+                }
+                var a = Bounds(layout.upper); var b = Bounds(layout.lower); var f = Bounds(layout.frame);
+                var p = Bounds(layout.progress); var back = Bounds(layout.back); var life = Bounds(layout.life);
+                var hint = Bounds(layout.hint); var zoom = Bounds(layout.zoom);
+                var area = ((RectTransform)ui.play.transform).rect;
+                foreach (var item in items)
+                {
+                    var bounds = Bounds(item);
+                    if (bounds.xMin < area.xMin - .1f || bounds.xMax > area.xMax + .1f ||
+                        bounds.yMin < area.yMin + adHeight - .1f || bounds.yMax > area.yMax + .1f)
+                        throw new Exception(screen + ": " + item.name + " 越界");
+                }
+                for (var step = 0; step < 30; step++)
+                {
+                    advanceHand.Invoke(guide, new object[] { .05f });
+                    if (Bounds(hand).yMin < area.yMin + adHeight - .1f)
+                        throw new Exception(screen + ": 提示手势覆盖广告位");
+                }
+                if (Mathf.Abs(a.width / a.height - UIDifferences.ImageAspect) > .001f ||
+                    Mathf.Abs(b.width / b.height - UIDifferences.ImageAspect) > .001f ||
+                    b.yMax > a.yMin || p.yMin < f.yMax || back.yMin < p.yMax || life.yMin < p.yMax ||
+                    hint.yMax > f.yMin || zoom.yMax > f.yMin)
+                    throw new Exception(screen + ": 图片变形或操作区重叠");
+                for (var i = 0; i < items.Length; i++)
+                    if (anchors[i] != new Vector4(items[i].anchorMin.x,items[i].anchorMin.y,items[i].anchorMax.x,items[i].anchorMax.y))
+                        throw new Exception("适配修改了原有锚点");
+                typeof(UIDifferences).GetMethod("FitProgressRow", Private).Invoke(ui, new object[] { 30 });
+                var row = layout.progress.GetComponent<HorizontalLayoutGroup>();
+                if (ui.progressDots[0].rectTransform.rect.width * 30 + row.spacing * 29 + row.padding.horizontal > p.width + .1f)
+                    throw new Exception("30 个进度点超出图片宽度");
+                report.AppendLine($"PASS {screen.x}x{screen.y}, ad={adHeight}: board={a.width:F1}x{a.height:F1}; controls and hand above ad; original anchors; 30 dots fit");
+            }
+            File.WriteAllText("Temp/responsive-play-layout-check.txt", report.ToString());
+            Debug.Log(report.ToString());
+        }
+        catch (Exception error)
+        {
+            File.WriteAllText("Temp/responsive-play-layout-check.txt", "FAIL: " + error);
+            Debug.LogException(error);
+        }
+        finally { PrefabUtility.UnloadPrefabContents(root); }
+    }
+
     [MenuItem("Tools/Find Differences/Check Settings Actions Only")]
     public static void CheckSettingsActionsOnly()
     {
@@ -832,9 +907,8 @@ public static class DifferenceUiSmokeCheck
             typeof(UIDifferences).GetMethod("ShowCross", Private).Invoke(ui, new object[] { .5f, .5f });
             if (!ui.crossTop.gameObject.activeSelf || !ui.crossBottom.gameObject.activeSelf)
                 throw new InvalidOperationException("Bound miss feedback did not appear.");
-            await Task.Delay(750);
-            if (ui.crossTop.gameObject.activeSelf || ui.crossBottom.gameObject.activeSelf)
-                throw new InvalidOperationException("Bound miss feedback did not clear.");
+            await Wait(() => !ui.crossTop.gameObject.activeSelf && !ui.crossBottom.gameObject.activeSelf,
+                "Bound miss feedback clears after its animation completes.");
             var result = $"PASS: real level {ui.SelectedLevel + 1}, {ui.Round.Total} dots; board below progress by {progressBottom - boardTop:F2}; authored prefab layout and UI sprites preserved.";
             File.WriteAllText(report, result); Debug.Log(result);
         }
@@ -990,6 +1064,10 @@ public static class DifferenceUiSmokeCheck
             if (check == "startup-await") { CheckStartupAwaitOnly(); return; }
             if (check == "settings-connect") { DifferenceGameBuilder.ConnectSettingsActions(); CheckSettingsActionsOnly(); return; }
             if (check == "settings") { CheckSettingsActionsOnly(); return; }
+            if (check == "responsive-connect") { DifferenceGameBuilder.ConnectResponsivePlayLayout(); CheckResponsivePlayLayoutOnly(); return; }
+            if (check == "responsive") { CheckResponsivePlayLayoutOnly(); return; }
+            if (check == "board-coordinates") { CheckBoardCoordinatesOnly(); return; }
+            if (check == "gameplay-layout") { CheckGameplayLayoutOnly(); return; }
             Start();
         }
         if (!SessionState.GetBool(Pending, false)) return;

@@ -83,6 +83,7 @@ namespace Hotfix.UI
         public float wideScreenControlMovement = .5f;
         RectTransform[] widthControls;
         Vector2[] widthControlPositions;
+        DifferencePlayLayout playLayout;
         float hintIdle;
         int pendingHint = -1;
         public bool HintActive => hintSpotlight && hintSpotlight.isActiveAndEnabled;
@@ -191,6 +192,7 @@ namespace Hotfix.UI
             resetZoomButton = At<UnityEngine.UI.Button>("Play/Zoom");
             widthControls = new[] { (RectTransform)backButton.transform, At<RectTransform>("Play/LifeBadge"), (RectTransform)resetZoomButton.transform };
             widthControlPositions = Array.ConvertAll(widthControls, rect => rect.anchoredPosition);
+            playLayout = play.GetComponent<DifferencePlayLayout>();
             Bind("Play/Zoom", () => upperImage.GetComponent<DifferenceBoard>().ResetViewAnimated());
             resetZoomButton.gameObject.SetActive(false);
             toast = noticeLabel.transform.parent.GetComponent<CommonToast>();
@@ -254,7 +256,6 @@ namespace Hotfix.UI
         void LateUpdate()
         {
             if (!interactionsBound) return;
-            AlignWideScreenControls();
             resetZoomButton.gameObject.SetActive(upperImage.transform.localScale.x > 1.0001f);
             resetZoomButton.interactable = !HintActive && !upperImage.GetComponent<DifferenceBoard>().IsResetting;
             var root = (RectTransform)transform;
@@ -268,6 +269,15 @@ namespace Hotfix.UI
             stage.localScale = Vector3.one * scale;
             stage.anchoredPosition = new Vector2((area.center.x / Mathf.Max(1, Screen.width) - .5f) * root.rect.width,
                 (area.center.y / Mathf.Max(1, Screen.height) - .5f) * root.rect.height);
+            if (playLayout && playLayout.enabled)
+            {
+                if (playLayout.ApplyLayout())
+                {
+                    FitProgressRow(Round == null ? progressDots.Length : Round.Total);
+                    upperImage.GetComponent<DifferenceBoard>().RefreshViewport();
+                }
+            }
+            else AlignWideScreenControls();
             AdvanceDesignLoading();
             AdvanceTabTransition(Time.unscaledDeltaTime);
             AdvancePatches(Time.unscaledDeltaTime);

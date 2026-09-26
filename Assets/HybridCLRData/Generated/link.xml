@@ -55,6 +55,9 @@
   <assembly fullname="GameFrameX.Setting.Runtime">
     <type fullname="GameFrameX.Setting.Runtime.SettingComponent" preserve="all" />
   </assembly>
+  <assembly fullname="GameFrameX.Startup.Application">
+    <type fullname="GameFrameX.Startup.Application.DifferenceHaptics" preserve="all" />
+  </assembly>
   <assembly fullname="GameFrameX.UI.Runtime">
     <type fullname="GameFrameX.UI.Runtime.IUIForm" preserve="all" />
     <type fullname="GameFrameX.UI.Runtime.IUIGroup" preserve="all" />
@@ -129,11 +132,12 @@
     <type fullname="UnityEngine.Events.UnityEventBase" preserve="all" />
     <type fullname="UnityEngine.FilterMode" preserve="all" />
     <type fullname="UnityEngine.GameObject" preserve="all" />
-    <type fullname="UnityEngine.Handheld" preserve="all" />
     <type fullname="UnityEngine.Hash128" preserve="all" />
+    <type fullname="UnityEngine.HeaderAttribute" preserve="all" />
     <type fullname="UnityEngine.KeyCode" preserve="all" />
     <type fullname="UnityEngine.Material" preserve="all" />
     <type fullname="UnityEngine.Mathf" preserve="all" />
+    <type fullname="UnityEngine.MinAttribute" preserve="all" />
     <type fullname="UnityEngine.MonoBehaviour" preserve="all" />
     <type fullname="UnityEngine.Object" preserve="all" />
     <type fullname="UnityEngine.Quaternion" preserve="all" />
@@ -183,6 +187,7 @@
     <type fullname="UnityEngine.ParticleSystemStopBehavior" preserve="all" />
   </assembly>
   <assembly fullname="UnityEngine.UI">
+    <type fullname="UnityEngine.EventSystems.EventSystem" preserve="all" />
     <type fullname="UnityEngine.EventSystems.IBeginDragHandler" preserve="all" />
     <type fullname="UnityEngine.EventSystems.IDragHandler" preserve="all" />
     <type fullname="UnityEngine.EventSystems.IEndDragHandler" preserve="all" />

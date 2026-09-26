@@ -112,6 +112,12 @@ namespace Hotfix.UI
                 changedFlashImages[i] = changedFlash.transform.Find("Picture").GetComponent<UnityEngine.UI.Image>();
                 changedFlash.SetActive(false);
             }
+            if (playLayout && playLayout.enabled) playLayout.ApplyLayout();
+            FitProgressRow(count);
+        }
+
+        void FitProgressRow(int count)
+        {
             var progress = (RectTransform)progressDots[0].transform.parent;
             var horizontal = progress.GetComponent<UnityEngine.UI.HorizontalLayoutGroup>();
             if (progressDotSize == Vector2.zero)

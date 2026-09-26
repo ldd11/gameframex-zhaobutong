@@ -46,6 +46,8 @@ namespace Hotfix.UI
             SetZoom(1);
         }
 
+        public void RefreshViewport() { if (Viewport) ClampAndSync(); }
+
         public void SetZoom(float zoom)
         {
             CancelReset();

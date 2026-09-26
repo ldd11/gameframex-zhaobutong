@@ -92,6 +92,35 @@ public static class DifferenceGameBuilder
         Debug.Log("Find Differences V2: 3 unique scenes, complete UI pages, profile, music, saved rounds and animated feedback built.");
     }
 
+    [MenuItem("Tools/Find Differences/Connect Responsive Play Layout")]
+    public static void ConnectResponsivePlayLayout()
+    {
+        if (EditorApplication.isPlaying) throw new InvalidOperationException("请先退出 Play 模式");
+        var path = Folder + "UIDifferences.prefab";
+        var prefabStage = UnityEditor.SceneManagement.PrefabStageUtility.GetCurrentPrefabStage();
+        var editing = prefabStage != null && prefabStage.assetPath == path;
+        var root = editing ? prefabStage.prefabContentsRoot : PrefabUtility.LoadPrefabContents(path);
+        try
+        {
+            var ui = root.GetComponent<UIDifferences>();
+            var layout = ui.play.GetComponent<DifferencePlayLayout>() ?? ui.play.AddComponent<DifferencePlayLayout>();
+            layout.upper = (RectTransform)ui.upperImage.transform.parent;
+            layout.lower = (RectTransform)ui.lowerImage.transform.parent;
+            layout.frame = (RectTransform)ui.play.transform.Find("Frame");
+            layout.progress = (RectTransform)ui.play.transform.Find("Progress");
+            layout.back = (RectTransform)ui.backButton.transform;
+            layout.life = (RectTransform)ui.play.transform.Find("LifeBadge");
+            layout.hint = (RectTransform)ui.hintButton.transform;
+            layout.zoom = (RectTransform)ui.play.transform.Find("Zoom");
+            layout.level = (RectTransform)ui.levelLabel.transform;
+            EditorUtility.SetDirty(layout);
+            PrefabUtility.SaveAsPrefabAsset(root, path);
+        }
+        finally { if (!editing) PrefabUtility.UnloadPrefabContents(root); }
+        AssetDatabase.SaveAssets();
+        Debug.Log("游戏页适配已绑定：在 Stage/Play 的 Difference Play Layout 组件调整留白和间距。");
+    }
+
     static Sprite[] LoadDesignSprites()
     {
         var paths = Directory.GetFiles(Folder + "Art/Figma", "*.png").OrderBy(path => path).ToArray();
