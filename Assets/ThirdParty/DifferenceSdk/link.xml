@@ -1,0 +1,21 @@
+<linker>
+  <assembly fullname="Difference.Sdk" preserve="all" ignoreIfMissing="1" />
+  <assembly fullname="AdjustSdk.Scripts" preserve="all" ignoreIfMissing="1" />
+  <assembly fullname="MaxSdk.Scripts" preserve="all" ignoreIfMissing="1" />
+  <assembly fullname="Firebase.Analytics" preserve="all" ignoreIfMissing="1" />
+  <assembly fullname="Firebase.App" preserve="all" ignoreIfMissing="1" />
+  <assembly fullname="Firebase.Crashlytics" preserve="all" ignoreIfMissing="1" />
+  <assembly fullname="Firebase.Messaging" preserve="all" ignoreIfMissing="1" />
+  <assembly fullname="Firebase.Platform" preserve="all" ignoreIfMissing="1" />
+  <assembly fullname="Firebase.RemoteConfig" preserve="all" ignoreIfMissing="1" />
+  <assembly fullname="Firebase.TaskExtension" preserve="all" ignoreIfMissing="1" />
+  <assembly fullname="Google.MiniJson" preserve="all" ignoreIfMissing="1" />
+  <assembly fullname="GoogleMobileAds" preserve="all" ignoreIfMissing="1" />
+  <assembly fullname="GoogleMobileAds.Android" preserve="all" ignoreIfMissing="1" />
+  <assembly fullname="GoogleMobileAds.Common" preserve="all" ignoreIfMissing="1" />
+  <assembly fullname="GoogleMobileAds.Core" preserve="all" ignoreIfMissing="1" />
+  <assembly fullname="GoogleMobileAds.Ump" preserve="all" ignoreIfMissing="1" />
+  <assembly fullname="GoogleMobileAds.Ump.Android" preserve="all" ignoreIfMissing="1" />
+  <assembly fullname="GoogleMobileAds.Ump.iOS" preserve="all" ignoreIfMissing="1" />
+  <assembly fullname="GoogleMobileAds.iOS" preserve="all" ignoreIfMissing="1" />
+</linker>

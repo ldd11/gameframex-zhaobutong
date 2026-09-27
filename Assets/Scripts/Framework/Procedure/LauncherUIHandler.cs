@@ -51,7 +51,20 @@ namespace GameFrameX.Startup.Application
         /// <returns>异步任务 / The async task</returns>
         public static async UniTask StartAsync(string uiResName)
         {
-            _ui = await GameApp.UI.OpenFullScreenAsync<UILauncher>(uiResName, UIGroupConstants.Loading);
+            try
+            {
+                _ui = await GameApp.UI.OpenFullScreenAsync<UILauncher>(uiResName, UIGroupConstants.Loading);
+                if (DifferenceAnalytics.Enabled)
+                {
+                    await UniTask.NextFrame();
+                    if (_ui != null && _ui.Visible) DifferenceStartupAnalytics.SplashVisible();
+                }
+            }
+            catch
+            {
+                DifferenceStartupAnalytics.Fail("launcher_load_failed");
+                throw;
+            }
 
             GameApp.Event.CheckSubscribe(AssetDownloadProgressUpdateEventArgs.EventId, SetProgressUpdate);
         }
@@ -66,6 +79,7 @@ namespace GameFrameX.Startup.Application
         {
             GameApp.UI.CloseUIForm<UILauncher>();
             _ui = null;
+            DifferenceStartupAnalytics.LauncherClosed();
         }
 
         /// <summary>

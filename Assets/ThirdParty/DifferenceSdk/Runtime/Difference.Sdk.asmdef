@@ -1,0 +1,17 @@
+{
+    "name": "Difference.Sdk",
+    "references": [
+        "AdjustSdk.Scripts",
+        "MaxSdk.Scripts",
+        "GameFrameX.Startup.Application"
+    ],
+    "includePlatforms": [
+        "Android",
+        "iOS",
+        "Editor"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "ENABLE_DIFFERENCE_SDK"
+    ]
+}

@@ -28,6 +28,44 @@ public static class DifferenceUiSmokeCheck
 
     static DifferenceUiSmokeCheck() { EditorApplication.update += Tick; }
 
+    [MenuItem("Tools/Find Differences/Check Victory Votes Only")]
+    public static void CheckVictoryVotesOnly()
+    {
+        const string report = "Temp/FindDifferences-victory-votes.txt";
+        var root = PrefabUtility.LoadPrefabContents("Assets/Bundles/UI/UIDifferences/UIDifferences.prefab");
+        try
+        {
+            var ui = root.GetComponent<UIDifferences>();
+            typeof(UIDifferences).GetMethod("BindFigmaDesign", Private).Invoke(ui, null);
+            var like = (Button)Field(ui, "designLikeButton");
+            var unlike = (Button)Field(ui, "designUnlikeButton");
+            var defaultLike = like.image.sprite; var defaultUnlike = unlike.image.sprite;
+            var selectedLike = (Sprite)Field(ui, "likeSelectedSprite");
+            var selectedUnlike = (Sprite)Field(ui, "unlikeSelectedSprite");
+            if (!selectedLike || !selectedUnlike) throw new Exception("Missing selected vote sprites.");
+            typeof(UIDifferences).GetField("figmaResultActive", Private).SetValue(ui, true);
+            typeof(UIDifferences).GetField("figmaResultWon", Private).SetValue(ui, true);
+            foreach (var positive in new[] { true, true, false, false, true })
+            {
+                (positive ? like : unlike).onClick.Invoke();
+                if (like.image.sprite != (positive ? selectedLike : defaultLike) ||
+                    unlike.image.sprite != (positive ? defaultUnlike : selectedUnlike))
+                    throw new Exception("Vote buttons are not mutually exclusive or repeated clicks deselect.");
+            }
+            typeof(UIDifferences).GetField("adInputLocked", Private).SetValue(ui, true);
+            unlike.onClick.Invoke();
+            if (like.image.sprite != selectedLike || unlike.image.sprite != defaultUnlike)
+                throw new Exception("Vote changed while advertising blocked input.");
+            typeof(UIDifferences).GetMethod("SetVictoryVote", Private).Invoke(ui, new object[] { 0 });
+            if (like.image.sprite != defaultLike || unlike.image.sprite != defaultUnlike)
+                throw new Exception("New result did not reset both vote sprites.");
+            File.WriteAllText(report, "PASS: prefab sprite references, like/unlike switching, repeated clicks, ad input lock and reset.");
+            Debug.Log(File.ReadAllText(report));
+        }
+        catch (Exception error) { File.WriteAllText(report, "FAIL: " + error); Debug.LogException(error); }
+        finally { PrefabUtility.UnloadPrefabContents(root); }
+    }
+
     [MenuItem("Tools/Find Differences/Check Responsive Play Layout Only")]
     public static void CheckResponsivePlayLayoutOnly()
     {
@@ -1066,6 +1104,10 @@ public static class DifferenceUiSmokeCheck
             if (check == "settings") { CheckSettingsActionsOnly(); return; }
             if (check == "responsive-connect") { DifferenceGameBuilder.ConnectResponsivePlayLayout(); CheckResponsivePlayLayoutOnly(); return; }
             if (check == "responsive") { CheckResponsivePlayLayoutOnly(); return; }
+            if (check == "sdk-check") { DifferenceSdkCheck.Run(); return; }
+            if (check == "victory-votes") { CheckVictoryVotesOnly(); return; }
+            if (check == "sdk-enable") { DifferenceSdkBuild.SetEnabled(true); return; }
+            if (check == "sdk-disable") { DifferenceSdkBuild.SetEnabled(false); return; }
             if (check == "board-coordinates") { CheckBoardCoordinatesOnly(); return; }
             if (check == "gameplay-layout") { CheckGameplayLayoutOnly(); return; }
             Start();

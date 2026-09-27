@@ -16,6 +16,9 @@ namespace Hotfix.UI
         [SerializeField] Sprite designRound, toggleOn, toggleOff;
         [SerializeField] Button designSettingsButton, designStartButton, designSettingsClose, designMusicButton, designSoundButton, designVibrationButton, designFailClose, designContinueButton, designRetryButton, designHintClose, designFreeButton, designBuyButton, designNextButton;
         [SerializeField] Button designContactButton, designTermsButton, designPrivacyButton;
+        [SerializeField] Button designLikeButton, designUnlikeButton;
+        [SerializeField] Sprite likeSelectedSprite, unlikeSelectedSprite;
+        Sprite likeDefaultSprite, unlikeDefaultSprite;
         [Header("Settings Links")]
         [SerializeField] string contactUrl = "mailto:contact@joystar.pro";
         [SerializeField] string termsOfServiceUrl = "https://joystar.pro/terms";
@@ -41,8 +44,8 @@ namespace Hotfix.UI
             designSettingsButton.onClick.AddListener(ShowSettings);
             designStartButton.onClick.AddListener(StartLevel);
             designSettingsClose.onClick.AddListener(CloseSettings);
-            designMusicButton.onClick.AddListener(() => { musicEnabled = !musicEnabled; Save(); PlayMusic(); RefreshSettings(); });
-            designSoundButton.onClick.AddListener(() => { sound = !sound; Save(); RefreshSettings(); });
+            designMusicButton.onClick.AddListener(() => { if (AdInputBlocked) return; musicEnabled = !musicEnabled; Save(); PlayMusic(); RefreshSettings(); });
+            designSoundButton.onClick.AddListener(() => { if (AdInputBlocked) return; sound = !sound; Save(); RefreshSettings(); });
             designVibrationButton.onClick.AddListener(ToggleVibration);
             if (designContactButton) designContactButton.onClick.AddListener(() => OpenSettingsLink(contactUrl));
             if (designTermsButton) designTermsButton.onClick.AddListener(() => OpenSettingsLink(termsOfServiceUrl));
@@ -50,10 +53,25 @@ namespace Hotfix.UI
             designFailClose.onClick.AddListener(ShowHome);
             designContinueButton.onClick.AddListener(OnFigmaResultPrimary);
             designRetryButton.onClick.AddListener(OnFigmaResultSecondary);
-            designHintClose.onClick.AddListener(CloseDesignHint);
+            designHintClose.onClick.AddListener(() => { if (!AdInputBlocked) CloseDesignHint(); });
             designFreeButton.onClick.AddListener(() => AcquireDesignHint(true));
             designBuyButton.onClick.AddListener(() => AcquireDesignHint(false));
             designNextButton.onClick.AddListener(OnFigmaResultPrimary);
+            if (designLikeButton && designUnlikeButton)
+            {
+                likeDefaultSprite = designLikeButton.image.sprite;
+                unlikeDefaultSprite = designUnlikeButton.image.sprite;
+                designLikeButton.onClick.AddListener(() => SetVictoryVote(1));
+                designUnlikeButton.onClick.AddListener(() => SetVictoryVote(-1));
+            }
+        }
+
+        void SetVictoryVote(int vote)
+        {
+            if (!designLikeButton || !designUnlikeButton) return;
+            if (vote != 0 && (AdInputBlocked || !figmaResultActive || !figmaResultWon)) return;
+            designLikeButton.image.sprite = vote == 1 ? likeSelectedSprite : likeDefaultSprite;
+            designUnlikeButton.image.sprite = vote == -1 ? unlikeSelectedSprite : unlikeDefaultSprite;
         }
 
         void UpdateFigmaDesign(GameObject page)
@@ -69,6 +87,7 @@ namespace Hotfix.UI
             foreach (var layer in new[] { homeDesign, loadingDesign, victoryDesign, failDesign, hintDesign, settingsDesign })
                 if (layer.activeSelf) layer.transform.SetAsLastSibling();
             if (modal.activeSelf) modal.transform.SetAsLastSibling();
+            UpdateAdsVisibility();
         }
 
         void AdvanceDesignLoading()
@@ -82,11 +101,11 @@ namespace Hotfix.UI
                 loadingFillWidth * (.18f + .67f * (1 - Mathf.Exp(-elapsed))));
         }
 
-        IEnumerator LoadLocalLevel(int index, bool resume)
+        IEnumerator LoadLocalLevel(int index, bool resume, bool isRetry = false)
         {
             yield return new WaitForSecondsRealtime(.55f);
             localLoading = false; localLoadRoutine = null;
-            OpenLevel(index, resume);
+            OpenLevel(index, resume, isRetry);
         }
 
         void ShowFigmaResult(bool won)
@@ -95,7 +114,7 @@ namespace Hotfix.UI
             victoryPreview.sprite = upperImage.sprite;
             failProgress.text = "You completed " + Mathf.RoundToInt(100f * Round.Count / Mathf.Max(1, Round.Total)) + "%.";
             UpdateFigmaDesign(currentPage);
-            if (won) ReplayVictoryAnimation();
+            if (won) { SetVictoryVote(0); ReplayVictoryAnimation(); }
             PlayTone(won ? winSound : failSound);
         }
 
@@ -116,10 +135,11 @@ namespace Hotfix.UI
         void CloseFigmaResult() { CancelRewardCoins(); figmaResultActive = false; UpdateFigmaDesign(currentPage); }
         void OnFigmaResultPrimary()
         {
+            if (AdInputBlocked || !figmaResultActive) return;
             if (figmaResultWon) { CloseFigmaResult(); if (level + 1 < LevelLimit) BeginLevel(level + 1, false); else ShowHome(); }
             else Revive();
         }
-        void OnFigmaResultSecondary() { CloseFigmaResult(); BeginLevel(level, false); }
+        void OnFigmaResultSecondary() { RetryWithInterstitial(); }
 
         IEnumerator ReplayCompletedProgress()
         {
@@ -245,6 +265,7 @@ namespace Hotfix.UI
 
         void ToggleVibration()
         {
+            if (AdInputBlocked) return;
             vibration = !vibration; Save(); RefreshSettings();
             PlayResultVibration(0);
         }
@@ -266,10 +287,11 @@ namespace Hotfix.UI
 
         async void OpenSettingsLink(string url)
         {
+            if (AdInputBlocked) return;
             if (!Uri.TryCreate(url, UriKind.Absolute, out var address) ||
                 (address.Scheme != "https" && address.Scheme != "http" && address.Scheme != "mailto"))
             {
-                Notice("链接暂时不可用，请稍后重试。", 2);
+                Notice("This link is unavailable. Please try again later.", 2);
                 return;
             }
             if (UnityEngine.EventSystems.EventSystem.current)
@@ -277,12 +299,14 @@ namespace Hotfix.UI
             await System.Threading.Tasks.Task.Delay(500);
             Application.OpenURL(address.AbsoluteUri);
         }
-        void CloseDesignHint() { if (hintDesign) hintDesign.SetActive(false); }
+        void CloseDesignHint() { if (hintDesign) hintDesign.SetActive(false); UpdateAdsVisibility(); }
         void AcquireDesignHint(bool free)
         {
+            if (AdInputBlocked || !hintDesign.activeSelf) return;
+            if (free && GameFrameX.Startup.Application.DifferenceAds.SdkEnabled) { RequestRewardHint(); return; }
             var today = DateTime.UtcNow.ToString("yyyy-MM-dd");
-            if (free && GiftClaimed(today)) { Notice("今日免费提示已领取", 2); return; }
-            if (!free && coins < 100) { Notice("金币不足，需要 100 金币", 2); return; }
+            if (free && GiftClaimed(today)) { Notice("You already claimed today's free hint.", 2); return; }
+            if (!free && coins < 100) { Notice("Not enough coins. You need 100 coins.", 2); return; }
             if (free) giftDate = today; else coins -= 100;
             hints++; Save(); CloseDesignHint(); UpdateHUD(); UseHint();
         }

@@ -12,6 +12,7 @@ using Hotfix.Proto;
 using SimpleJSON;
 using UnityEngine;
 using GameFrameX.Runtime;
+using GameFrameX.Startup.Application;
 using GameFrameX.UI.Runtime;
 using Hotfix.Config;
 using Hotfix.Config.Local;
@@ -42,7 +43,8 @@ namespace Hotfix
 #if ENABLE_UI_UGUI
         private static async Task LaunchDifferences()
         {
-            await GameApp.UI.OpenFullScreenAsync<UIDifferences>();
+            var home = await GameApp.UI.OpenFullScreenAsync<UIDifferences>();
+            DifferenceStartupAnalytics.PrepareHome(home);
             // Keep the launcher visible through the home's first layout/update frame.
             await UniTask.NextFrame();
             Canvas.ForceUpdateCanvases();

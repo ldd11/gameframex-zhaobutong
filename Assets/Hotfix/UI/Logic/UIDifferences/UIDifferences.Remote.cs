@@ -37,7 +37,7 @@ namespace Hotfix.UI
             return prefix + "/" + (index + 1).ToString(CultureInfo.InvariantCulture);
         }
 
-        IEnumerator LoadRemoteLevel(DifferenceRemoteLevel request, int index, bool resume)
+        IEnumerator LoadRemoteLevel(DifferenceRemoteLevel request, int index, bool resume, bool isRetry = false)
         {
             var url = LevelUrl(index);
             yield return request.Load(url, index + 1);
@@ -49,19 +49,21 @@ namespace Hotfix.UI
             if (!OnlineLevels || url != LevelUrl(index)) { request.Dispose(); ShowHome(); yield break; }
             if (request.Error != null || request.Level == null)
             {
+                FailAnalyticsLoad(request.Error, request.Level);
                 Debug.LogWarning("后台关卡加载失败：" + request.Error);
                 request.Dispose();
                 ShowHome();
-                Notice("第 " + (index + 1) + " 关加载失败，请稍后重试。", 3f);
+                Notice("Failed to load level " + (index + 1) + ". Please try again later.", 3f);
                 yield break;
             }
             ReleaseRemoteLevel();
             remoteLevel = request; loadedApiUrl = url;
-            OpenLevel(index, resume);
+            OpenLevel(index, resume, isRetry);
         }
 
         void CancelRemoteLoad()
         {
+            CancelAnalyticsLoad();
             if (localLoadRoutine != null) { StopCoroutine(localLoadRoutine); localLoadRoutine = null; }
             localLoading = false;
             if (loadingLevel != null) { loadingLevel.Dispose(); loadingLevel = null; }

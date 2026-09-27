@@ -1,0 +1,15 @@
+{
+    "name": "MaxSdk.Scripts",
+    "references": [
+        "Unity.ugui"
+    ],
+    "includePlatforms": [
+        "Android",
+        "iOS",
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "defineConstraints": [
+        "ENABLE_DIFFERENCE_SDK"
+    ]
+}

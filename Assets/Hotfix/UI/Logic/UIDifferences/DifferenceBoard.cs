@@ -30,6 +30,7 @@ namespace Hotfix.UI
 
         public void OnPointerClick(PointerEventData data)
         {
+            if (owner && owner.AdInputBlocked) return;
             if (data.button != PointerEventData.InputButton.Left || IsResetting || dragging || pinching ||
                 Time.unscaledTime < blockedUntil || !Inside(data.position, data.pressEventCamera)) return;
             if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(Content, data.position, data.pressEventCamera, out var local)) return;
@@ -74,6 +75,7 @@ namespace Hotfix.UI
 
         public void OnScroll(PointerEventData data)
         {
+            if (owner && owner.AdInputBlocked) return;
             if (IsResetting || (owner && owner.HintActive)) return;
             if (!Inside(data.position, data.enterEventCamera)) return;
             BlockClick();
@@ -83,6 +85,7 @@ namespace Hotfix.UI
 
         public void OnBeginDrag(PointerEventData data)
         {
+            if (owner && owner.AdInputBlocked) { dragging = pinching = false; return; }
             if (IsResetting || (owner && owner.HintActive)) return;
             if (data.button != PointerEventData.InputButton.Left || !Inside(data.pressPosition, data.pressEventCamera)) return;
             dragging = true;
@@ -91,6 +94,7 @@ namespace Hotfix.UI
 
         public void OnDrag(PointerEventData data)
         {
+            if (owner && owner.AdInputBlocked) { dragging = pinching = false; return; }
             if (IsResetting || (owner && owner.HintActive)) return;
             if (!dragging || pinching || Input.touchCount > 1 || Zoom <= 1) return;
             if (RectTransformUtility.ScreenPointToLocalPointInRectangle(Viewport, data.position, data.pressEventCamera, out var current) &&
@@ -104,11 +108,13 @@ namespace Hotfix.UI
         public void OnEndDrag(PointerEventData data)
         {
             dragging = false;
+            if (owner && owner.AdInputBlocked) { pinching = false; return; }
             BlockClick();
         }
 
         void Update()
         {
+            if (owner && owner.AdInputBlocked) { dragging = pinching = false; return; }
             if (owner && owner.HintActive) { dragging = pinching = false; return; }
             if (resetting)
             {
@@ -150,6 +156,7 @@ namespace Hotfix.UI
 
         public void ResetViewAnimated()
         {
+            if (owner && owner.AdInputBlocked) return;
             if (!Viewport || IsResetting || Zoom <= 1 || (owner && owner.HintActive)) return;
             dragging = pinching = false;
             if (peer) peer.dragging = peer.pinching = false;

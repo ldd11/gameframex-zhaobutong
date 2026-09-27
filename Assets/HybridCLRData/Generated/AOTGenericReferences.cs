@@ -15,6 +15,7 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 		"System.Core.dll",
 		"UniTask.Runtime.dll",
 		"UnityEngine.CoreModule.dll",
+		"UnityEngine.JSONSerializeModule.dll",
 		"YooAsset.Runtime.dll",
 		"mscorlib.dll",
 	};
@@ -127,6 +128,7 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// Cysharp.Threading.Tasks.UniTaskCompletionSourceCore<Cysharp.Threading.Tasks.AsyncUnit>
 	// Cysharp.Threading.Tasks.UniTaskCompletionSourceCore<object>
 	// System.Action<Hotfix.Events.PlayerAttributeChangeItem>
+	// System.Action<byte>
 	// System.Action<int>
 	// System.Action<long>
 	// System.Action<object,object>
@@ -557,7 +559,7 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,Hotfix.UI.UIPlayerList.<Login>d__7>(Cysharp.Threading.Tasks.UniTask.Awaiter&,Hotfix.UI.UIPlayerList.<Login>d__7&)
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,Hotfix.UI.UIRoomListPanel.<OnOpen>d__14>(Cysharp.Threading.Tasks.UniTask.Awaiter&,Hotfix.UI.UIRoomListPanel.<OnOpen>d__14&)
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter,Hotfix.HotfixLauncher.<LoadConfig>d__3>(System.Runtime.CompilerServices.TaskAwaiter&,Hotfix.HotfixLauncher.<LoadConfig>d__3&)
-		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter,Hotfix.UI.UIDifferences.<OpenSettingsLink>d__295>(System.Runtime.CompilerServices.TaskAwaiter&,Hotfix.UI.UIDifferences.<OpenSettingsLink>d__295&)
+		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter,Hotfix.UI.UIDifferences.<OpenSettingsLink>d__365>(System.Runtime.CompilerServices.TaskAwaiter&,Hotfix.UI.UIDifferences.<OpenSettingsLink>d__365&)
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter<object>,Hotfix.HotfixLauncher.<LoadUI>d__2>(System.Runtime.CompilerServices.TaskAwaiter<object>&,Hotfix.HotfixLauncher.<LoadUI>d__2&)
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter<object>,Hotfix.UI.UILogin.<Login>d__3>(System.Runtime.CompilerServices.TaskAwaiter<object>&,Hotfix.UI.UILogin.<Login>d__3&)
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter<object>,Hotfix.UI.UIMain.<OnBagBtnClick>d__2>(System.Runtime.CompilerServices.TaskAwaiter<object>&,Hotfix.UI.UIMain.<OnBagBtnClick>d__2&)
@@ -569,7 +571,7 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter<object>,Hotfix.UI.UIPlayerList.<OnPlayerListItemClick>d__9>(System.Runtime.CompilerServices.TaskAwaiter<object>&,Hotfix.UI.UIPlayerList.<OnPlayerListItemClick>d__9&)
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Start<Hotfix.HotfixLauncher.<LoadConfig>d__3>(Hotfix.HotfixLauncher.<LoadConfig>d__3&)
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Start<Hotfix.HotfixLauncher.<LoadUI>d__2>(Hotfix.HotfixLauncher.<LoadUI>d__2&)
-		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Start<Hotfix.UI.UIDifferences.<OpenSettingsLink>d__295>(Hotfix.UI.UIDifferences.<OpenSettingsLink>d__295&)
+		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Start<Hotfix.UI.UIDifferences.<OpenSettingsLink>d__365>(Hotfix.UI.UIDifferences.<OpenSettingsLink>d__365&)
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Start<Hotfix.UI.UILogin.<Login>d__3>(Hotfix.UI.UILogin.<Login>d__3&)
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Start<Hotfix.UI.UIMain.<OnBagBtnClick>d__2>(Hotfix.UI.UIMain.<OnBagBtnClick>d__2&)
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Start<Hotfix.UI.UIMain.<OnOpen>d__1>(Hotfix.UI.UIMain.<OnOpen>d__1&)
@@ -590,6 +592,8 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 		// object UnityEngine.GameObject.GetComponentInParent<object>(bool)
 		// object[] UnityEngine.GameObject.GetComponentsInChildren<object>()
 		// object[] UnityEngine.GameObject.GetComponentsInChildren<object>(bool)
+		// object UnityEngine.JsonUtility.FromJson<object>(string)
+		// object UnityEngine.Object.FindObjectOfType<object>()
 		// object UnityEngine.Object.Instantiate<object>(object,UnityEngine.Transform)
 		// object UnityEngine.Object.Instantiate<object>(object,UnityEngine.Transform,bool)
 		// object YooAsset.AssetHandle.GetAssetObject<object>()

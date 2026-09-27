@@ -1,0 +1,13 @@
+{
+    "name": "AdjustSdk.Scripts",
+    "references": [],
+    "includePlatforms": [
+        "Android",
+        "iOS",
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "defineConstraints": [
+        "ENABLE_DIFFERENCE_SDK"
+    ]
+}

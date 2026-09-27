@@ -466,13 +466,17 @@ public static class DifferenceGamePlayCheck
                 !originalRect.gameObject.activeSelf && !changedRect.gameObject.activeSelf, "重复点击不扣心、不重播飞行或区域闪动");
             Miss(ui);
             Check(ui.Round.Lives == 2 && ui.crossTop.gameObject.activeSelf && ui.crossBottom.gameObject.activeSelf && ActiveFlights(ui).Length == 1, "误点与双图错误反馈、不会生成飞行特效");
+            var hintsField = typeof(UIDifferences).GetField("hints", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            hintsField.SetValue(ui, 0);
             Click(ui.hintButton);
-            Check(ui.Round.Count == 1 && ui.Hints == 4 && ui.HintActive && !ui.topRings[1].gameObject.activeSelf, "提示只消耗一次道具，不提前圈选或修改进度");
+            Check(ui.Round.Count == 1 && ui.Hints == 0 && ui.hintLabel.text == "∞" && ui.HintActive && !ui.topRings[1].gameObject.activeSelf,
+                "第一关零库存也能提示，显示无限且不扣道具或修改进度");
+            hintsField.SetValue(ui, 5);
             var spotlight = ui.play.GetComponentInChildren<DifferenceHintSpotlight>();
             var hintStep = typeof(DifferenceHintSpotlight).GetMethod("Advance", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
             Check(spotlight && spotlight.material.shader.isSupported && spotlight.material != ui.hintSpotlightMaterial, "独立提示材质受资源引用且Shader可用");
             ui.UseHint(); Find(ui, 1);
-            Check(ui.Hints == 4 && ui.Round.Count == 1 && ui.Round.Lives == 2, "聚光打开期间拦截重复消耗和点击");
+            Check(ui.Hints == 5 && ui.Round.Count == 1 && ui.Round.Lives == 2, "聚光打开期间拦截重复消耗和点击");
             hintStep.Invoke(spotlight, new object[] { .2f });
             Check(ui.upperImage.transform.localScale.x > 1 && ui.upperImage.transform.localScale.x < 2, "平滑放大，非瞬间跳变");
             hintStep.Invoke(spotlight, new object[] { .2f });
@@ -490,7 +494,7 @@ public static class DifferenceGamePlayCheck
             Check(ui.Round.Lives == 2 && ui.Round.Count == 1 && Near(ui.upperImage.transform.localScale.x, 2), "聚光期间误点不扣心，缩放按钮不干扰引导");
             var hintedOrigin = ui.topRings[1].transform.position;
             Find(ui, 1);
-            Check(ui.Round.Count == 2 && ui.Hints == 4 && ui.topRings[1].gameObject.activeSelf && !spotlight.Ready, "实际点击提示目标才圈选并退出聚光");
+            Check(ui.Round.Count == 2 && ui.Hints == 5 && ui.topRings[1].gameObject.activeSelf && !spotlight.Ready, "实际点击提示目标才圈选并退出聚光");
             Check(ActiveFlights(ui).Length == 2, "连续找到的特效独立飞向各自进度圆点");
             Check(Text(ui, "Play/Progress/Dot0/Text") == "?" && Text(ui, "Play/Progress/Dot1/Text") == "?", "刷新生命与提示时不会提前显示飞行中的勾");
             CheckFoundFlight(ActiveFlights(ui)[1], hintedOrigin, ui.progressDots[1].rectTransform);
@@ -558,7 +562,7 @@ public static class DifferenceGamePlayCheck
             Complete(ui);
             Check(ui.Completed == 1 && ui.Coins == 80 && settings.GetInt(key + "RoundLevel") == -1, "首关首次奖励十金币并清除存档");
             Find(ui, 0); ui.UseHint();
-            Check(ui.Coins == 80 && ui.Round.Count == 10 && ui.Hints == 4, "终局不可重复结算或消耗提示");
+            Check(ui.Coins == 80 && ui.Round.Count == 10 && ui.Hints == 5, "终局不可重复结算或消耗提示");
             previousRound = ui.Round;
             ui.ShowShop();
             Click(ui, "Shop/Close");
@@ -566,7 +570,8 @@ public static class DifferenceGamePlayCheck
             Click(ui.modalSecondary);
             Check(ui.home.activeSelf && ui.SelectedLevel == 1 && !ui.startLabel.text.Contains("继续"), "通关后首页指向第二关");
             Click(ui.startButton);
-            Check(ui.SelectedLevel == 1 && ui.Round.Total == 10 && ui.upperImage.sprite == ui.levels[1].original, "第二组图片");
+            Check(ui.SelectedLevel == 1 && ui.Round.Total == 10 && ui.upperImage.sprite == ui.levels[1].original &&
+                ui.hintLabel.text == ui.Hints.ToString(), "第二组图片且恢复显示真实提示库存");
             Complete(ui);
             Check(ui.Completed == 2 && ui.Coins == 90, "第二关首次奖励");
             Click(ui.modalAction);

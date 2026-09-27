@@ -3,4 +3,10 @@
   <assembly fullname="unity.webp" preserve="all" />
   <assembly fullname="spine-csharp" preserve="all" />
   <assembly fullname="spine-unity" preserve="all" />
+  <assembly fullname="GameFrameX.Startup.Application">
+    <type fullname="GameFrameX.Startup.Application.DifferenceAds" preserve="all" />
+    <type fullname="GameFrameX.Startup.Application.DifferenceAdConfig" preserve="all" />
+    <type fullname="GameFrameX.Startup.Application.DifferenceAnalytics*" preserve="all" />
+    <type fullname="GameFrameX.Startup.Application.DifferenceStartupAnalytics" preserve="all" />
+  </assembly>
 </linker>

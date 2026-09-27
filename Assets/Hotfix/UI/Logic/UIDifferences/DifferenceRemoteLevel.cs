@@ -172,6 +172,11 @@ namespace Hotfix.UI
             {
                 title = data["title"].IsString ? data["title"].Value : "关卡 " + expectedNumber,
                 contentKey = apiUrl + "|" + endpoint["level_id"].Value + "|" + endpoint["revision"].Value + "|" + Hash128.Compute(diffsJson),
+                analyticsPicId = endpoint["level_id"].Value,
+                analyticsPicName = AnalyticsText(data["pic_name"]) ?? AnalyticsText(endpoint["pic_name"]) ??
+                    System.IO.Path.GetFileNameWithoutExtension(Uri.UnescapeDataString(new Uri(AssetUrl(endpoint, "level-base.png")).AbsolutePath)),
+                analyticsDifficulty = AnalyticsDifficulty(data["difficulty"]) ?? AnalyticsDifficulty(endpoint["difficulty"]) ?? "unknown",
+                analyticsParts = new string[items.Count],
                 regions = new Vector4[items.Count], hitSpots = new DifferenceSpot[items.Count], changedOnTop = true
             };
             var nodes = new HashSet<string>(StringComparer.Ordinal);
@@ -180,6 +185,7 @@ namespace Hotfix.UI
                 var item = items[i];
                 Require(item != null && item.IsObject, "差异项必须是对象");
                 Require(nodes.Add(Text(item["node"], "node")), "差异 node 重复");
+                level.analyticsParts[i] = item["node"].Value;
                 var position = Numbers(item["pos"], 2, "pos", true);
                 var cropSize = Numbers(item["crop_size"], 2, "crop_size", true);
                 var crop = new Rect(position[0], position[1], cropSize[0], cropSize[1]);
@@ -241,6 +247,14 @@ namespace Hotfix.UI
         }
 
         static string AssetUrl(JSONNode endpoint, string name) => WebUrl(Text(endpoint["assets"][name], name));
+        static string AnalyticsText(JSONNode node) => node != null && node.IsString && !string.IsNullOrWhiteSpace(node.Value) ? node.Value : null;
+        static string AnalyticsDifficulty(JSONNode node)
+        {
+            var text = AnalyticsText(node);
+            if (text != null) return text;
+            return node != null && node.IsNumber && !double.IsNaN(node.AsDouble) && !double.IsInfinity(node.AsDouble)
+                ? node.AsDouble.ToString(System.Globalization.CultureInfo.InvariantCulture) : null;
+        }
         static string WebUrl(string value)
         {
             Require(Uri.TryCreate(value, UriKind.Absolute, out var uri) && (uri.Scheme == Uri.UriSchemeHttps || uri.Scheme == Uri.UriSchemeHttp), "资源地址必须为 HTTP(S)");
@@ -289,6 +303,10 @@ namespace Hotfix.UI
             const string endpoint = "{\"ok\":true,\"number\":1,\"revision\":1,\"level_id\":\"check\",\"assets\":{\"different.png\":\"https://example.com/d.png\",\"level-base.png\":\"https://example.com/b.png\",\"level-diffs.json\":\"https://example.com/d.json\"}}";
             const string diffs = "{\"schema\":\"difference_desk/greyfun-level/v1\",\"level_id\":\"check\",\"game_size\":[1500,1000],\"expected\":1,\"items\":[{\"node\":\"D01\",\"pos\":[969,60],\"crop_size\":[204,377],\"hit_bounds\":[975,65,192,366],\"hit_geometry\":\"bbox-rect\"}]}";
             var level = Parse(api, endpoint, diffs, out var size);
+            Require(level.analyticsPicId == "check" && level.analyticsPicName == "b" && level.analyticsDifficulty == "unknown" &&
+                level.analyticsParts[0] == "D01", "埋点必须使用实际图片 ID、资源名和差异 node，缺失难度不得编造");
+            var annotated = Parse(api, endpoint, diffs.Replace("\"expected\":1", "\"pic_name\":\"winter-scene\",\"difficulty\":2,\"expected\":1"), out size);
+            Require(annotated.analyticsPicName == "winter-scene" && annotated.analyticsDifficulty == "2", "埋点应保留明确配置的图片名和难度");
             Require(size == new Vector2Int(1500, 1000) && Mathf.Abs(level.regions[0].x - 1071f / 1500) < .00001f &&
                 Mathf.Abs(level.regions[0].y - 248.5f / 1000) < .00001f && level.changedOnTop, "坐标转换自检失败");
             Require(new DifferenceRound(level.hitSpots, 1.5f).Click(976f / 1500, 66f / 1000) == 0, "矩形点击自检失败");

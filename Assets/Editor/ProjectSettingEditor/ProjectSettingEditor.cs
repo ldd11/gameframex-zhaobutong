@@ -9,12 +9,9 @@ namespace Unity.Editor
         [InitializeOnLoadMethod]
         static void Start()
         {
-            PlayerSettings.SetApplicationIdentifier(BuildTargetGroup.Android, "com.blank.gfx");
-            PlayerSettings.SetApplicationIdentifier(BuildTargetGroup.iOS, "com.blank.gfx");
+            // Keep the application's identifiers, display name and signing team from Player Settings.
             PlayerSettings.SplashScreen.show = false;
             PlayerSettings.SplashScreen.showUnityLogo = false;
-            PlayerSettings.productName = "GFX";
-            PlayerSettings.companyName = "ALianBlank";
             PlayerSettings.defaultInterfaceOrientation = UIOrientation.Portrait;
             PlayerSettings.allowedAutorotateToLandscapeLeft = false;
             PlayerSettings.allowedAutorotateToLandscapeRight = false;
@@ -47,7 +44,6 @@ namespace Unity.Editor
             // PlayerSettings.bundleVersion = "1.0.0";
 #endif
 #if UNITY_IOS
-            PlayerSettings.iOS.appleDeveloperTeamID = "XXXXXX";
             PlayerSettings.iOS.appleEnableAutomaticSigning = true;
             PlayerSettings.iOS.hideHomeButton = true;
             PlayerSettings.SetArchitecture(BuildTargetGroup.iOS, 1);

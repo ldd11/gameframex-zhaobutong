@@ -22,11 +22,15 @@ namespace GameFrameX.Startup.Application
 
         private async UniTask RunAsync()
         {
+            DifferenceStartupAnalytics.Begin(startupOptions != null &&
+                (startupOptions.SkipRemoteStartupRequests || startupOptions.GamePlayMode == YooAsset.EPlayMode.OfflinePlayMode ||
+                 (UnityEngine.Application.isEditor && startupOptions.GamePlayMode == YooAsset.EPlayMode.EditorSimulateMode)));
             try
             {
                 if (startupOptions == null)
                 {
                     Log.Error("StartupOptions is not assigned.");
+                    DifferenceStartupAnalytics.Fail("startup_options_missing");
                     return;
                 }
 
@@ -50,11 +54,24 @@ namespace GameFrameX.Startup.Application
                 if (!result.Success)
                 {
                     Log.Error($"Startup failed. Procedure: {result.FailedProcedureName}, Url: {result.FailedUrl}, Error: {result.ErrorMessage}");
+                    var cause = result.FailedProcedureName == "ProcedureGetGlobalInfoState" ? "global_info_failed" :
+                        result.FailedProcedureName == "ProcedureGetAppVersionInfoState" ? "app_version_failed" :
+                        result.FailedProcedureName == "ProcedureGetGameAssetPackageVersionInfoByDefaultPackageState" ? "asset_version_failed" :
+                        result.FailedProcedureName == "ProcedureGameLauncherState" ? "hotfix_launch_failed" : "startup_failed";
+                    DifferenceStartupAnalytics.Fail(cause);
+                }
+                else if (DifferenceAnalytics.Enabled)
+                {
+                    // Startup disposes UILauncher after Hotfix.Main returns; only now can the home be visible.
+                    await UniTask.NextFrame();
+                    Canvas.ForceUpdateCanvases();
+                    DifferenceStartupAnalytics.HomeVisible();
                 }
             }
             catch (System.Exception exception)
             {
                 Log.Error(exception);
+                DifferenceStartupAnalytics.Fail(exception is System.TimeoutException ? "startup_timeout" : "startup_exception");
             }
         }
     }

@@ -56,7 +56,10 @@
     <type fullname="GameFrameX.Setting.Runtime.SettingComponent" preserve="all" />
   </assembly>
   <assembly fullname="GameFrameX.Startup.Application">
+    <type fullname="GameFrameX.Startup.Application.DifferenceAds" preserve="all" />
+    <type fullname="GameFrameX.Startup.Application.DifferenceAnalytics" preserve="all" />
     <type fullname="GameFrameX.Startup.Application.DifferenceHaptics" preserve="all" />
+    <type fullname="GameFrameX.Startup.Application.DifferenceStartupAnalytics" preserve="all" />
   </assembly>
   <assembly fullname="GameFrameX.UI.Runtime">
     <type fullname="GameFrameX.UI.Runtime.IUIForm" preserve="all" />
@@ -126,10 +129,13 @@
     <type fullname="UnityEngine.Coroutine" preserve="all" />
     <type fullname="UnityEngine.Debug" preserve="all" />
     <type fullname="UnityEngine.DisallowMultipleComponent" preserve="all" />
+    <type fullname="UnityEngine.DrivenRectTransformTracker" preserve="all" />
+    <type fullname="UnityEngine.DrivenTransformProperties" preserve="all" />
     <type fullname="UnityEngine.Events.UnityAction" preserve="all" />
     <type fullname="UnityEngine.Events.UnityAction`1" preserve="all" />
     <type fullname="UnityEngine.Events.UnityEvent" preserve="all" />
     <type fullname="UnityEngine.Events.UnityEventBase" preserve="all" />
+    <type fullname="UnityEngine.ExecuteAlways" preserve="all" />
     <type fullname="UnityEngine.FilterMode" preserve="all" />
     <type fullname="UnityEngine.GameObject" preserve="all" />
     <type fullname="UnityEngine.Hash128" preserve="all" />
@@ -178,6 +184,9 @@
   <assembly fullname="UnityEngine.InputLegacyModule">
     <type fullname="UnityEngine.Input" preserve="all" />
     <type fullname="UnityEngine.Touch" preserve="all" />
+  </assembly>
+  <assembly fullname="UnityEngine.JSONSerializeModule">
+    <type fullname="UnityEngine.JsonUtility" preserve="all" />
   </assembly>
   <assembly fullname="UnityEngine.ParticleSystemModule">
     <type fullname="UnityEngine.ParticleSystem" preserve="all" />
@@ -261,6 +270,7 @@
     <type fullname="System.Comparison`1" preserve="all" />
     <type fullname="System.Converter`2" preserve="all" />
     <type fullname="System.DateTime" preserve="all" />
+    <type fullname="System.DateTimeOffset" preserve="all" />
     <type fullname="System.Diagnostics.DebuggableAttribute" preserve="all" />
     <type fullname="System.Diagnostics.DebuggableAttribute/DebuggingModes" preserve="all" />
     <type fullname="System.Diagnostics.DebuggerHiddenAttribute" preserve="all" />
@@ -273,8 +283,10 @@
     <type fullname="System.Func`2" preserve="all" />
     <type fullname="System.Func`3" preserve="all" />
     <type fullname="System.Globalization.CultureInfo" preserve="all" />
+    <type fullname="System.Guid" preserve="all" />
     <type fullname="System.IDisposable" preserve="all" />
     <type fullname="System.IFormatProvider" preserve="all" />
+    <type fullname="System.IO.Path" preserve="all" />
     <type fullname="System.Int32" preserve="all" />
     <type fullname="System.Int64" preserve="all" />
     <type fullname="System.InvalidOperationException" preserve="all" />
@@ -305,6 +317,7 @@
     <type fullname="System.Single" preserve="all" />
     <type fullname="System.String" preserve="all" />
     <type fullname="System.StringComparer" preserve="all" />
+    <type fullname="System.StringComparison" preserve="all" />
     <type fullname="System.Threading.CancellationToken" preserve="all" />
     <type fullname="System.Threading.Tasks.Task" preserve="all" />
     <type fullname="System.Threading.Tasks.Task`1" preserve="all" />

@@ -15,11 +15,13 @@ namespace Hotfix.UI
 
         public void OnInitializePotentialDrag(PointerEventData data)
         {
+            if (owner && owner.AdInputBlocked) { CancelGesture(); return; }
             if (scroll && dragging == null) scroll.OnInitializePotentialDrag(data);
         }
 
         public void OnBeginDrag(PointerEventData data)
         {
+            if (owner && owner.AdInputBlocked) { CancelGesture(); return; }
             if (dragging != null || data.button != PointerEventData.InputButton.Left || !owner || !owner.CanSwipeTabs) return;
             var delta = data.position - data.pressPosition;
             horizontal = Mathf.Abs(delta.x) > Mathf.Abs(delta.y);
@@ -37,6 +39,7 @@ namespace Hotfix.UI
 
         public void OnDrag(PointerEventData data)
         {
+            if (owner && owner.AdInputBlocked) { CancelGesture(); return; }
             if (dragging == null || dragging.pointerId != data.pointerId) return;
             if (horizontal)
             {
@@ -48,6 +51,7 @@ namespace Hotfix.UI
 
         public void OnEndDrag(PointerEventData data)
         {
+            if (owner && owner.AdInputBlocked) { CancelGesture(); return; }
             if (dragging == null || dragging.pointerId != data.pointerId) return;
             OnDrag(data);
             dragging = null;
@@ -55,8 +59,12 @@ namespace Hotfix.UI
             else if (scroll) scroll.OnEndDrag(data);
         }
 
-        void OnDisable()
+        void Update() { if (owner && owner.AdInputBlocked) CancelGesture(); }
+        void OnDisable() { CancelGesture(); }
+
+        void CancelGesture()
         {
+            if (scroll) scroll.StopMovement();
             if (dragging == null) return;
             var data = dragging; dragging = null;
             if (horizontal) { if (owner) owner.CancelTabDrag(); }

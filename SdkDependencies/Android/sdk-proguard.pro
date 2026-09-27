@@ -1,0 +1,5 @@
+-keep class com.adjust.sdk.** { *; }
+-keep class com.applovin.mediation.unity.** { *; }
+-keep class com.difference.sdk.DifferenceBannerAnalytics { *; }
+-keep class com.google.unity.** { *; }
+-keep class com.google.firebase.messaging.cpp.** { *; }
