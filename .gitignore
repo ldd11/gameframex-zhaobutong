@@ -8,3 +8,6 @@ Logs
 Temp
 yoo/DefaultPackage/ManifestFiles
 obj/Debug
+LocalSdkConfig/
+Builds
+UserSettings/Layouts

@@ -38,7 +38,7 @@ namespace Unity.Editor
                 PlayerSettings.SetIl2CppCompilerConfiguration(BuildTargetGroup.Android, Il2CppCompilerConfiguration.Release);
             }
 
-            PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
+            // Preserve the target architectures selected in Player Settings across script reloads.
             PlayerSettings.Android.androidTVCompatibility = false;
             // PlayerSettings.Android.chromeosInputEmulation = false;
             // PlayerSettings.bundleVersion = "1.0.0";
