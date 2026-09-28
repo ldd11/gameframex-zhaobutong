@@ -23,7 +23,8 @@ namespace Hotfix.UI
             var rect = (RectTransform)go.transform;
             rect.SetParent(parent, false);
             rect.anchorMin = Vector2.zero; rect.anchorMax = Vector2.one;
-            rect.offsetMin = rect.offsetMax = Vector2.zero;
+            rect.offsetMin = new Vector2(-200, 0);   // 左边界向左扩 200
+            rect.offsetMax = new Vector2( 200, 0);   // 右边界向右扩 200
             var effect = go.AddComponent<DifferenceHintSpotlight>();
             effect.spotlightMaterial = new Material(material);
 #if UNITY_EDITOR

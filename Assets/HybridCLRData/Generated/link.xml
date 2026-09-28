@@ -56,6 +56,7 @@
     <type fullname="GameFrameX.Setting.Runtime.SettingComponent" preserve="all" />
   </assembly>
   <assembly fullname="GameFrameX.Startup.Application">
+    <type fullname="GameFrameX.Startup.Application.ApplicationStartupEntry" preserve="all" />
     <type fullname="GameFrameX.Startup.Application.DifferenceAds" preserve="all" />
     <type fullname="GameFrameX.Startup.Application.DifferenceAnalytics" preserve="all" />
     <type fullname="GameFrameX.Startup.Application.DifferenceHaptics" preserve="all" />
@@ -194,6 +195,9 @@
     <type fullname="UnityEngine.ParticleSystem/MinMaxCurve" preserve="all" />
     <type fullname="UnityEngine.ParticleSystemRenderer" preserve="all" />
     <type fullname="UnityEngine.ParticleSystemStopBehavior" preserve="all" />
+  </assembly>
+  <assembly fullname="UnityEngine.TextRenderingModule">
+    <type fullname="UnityEngine.HorizontalWrapMode" preserve="all" />
   </assembly>
   <assembly fullname="UnityEngine.UI">
     <type fullname="UnityEngine.EventSystems.EventSystem" preserve="all" />

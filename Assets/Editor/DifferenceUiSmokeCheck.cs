@@ -28,6 +28,65 @@ public static class DifferenceUiSmokeCheck
 
     static DifferenceUiSmokeCheck() { EditorApplication.update += Tick; }
 
+    [MenuItem("Tools/Find Differences/Connect Home Entrance")]
+    public static void ConnectHomeEntrance()
+    {
+        const string path = "Assets/Bundles/UI/UIDifferences/UIDifferences.prefab";
+        var stage = UnityEditor.SceneManagement.PrefabStageUtility.GetCurrentPrefabStage();
+        var editing = stage != null && stage.assetPath == path;
+        var root = editing ? stage.prefabContentsRoot : PrefabUtility.LoadPrefabContents(path);
+        try
+        {
+            var home = root.transform.Find("Stage/FigmaHome");
+            if (!home.GetComponent<DifferenceHomeMotion>()) home.gameObject.AddComponent<DifferenceHomeMotion>();
+            PrefabUtility.SaveAsPrefabAsset(root, path);
+        }
+        finally { if (!editing) PrefabUtility.UnloadPrefabContents(root); }
+    }
+
+    [MenuItem("Tools/Find Differences/Check Home Entrance Only")]
+    public static void CheckHomeEntranceOnly()
+    {
+        var root = PrefabUtility.LoadPrefabContents("Assets/Bundles/UI/UIDifferences/UIDifferences.prefab");
+        try
+        {
+            // Check the generated bindings too: a removed Image node must not block startup.
+            typeof(UIDifferences).GetMethod("InitView", Private).Invoke(root.GetComponent<UIDifferences>(), null);
+            var home = root.transform.Find("Stage/FigmaHome");
+            var motion = home.GetComponent<DifferenceHomeMotion>();
+            if (!motion) throw new Exception("Home motion must be saved on the prefab for Inspector tuning.");
+            var logo = home.Find("Logo/Spine").GetComponent<Spine.Unity.SkeletonGraphic>();
+            var start = home.Find("Start");
+            void Call(string method) => typeof(DifferenceHomeMotion).GetMethod(method, Private).Invoke(motion, null);
+            void Advance(float dt, bool ready) => typeof(DifferenceHomeMotion).GetMethod("Advance", Private).Invoke(motion, new object[] { dt, ready });
+            for (var visit = 0; visit < 2; visit++)
+            {
+                Call("OnEnable");
+                Advance(5, false);
+                if (start.localScale != Vector3.zero || !logo.freeze || logo.AnimationState.GetCurrent(0).TrackTime != 0)
+                    throw new Exception("Entrance played behind the startup launcher.");
+                Advance(0, true);
+                if (logo.freeze) throw new Exception("Spine did not resume when home became visible.");
+                Advance(.18f, true);
+                if (Mathf.Abs(start.localScale.x - 1.2f) > .001f)
+                    throw new Exception("Start did not reach the configured overshoot.");
+                logo.Update(.5f);
+                Advance(.32f, true);
+                if (Vector3.Distance(start.localScale, Vector3.one) > .001f ||
+                    Mathf.Abs(logo.Skeleton.FindBone("bone16").ScaleX - 1) > .001f)
+                    throw new Exception("Start and Spine did not finish their entrance at scale one.");
+                Call("OnDisable");
+            }
+            File.WriteAllText("Temp/FindDifferences-home-entrance.txt", "PASS: generated bindings, startup hold, 0 -> 1.2 -> 1 bounce, synchronized finish and repeat entrance.");
+        }
+        catch (Exception error)
+        {
+            File.WriteAllText("Temp/FindDifferences-home-entrance.txt", "FAIL: " + error);
+            Debug.LogException(error);
+        }
+        finally { PrefabUtility.UnloadPrefabContents(root); }
+    }
+
     [MenuItem("Tools/Find Differences/Check Victory Votes Only")]
     public static void CheckVictoryVotesOnly()
     {
@@ -270,7 +329,7 @@ public static class DifferenceUiSmokeCheck
     public static void CheckAudioOnly()
     {
         var ui = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Bundles/UI/UIDifferences/UIDifferences.prefab").GetComponent<UIDifferences>();
-        foreach (var binding in new[] { "buttonSound|Click_Btn.wav", "failSound|False.wav", "foundSound|Found.wav", "missSound|Miss.wav", "winSound|Win.wav", "tipsSound|Tips.WAV", "homeMusic|MusicHome.wav", "gameMusic|MusicGame.wav" })
+        foreach (var binding in new[] { "buttonSound|Click_Btn.wav", "failSound|False.wav", "foundSound|Found.wav", "missSound|Miss.wav", "winSound|Win.wav", "coinCreateSound|CoinCreate.WAV", "tipsSound|Tips.WAV", "homeMusic|MusicHome.wav", "gameMusic|MusicGame.wav" })
         {
             var pair = binding.Split('|');
             var clip = (AudioClip)typeof(UIDifferences).GetField(pair[0]).GetValue(ui);
@@ -304,7 +363,7 @@ public static class DifferenceUiSmokeCheck
                 method.Invoke(ui, new object[] { Field(ui, "currentPage") });
             }
         }
-        Debug.Log("PASS: all 8 audio bindings; in Play mode also checks home/game music switching and mute");
+        Debug.Log("PASS: all 9 audio bindings; in Play mode also checks home/game music switching and mute");
     }
 
     [MenuItem("Tools/Find Differences/Check Reward Coins Only")]
@@ -1106,6 +1165,10 @@ public static class DifferenceUiSmokeCheck
             if (check == "responsive") { CheckResponsivePlayLayoutOnly(); return; }
             if (check == "sdk-check") { DifferenceSdkCheck.Run(); return; }
             if (check == "victory-votes") { CheckVictoryVotesOnly(); return; }
+            if (check == "coin-audio-connect") { DifferenceGameBuilder.RefreshUIBindingsOnly(); CheckAudioOnly(); File.WriteAllText("Temp/FindDifferences-coin-audio.txt", "PASS: CoinCreate and all audio bindings verified."); return; }
+            if (check == "victory-votes-connect") { DifferenceGameBuilder.RefreshUIBindingsOnly(); CheckVictoryVotesOnly(); return; }
+            if (check == "home-entrance") { CheckHomeEntranceOnly(); return; }
+            if (check == "home-entrance-connect") { ConnectHomeEntrance(); CheckHomeEntranceOnly(); return; }
             if (check == "sdk-enable") { DifferenceSdkBuild.SetEnabled(true); return; }
             if (check == "sdk-disable") { DifferenceSdkBuild.SetEnabled(false); return; }
             if (check == "board-coordinates") { CheckBoardCoordinatesOnly(); return; }

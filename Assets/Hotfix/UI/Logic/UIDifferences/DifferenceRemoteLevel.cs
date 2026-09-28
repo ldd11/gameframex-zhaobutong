@@ -19,7 +19,7 @@ namespace Hotfix.UI
 
         public IEnumerator Load(string apiUrl, int expectedNumber = 1)
         {
-            if (loading) throw new InvalidOperationException("关卡正在加载");
+            if (loading) throw new InvalidOperationException("Level Loading");
             ReleaseResources();
             loading = true; cancelled = false; Error = null;
             var urls = new string[4];
@@ -177,7 +177,7 @@ namespace Hotfix.UI
                     System.IO.Path.GetFileNameWithoutExtension(Uri.UnescapeDataString(new Uri(AssetUrl(endpoint, "level-base.png")).AbsolutePath)),
                 analyticsDifficulty = AnalyticsDifficulty(data["difficulty"]) ?? AnalyticsDifficulty(endpoint["difficulty"]) ?? "unknown",
                 analyticsParts = new string[items.Count],
-                regions = new Vector4[items.Count], hitSpots = new DifferenceSpot[items.Count], changedOnTop = true
+                regions = new Vector4[items.Count], hitSpots = new DifferenceSpot[items.Count], changedOnTop = false
             };
             var nodes = new HashSet<string>(StringComparer.Ordinal);
             for (var i = 0; i < items.Count; i++)

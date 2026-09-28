@@ -14,6 +14,10 @@ namespace GameFrameX.Startup.Application
     public sealed class ApplicationStartupEntry : MonoBehaviour
     {
         [SerializeField] private StartupOptions startupOptions;
+        public static bool HomeReady { get; private set; }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetHomeReady() { HomeReady = false; }
 
         private async void Start()
         {
@@ -60,11 +64,12 @@ namespace GameFrameX.Startup.Application
                         result.FailedProcedureName == "ProcedureGameLauncherState" ? "hotfix_launch_failed" : "startup_failed";
                     DifferenceStartupAnalytics.Fail(cause);
                 }
-                else if (DifferenceAnalytics.Enabled)
+                else
                 {
                     // Startup disposes UILauncher after Hotfix.Main returns; only now can the home be visible.
                     await UniTask.NextFrame();
                     Canvas.ForceUpdateCanvases();
+                    HomeReady = true;
                     DifferenceStartupAnalytics.HomeVisible();
                 }
             }

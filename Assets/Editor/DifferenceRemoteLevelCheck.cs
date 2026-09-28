@@ -58,10 +58,11 @@ public static class DifferenceRemoteLevelCheck
             Check(ui.play.activeSelf && ui.Round != null && ui.Round.Total == 15 && ui.Round.Count == 0, "真实线上第一关加载 15 处差异");
             data = (DifferenceLevel)typeof(UIDifferences).GetProperty("CurrentLevel", Private).GetValue(ui);
             contentKey = data.contentKey;
-            Check(!string.IsNullOrEmpty(contentKey) && data.changedOnTop, "后台内容标识与上图覆盖方向");
+            Check(!string.IsNullOrEmpty(contentKey) && !data.changedOnTop, "后台内容标识与下图覆盖方向");
             Check(data.original.texture.width == 1500 && data.original.texture.height == 1000 &&
                 data.changed.texture.width == 1500 && data.changed.texture.height == 1000, "线上两张图片均为 1500 × 1000");
             Check(data.croppedPatches.Length == 15 && data.hitSpots.Length == 15, "完整裁剪块与矩形点击区域");
+            Check(ui.upperImage.sprite == data.original && ui.lowerImage.sprite == data.changed, "上图完整原图，下图完整差异图");
             var originals = OriginalPatches(ui);
             var changedFlashes = ChangedFlashes(ui);
             for (var i = 0; i < 15; i++)
@@ -70,9 +71,9 @@ public static class DifferenceRemoteLevelCheck
                 var changedRect = (RectTransform)changedFlashes[i].transform.parent;
                 var center = new Vector2(data.regions[i].x * 600, -data.regions[i].y * 400);
                 Check(ui.spots[i].rectangular && data.croppedPatches[i].texture == data.changed.texture &&
-                    ui.patchImages[i].sprite == data.croppedPatches[i] && ui.differencePatches[i].transform.parent == ui.upperImage.transform &&
-                    originals[i].sprite.texture == data.original.texture && originalRect.parent == ui.upperImage.transform &&
-                    changedFlashes[i].sprite.texture == data.changed.texture && changedRect.parent == ui.lowerImage.transform &&
+                    ui.patchImages[i].sprite == data.croppedPatches[i] && ui.differencePatches[i].transform.parent == ui.lowerImage.transform &&
+                    originals[i].sprite.texture == data.original.texture && originalRect.parent == ui.lowerImage.transform &&
+                    changedFlashes[i].sprite.texture == data.changed.texture && changedRect.parent == ui.upperImage.transform &&
                     originalRect.GetComponent<UnityEngine.UI.RectMask2D>() && changedRect.GetComponent<UnityEngine.UI.RectMask2D>() &&
                     originalRect.pivot == Vector2.one * .5f && changedRect.pivot == Vector2.one * .5f &&
                     Vector2.Distance(originalRect.anchoredPosition, center) < .001f && Vector2.Distance(changedRect.anchoredPosition, center) < .001f && RestoredPatch(ui, i),
@@ -321,7 +322,7 @@ public static class DifferenceRemoteLevelCheck
     {
         var original = OriginalPatches(ui)[index];
         var changed = ChangedFlashes(ui)[index];
-        return ui.differencePatches[index].activeSelf && ui.patchImages[index].color == Color.white &&
+        return !ui.differencePatches[index].activeSelf && ui.patchImages[index].color == Color.white &&
             original.color == Color.white && changed.color == Color.white &&
             !original.transform.parent.gameObject.activeSelf && !changed.transform.parent.gameObject.activeSelf &&
             original.transform.parent.localScale == Vector3.one && changed.transform.parent.localScale == Vector3.one;
@@ -335,7 +336,7 @@ public static class DifferenceRemoteLevelCheck
         return original.isActiveAndEnabled && changed.isActiveAndEnabled && tint == original.color &&
             tint.r == 1 && tint.g == 1 && tint.b == 1 && Near(tint.a, alpha) &&
             original.transform.parent.localScale == Vector3.one && changed.transform.parent.localScale == Vector3.one &&
-            ui.patchImages[index].color == Color.white && ui.differencePatches[index].activeSelf;
+            ui.patchImages[index].color == Color.white && !ui.differencePatches[index].activeSelf;
     }
 
     static async Task CaptureFlash(string phase)

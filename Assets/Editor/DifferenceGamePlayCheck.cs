@@ -440,7 +440,7 @@ public static class DifferenceGamePlayCheck
                 Check(originalPatches[0].isActiveAndEnabled && changedFlashes[0].isActiveAndEnabled &&
                     originalPatches[0].color == Color.white && changedFlashes[0].color == Color.white &&
                     originalRect.localScale == Vector3.one && changedRect.localScale == Vector3.one &&
-                    ui.patchImages[0].color == Color.white && ui.differencePatches[0].activeSelf,
+                    ui.patchImages[0].color == Color.white && !ui.differencePatches[0].activeSelf,
                     "本地第 " + (pulse + 1) + " 轮完整互换，原色原尺寸");
                 patchStep.Invoke(ui, new object[] { .35f });
                 if (pulse < 2)
@@ -452,7 +452,7 @@ public static class DifferenceGamePlayCheck
                         "本地第 " + (pulse + 1) + " 轮淡出后恢复原图，等待下一轮");
                 }
             }
-            Check(ui.differencePatches[0].activeSelf && ui.patchImages[0].color == Color.white && originalPatches[0].color == Color.white && changedFlashes[0].color == Color.white &&
+            Check(!ui.differencePatches[0].activeSelf && ui.patchImages[0].color == Color.white && originalPatches[0].color == Color.white && changedFlashes[0].color == Color.white &&
                 !originalRect.gameObject.activeSelf && !changedRect.gameObject.activeSelf && originalRect.localScale == Vector3.one && changedRect.localScale == Vector3.one &&
                 ui.topRings[0].gameObject.activeSelf && ui.bottomRings[0].gameObject.activeSelf,
                 "本地 2.1 秒三轮互换结束恢复各自原样，保留不同内容及双圈");
@@ -549,7 +549,7 @@ public static class DifferenceGamePlayCheck
             Check(ui.shop.activeSelf && !ui.play.activeSelf && Button(ui, "Shop/Close").gameObject.activeSelf, "局内商店入口");
             Click(ui, "Shop/Close");
             Check(ui.play.activeSelf && ReferenceEquals(previousRound, ui.Round) && ui.Round.Count == 1 && ui.Round.Lives == 3, "商店返回原局");
-            Check(ui.differencePatches[0].activeSelf && ui.patchImages[0].color == Color.white && originalPatches[0].color == Color.white && changedFlashes[0].color == Color.white &&
+            Check(!ui.differencePatches[0].activeSelf && ui.patchImages[0].color == Color.white && originalPatches[0].color == Color.white && changedFlashes[0].color == Color.white &&
                 !originalRect.gameObject.activeSelf && !changedRect.gameObject.activeSelf && originalRect.localScale == Vector3.one && changedRect.localScale == Vector3.one,
                 "商店中途往返清除双侧临时裁块并恢复缩放，保留原差异");
             Check(Near(upper.transform.localScale.x, 2) && Near(lower.transform.localScale.x, 2) && Vector2.Distance(previousPosition, ui.upperImage.rectTransform.anchoredPosition) < .01f, "商店往返保留缩放和位置");

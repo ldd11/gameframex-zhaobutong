@@ -46,6 +46,7 @@ namespace Hotfix.UI
         public UnityEngine.UI.Graphic crossTop, crossBottom;
         public AudioSource audioSource, musicSource;
         public AudioClip foundSound, missSound, winSound;
+        public AudioClip coinCreateSound;
         public AudioClip buttonSound, failSound, tipsSound, homeMusic, gameMusic;
         public AudioClip[] musicTracks;
         //public RectTransform[] confetti;
@@ -549,11 +550,13 @@ namespace Hotfix.UI
         {
             var data = CurrentLevel;
             EnsureSpotCapacity(data.regions.Length);
-            upperImage.sprite = lowerImage.sprite = data.original;
+            upperImage.sprite = data.changedOnTop ? data.changed : data.original;
+            lowerImage.sprite = data.changedOnTop ? data.original : data.changed;
             spots = new DifferenceSpot[data.regions.Length];
             for (var i = 0; i < differencePatches.Length; i++)
             {
-                differencePatches[i].SetActive(i < data.regions.Length);
+                // Both boards show complete images; retain these hidden crops only for feedback setup.
+                differencePatches[i].SetActive(false);
                 if (i >= data.regions.Length) continue;
                 var r = data.regions[i];
                 var radius = Mathf.Max(23f / 600, new Vector2(r.z, r.w / ImageAspect).magnitude * .5f);

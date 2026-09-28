@@ -39,6 +39,8 @@ namespace Hotfix.UI
         // All page objects and graphics are authored in UIDifferences.prefab.
         void BindFigmaDesign()
         {
+            if (homeDesign && !homeDesign.GetComponent<DifferenceHomeMotion>())
+                homeDesign.AddComponent<DifferenceHomeMotion>();
             loadingMagnifierCenter = ((RectTransform)loadingMagnifier.transform).anchoredPosition;
             loadingFillWidth = loadingFill.rectTransform.rect.width;
             designSettingsButton.onClick.AddListener(ShowSettings);
@@ -238,6 +240,7 @@ namespace Hotfix.UI
                     var age = time - DifferenceRewardCoin.SpawnDelay - i * DifferenceRewardCoin.Stagger;
                     if (age < 0) continue;
                     var coin = icons[i];
+                    if (!coin.gameObject.activeSelf) PlayTone(coinCreateSound);
                     coin.gameObject.SetActive(true);
                     coin.transform.localPosition = DifferenceRewardCoin.Position(origin, target, spread, age, i, out var flight);
                     coin.SetAppearance(age, i, flight);

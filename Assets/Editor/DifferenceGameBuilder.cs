@@ -273,13 +273,21 @@ public static class DifferenceGameBuilder
             "designContactButton|FigmaSettings|Contact", "designTermsButton|FigmaSettings|Terms", "designPrivacyButton|FigmaSettings|Privacy",
             "designFailClose|FigmaFail|Close", "designContinueButton|FigmaFail|Continue", "designRetryButton|FigmaFail|Retry",
             "designHintClose|FigmaHint|Close", "designFreeButton|FigmaHint|Free", "designBuyButton|FigmaHint|Buy",
-            "designNextButton|FigmaVictory|Next" })
+            "designNextButton|FigmaVictory|Next",
+            "designLikeButton|FigmaVictory|Like", "designUnlikeButton|FigmaVictory|UnLike" })
         {
             var parts = binding.Split('|');
             var property = data.FindProperty(parts[0]);
             if (property.objectReferenceValue) continue;
             var page = ui.stage.Find(parts[1]);
             property.objectReferenceValue = UniqueChild<UnityEngine.UI.Button>(page, parts[2]);
+        }
+        foreach (var binding in new[] { "likeSelectedSprite|Like_Click", "unlikeSelectedSprite|Unlike_Click" })
+        {
+            var parts = binding.Split('|');
+            var property = data.FindProperty(parts[0]);
+            if (!property.objectReferenceValue)
+                property.objectReferenceValue = AssetDatabase.LoadAssetAtPath<Sprite>(Folder + "Art/Figma/" + parts[1] + ".png");
         }
         data.ApplyModifiedPropertiesWithoutUndo();
         foreach (var motion in ui.GetComponentsInChildren<DifferencePopupMotion>(true))
@@ -702,6 +710,7 @@ public static class DifferenceGameBuilder
         ui.foundSound = Clip("Found.wav");
         ui.missSound = Clip("Miss.wav");
         ui.winSound = Clip("Win.wav");
+        ui.coinCreateSound = Clip("CoinCreate.WAV");
         ui.tipsSound = Clip("Tips.WAV");
         ui.homeMusic = Clip("MusicHome.wav");
         ui.gameMusic = Clip("MusicGame.wav");
