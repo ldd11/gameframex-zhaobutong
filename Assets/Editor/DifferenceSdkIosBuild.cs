@@ -185,7 +185,7 @@ public sealed class DifferenceSdkIosBuild : IPreprocessBuildWithReport
         }
     }
 
-    // MAX's selected SDK versions contain four dynamic frameworks. Declaring their pods on the app
+    // AdjustSignature and selected MAX SDKs contain dynamic frameworks. Declaring their pods on the app
     // target lets CocoaPods embed/sign them there, instead of nesting them in UnityFramework.framework.
     static string CreatePodfile(string minimumVersion) => PodfileHeader +
         "source 'https://cdn.cocoapods.org/'\nplatform :ios, '" + minimumVersion + @"'
@@ -195,6 +195,7 @@ target 'UnityFramework' do
 " + Pods + @"end
 
 target 'Unity-iPhone' do
+  pod 'AdjustSignature', '3.35.2'
   pod 'AppLovinSDK', '13.6.4'
   pod 'FBAudienceNetwork', '6.22.0'
   pod 'InMobiSDK', '11.4.1'
@@ -231,6 +232,9 @@ end
         input.WriteToFile(config);
         ConfigureExport(path, config, "test-only", "ca-app-pub-3940256099942544~1458002511", "Test permission", "com.example.sdkcheck", MinimumIosVersion);
         ConfigureExport(path, config, "test-only", "ca-app-pub-3940256099942544~1458002511", "Test permission", "com.example.sdkcheck", MinimumIosVersion);
+        var appPods = File.ReadAllText(Path.Combine(path, "Podfile")).Split(new[] { "target 'Unity-iPhone' do" }, StringSplitOptions.None).Last();
+        if (!appPods.Contains("pod 'AdjustSignature', '3.35.2'"))
+            throw new BuildFailedException("Unity-iPhone must embed AdjustSignature to avoid a missing AdjustSigSdk crash.");
         bool rejected = false;
         try { ReadFirebaseConfig(config, "com.example.wrong"); }
         catch (BuildFailedException) { rejected = true; }
