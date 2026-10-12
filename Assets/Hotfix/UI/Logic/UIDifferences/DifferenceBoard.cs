@@ -76,6 +76,7 @@ namespace Hotfix.UI
         public void OnScroll(PointerEventData data)
         {
             if (owner && owner.AdInputBlocked) return;
+            if (owner && !owner.TutorialAllowsView) return;
             if (IsResetting || (owner && owner.HintActive)) return;
             if (!Inside(data.position, data.enterEventCamera)) return;
             BlockClick();
@@ -85,6 +86,7 @@ namespace Hotfix.UI
 
         public void OnBeginDrag(PointerEventData data)
         {
+            if (owner && !owner.TutorialAllowsView) return;
             if (owner && owner.AdInputBlocked) { dragging = pinching = false; return; }
             if (IsResetting || (owner && owner.HintActive)) return;
             if (data.button != PointerEventData.InputButton.Left || !Inside(data.pressPosition, data.pressEventCamera)) return;
@@ -94,6 +96,7 @@ namespace Hotfix.UI
 
         public void OnDrag(PointerEventData data)
         {
+            if (owner && !owner.TutorialAllowsView) return;
             if (owner && owner.AdInputBlocked) { dragging = pinching = false; return; }
             if (IsResetting || (owner && owner.HintActive)) return;
             if (!dragging || pinching || Input.touchCount > 1 || Zoom <= 1) return;
@@ -114,6 +117,7 @@ namespace Hotfix.UI
 
         void Update()
         {
+            if (owner && !owner.TutorialAllowsView) { dragging = pinching = false; return; }
             if (owner && owner.AdInputBlocked) { dragging = pinching = false; return; }
             if (owner && owner.HintActive) { dragging = pinching = false; return; }
             if (resetting)

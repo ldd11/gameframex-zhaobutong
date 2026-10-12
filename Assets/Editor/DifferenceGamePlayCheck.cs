@@ -918,7 +918,7 @@ public static class DifferenceGamePlayCheck
                         var radius = Vector2.Distance(vertex.position, ring.rectTransform.rect.center);
                         minRadius = Mathf.Min(minRadius, radius); maxRadius = Mathf.Max(maxRadius, radius);
                     }
-                    Check(Near(maxRadius, size * .5f) && Near(maxRadius - minRadius, 8), "大小差异圈均保持八单位线宽，中心透明");
+                    Check(Near(maxRadius, size * .5f) && Near(maxRadius - minRadius, ring.style.lineWidth), "大小差异圈均保持固定线宽，中心透明");
                 }
             }
         }

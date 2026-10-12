@@ -69,6 +69,15 @@ namespace Hotfix.Manager
         {
             if (Finished || !Finite(x) || !Finite(y) || x < 0 || x > 1 || y < 0 || y > 1)
                 return Ignored;
+            var best = HitIndex(x, y);
+            if (best >= 0) return found[best] ? Ignored : Find(best);
+            Lives--;
+            return Miss;
+        }
+
+        public int HitIndex(float x, float y)
+        {
+            if (!Finite(x) || !Finite(y) || x < 0 || x > 1 || y < 0 || y > 1) return -1;
             var best = -1;
             var distance = float.MaxValue;
             for (var i = 0; i < spots.Length; i++)
@@ -83,9 +92,7 @@ namespace Hotfix.Manager
                 if (hit && d < distance)
                 { best = i; distance = d; }
             }
-            if (best >= 0) return found[best] ? Ignored : Find(best);
-            Lives--;
-            return Miss;
+            return best;
         }
 
         public int Hint()
@@ -116,6 +123,8 @@ namespace Hotfix.Manager
         {
             var points = new[] { new DifferenceSpot(.2f, .3f), new DifferenceSpot(.7f, .8f) };
             var round = new DifferenceRound(points);
+            Require(round.HitIndex(.2f, .3f) == 0 && round.HitIndex(float.NaN, 0) == -1 &&
+                round.FoundMask == 0 && round.Lives == 3, "引导查询命中位置不改变进度或机会");
             Require(round.Click(.2f, .3f) == 0 && round.Count == 1, "命中");
             Require(round.Click(.2f, .3f) == Ignored && round.Lives == 3, "重复点击不扣血");
             Require(round.Click(float.NaN, .2f) == Ignored && round.Click(-1, 0) == Ignored, "越界输入");

@@ -15,6 +15,7 @@ namespace Hotfix.UI
         Vector2 target, startPan, endPan;
         float elapsed, startZoom;
         bool closing;
+        bool autoZoom;
 
         public static DifferenceHintSpotlight Create(RectTransform parent, Material material)
         {
@@ -41,14 +42,18 @@ namespace Hotfix.UI
             return effect;
         }
 
-        public void Show(DifferenceBoard source, RectTransform first, RectTransform second, Vector2 point, int index)
+        public void Show(DifferenceBoard source, RectTransform first, RectTransform second, Vector2 point, int index, bool zoom = true)
         {
+            autoZoom = zoom;
             board = source; upper = first; lower = second; target = point; TargetIndex = index;
             elapsed = 0; closing = false;
             startZoom = upper.localScale.x; startPan = upper.anchoredPosition;
-            board.FocusSpot(point, 2);
-            endPan = upper.anchoredPosition;
-            board.SetView(startZoom, startPan);
+            if (autoZoom)
+            {
+                board.FocusSpot(point, 2);
+                endPan = upper.anchoredPosition;
+                board.SetView(startZoom, startPan);
+            }
             gameObject.SetActive(true); transform.SetAsLastSibling();
             Advance(0);
         }
@@ -58,14 +63,18 @@ namespace Hotfix.UI
             if (!isActiveAndEnabled || closing) return;
             closing = true; elapsed = 0;
             startZoom = upper.localScale.x; startPan = upper.anchoredPosition;
-            board.ResetView(); endPan = upper.anchoredPosition;
-            board.SetView(startZoom, startPan);
+            if (autoZoom)
+            {
+                board.ResetView(); endPan = upper.anchoredPosition;
+                board.SetView(startZoom, startPan);
+            }
         }
 
         public void Cancel()
         {
             if (!gameObject.activeSelf) return;
-            board.ResetView(); TargetIndex = -1; gameObject.SetActive(false);
+            if (autoZoom) board.ResetView();
+            TargetIndex = -1; gameObject.SetActive(false);
         }
 
         void Update() { Advance(Time.unscaledDeltaTime); }
@@ -75,7 +84,7 @@ namespace Hotfix.UI
             elapsed += Mathf.Max(0, deltaTime);
             var t = Mathf.Clamp01(elapsed / (closing ? CloseTime : OpenTime));
             var eased = 1 - Mathf.Pow(1 - t, 3);
-            board.SetView(Mathf.Lerp(startZoom, closing ? 1 : 2, eased), Vector2.Lerp(startPan, endPan, eased));
+            if (autoZoom) board.SetView(Mathf.Lerp(startZoom, closing ? 1 : 2, eased), Vector2.Lerp(startPan, endPan, eased));
             var radius = closing ? Mathf.Lerp(Radius, 135, eased) : Mathf.Lerp(280, Radius, eased);
             spotlightMaterial.SetVector("_Size", rectTransform.rect.size);
             spotlightMaterial.SetVector("_HoleA", Hole(upper, radius));

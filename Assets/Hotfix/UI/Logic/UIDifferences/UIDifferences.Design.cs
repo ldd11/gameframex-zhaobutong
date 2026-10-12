@@ -52,7 +52,7 @@ namespace Hotfix.UI
             if (designContactButton) designContactButton.onClick.AddListener(() => OpenSettingsLink(contactUrl));
             if (designTermsButton) designTermsButton.onClick.AddListener(() => OpenSettingsLink(termsOfServiceUrl));
             if (designPrivacyButton) designPrivacyButton.onClick.AddListener(() => OpenSettingsLink(privacyPolicyUrl));
-            designFailClose.onClick.AddListener(ShowHome);
+            designFailClose.onClick.AddListener(CloseResultToHome);
             designContinueButton.onClick.AddListener(OnFigmaResultPrimary);
             designRetryButton.onClick.AddListener(OnFigmaResultSecondary);
             designHintClose.onClick.AddListener(() => { if (!AdInputBlocked) CloseDesignHint(); });
@@ -135,6 +135,17 @@ namespace Hotfix.UI
         }
 
         void CloseFigmaResult() { CancelRewardCoins(); figmaResultActive = false; UpdateFigmaDesign(currentPage); }
+        void CloseResultToHome()
+        {
+            if (AdInputBlocked) return;
+            if (Round != null && Round.Finished && !Round.Complete)
+            {
+                ClearRound();
+                Round = null; // Prevent returning home from saving the discarded failed round again.
+                if (tutorialPending) { BeginLevel(0, false, true); return; }
+            }
+            ShowHome();
+        }
         void OnFigmaResultPrimary()
         {
             if (AdInputBlocked || !figmaResultActive) return;
@@ -190,8 +201,8 @@ namespace Hotfix.UI
                     }
                     yield return new WaitForSecondsRealtime(.065f);
                 }
-                var ringAnimation = foundRingSpine ? foundRingSpine.GetSkeletonData(false).FindAnimation("a2") : null;
-                yield return new WaitForSecondsRealtime(Mathf.Max(.4f, ringAnimation == null ? 0 : ringAnimation.Duration));
+                var ringAnimation = useSpineFoundRing && foundRingSpine ? foundRingSpine.GetSkeletonData(false).FindAnimation("a2") : null;
+                yield return new WaitForSecondsRealtime(ringAnimation == null ? Mathf.Max(0, foundRingStyle.animationDuration) : ringAnimation.Duration);
             }
             finally { if (root) Destroy(root); }
         }

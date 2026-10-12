@@ -19,8 +19,8 @@ public static class DifferenceUiSmokeCheck
     const BindingFlags Private = BindingFlags.Instance | BindingFlags.NonPublic;
     static readonly string Folder = Path.GetFullPath(Path.Combine(Application.dataPath, "../Temp/FindDifferences-ui-smoke"));
     static readonly string Request = Folder + ".request";
-    static readonly string[] IntKeys = { "Completed", "Coins", "Hints", "Avatar", "Frame", "MusicTrack", "OwnedAvatars", "OwnedFrames", "TotalFound", "Perfect", "RoundLevel", "RoundMask", "RoundLives", "RoundMistakes", "RoundHint" };
-    static readonly string[] BoolKeys = { "Sound", "Music", "Vibration" };
+    static readonly string[] IntKeys = { "Completed", "Coins", "Hints", "Avatar", "Frame", "MusicTrack", "OwnedAvatars", "OwnedFrames", "TotalFound", "Perfect", "RoundLevel", "RoundMask", "RoundLives", "RoundMistakes", "RoundHint", "TutorialStep" };
+    static readonly string[] BoolKeys = { "Sound", "Music", "Vibration", "TutorialComplete" };
     static readonly string[] StringKeys = { "Nickname", "GiftDate", "RoundContent" };
     static bool running;
     static bool launcherCaptured;
@@ -489,30 +489,134 @@ public static class DifferenceUiSmokeCheck
     [MenuItem("Tools/Find Differences/Check Found Ring Only")]
     public static void CheckFoundRingOnly()
     {
-        if (!Application.isPlaying) throw new Exception("请进入 Play 并打开关卡后检查");
-        var ui = UnityEngine.Object.FindObjectOfType<UIDifferences>();
-        if (!ui || ui.Round == null || !ui.play.activeInHierarchy) throw new Exception("请先打开关卡");
-        var node = UnityEngine.Object.Instantiate(ui.topRings[0].gameObject, ui.topRings[0].transform.parent);
+        var root = PrefabUtility.LoadPrefabContents("Assets/Bundles/UI/UIDifferences/UIDifferences.prefab");
         try
         {
-            node.SetActive(true);
-            var marker = node.GetComponent<Image>();
+            var ui = root.GetComponent<UIDifferences>();
+            typeof(UIDifferences).GetField("useSpineFoundRing", Private).SetValue(ui, false);
+            var marker = ui.topRings[0];
+            marker.gameObject.SetActive(true);
+            var spine = Spine.Unity.SkeletonGraphic.NewSkeletonGraphicGameObject(ui.foundRingSpine, marker.transform, ui.foundRingMaterial);
             var show = typeof(UIDifferences).GetMethod("ShowFoundRing", Private);
-            show.Invoke(ui, new object[] { marker, true });
-            var spine = marker.GetComponentInChildren<Spine.Unity.SkeletonGraphic>();
-            var track = spine.AnimationState.GetCurrent(0);
-            if (track.Animation.Name != "a2" || track.Loop || track.Next?.Animation.Name != "a1" || marker.enabled)
-                throw new Exception("命中应由 Spine a2 切换到 a1，替换旧圆圈");
-            var particles = marker.GetComponentsInChildren<ParticleSystem>();
-            if (particles.Length == 0) throw new Exception("缺少命中粒子");
-            foreach (var particle in particles)
-                if (particle.main.loop || !particle.isPlaying) throw new Exception("粒子必须播放一次");
             show.Invoke(ui, new object[] { marker, false });
-            if (spine.AnimationState.GetCurrent(0).Animation.Name != "a1" || marker.GetComponentsInChildren<ParticleSystem>().Length != particles.Length)
-                throw new Exception("恢复进度不应再次生成粒子");
-            Debug.Log("PASS: found ring particles + a2, restored a1");
+            var ring = marker.GetComponentInChildren<DifferenceFoundRing>(true);
+            if (!ring || !ring.enabled || !ring.gameObject.activeSelf || spine.gameObject.activeSelf || marker.enabled || !ui.foundRingSpine || !ui.foundRingEffectPrefab)
+                throw new Exception("固定线宽圈必须显示，Spine 仅隐藏且资源与粒子保留");
+            var draw = typeof(DifferenceFoundRing).GetMethod("OnPopulateMesh", Private | BindingFlags.DeclaredOnly);
+            var advance = typeof(DifferenceFoundRing).GetMethod("Advance", Private);
+            foreach (var size in new[] { 46f, 180f })
+            {
+                marker.rectTransform.sizeDelta = Vector2.one * size;
+                ring.rectTransform.ForceUpdateRectTransforms();
+                ring.Play(true);
+                foreach (var step in new[] { 0f, .18f, .22f })
+                {
+                    advance.Invoke(ring, new object[] { step });
+                    using (var mesh = new VertexHelper())
+                    {
+                        draw.Invoke(ring, new object[] { mesh });
+                        var min = float.MaxValue; var max = 0f; var alpha = 0f; var vertex = new UIVertex();
+                        for (var i = 0; i < mesh.currentVertCount; i++)
+                        {
+                            mesh.PopulateUIVertex(ref vertex, i);
+                            var radius = Vector2.Distance(vertex.position, ring.rectTransform.rect.center);
+                            min = Mathf.Min(min, radius); max = Mathf.Max(max, radius); alpha = Mathf.Max(alpha, vertex.color.a);
+                        }
+                        if (mesh.currentVertCount == 0 || Mathf.Abs(max - min - ring.style.lineWidth) > .001f ||
+                            (step == 0 ? alpha != 0 || Mathf.Abs(max - size * .4f) > .001f : alpha != 255) ||
+                            (step == .18f && max <= size * .5f) || (step == .22f && Mathf.Abs(max - size * .5f) > .001f))
+                            throw new Exception("圆环渐显、弹出回弹、大小与动画过程中的固定线宽检查失败");
+                    }
+                }
+                ring.Play(false);
+                if ((float)typeof(DifferenceFoundRing).GetField("elapsed", Private).GetValue(ring) != ring.style.animationDuration) throw new Exception("恢复进度必须直接显示最终圆环");
+            }
+            ring.style = new DifferenceFoundRing.Style {
+                sizeMultiplier = 1.5f, radiusOffset = 3, lineWidth = 10, opacity = .5f,
+                glowIntensity = .6f, glowWidth = 12, glowColor = Color.magenta,
+                highlightIntensity = 0, animationDuration = 0, segments = 64
+            };
+            ring.style.outlineColors = new Gradient {
+                colorKeys = new[] { new GradientColorKey(Color.cyan, 0), new GradientColorKey(Color.cyan, 1) },
+                alphaKeys = new[] { new GradientAlphaKey(1, 0), new GradientAlphaKey(1, 1) }
+            };
+            ring.Play(true);
+            using (var mesh = new VertexHelper())
+            {
+                draw.Invoke(ring, new object[] { mesh });
+                var vertex = new UIVertex(); var max = 0f; var min = float.MaxValue;
+                var cyan = false; var magenta = false;
+                for (var i = 0; i < mesh.currentVertCount; i++)
+                {
+                    mesh.PopulateUIVertex(ref vertex, i);
+                    var radius = Vector2.Distance(vertex.position, ring.rectTransform.rect.center);
+                    max = Mathf.Max(max, radius); min = Mathf.Min(min, radius);
+                    cyan |= vertex.color.g == 255 && vertex.color.b == 255 && vertex.color.a == 128;
+                    magenta |= vertex.color.r == 255 && vertex.color.b == 255 && vertex.color.a > 0;
+                }
+                if (Mathf.Abs(max - 150) > .001f || Mathf.Abs(min - 116) > .001f || !cyan || !magenta)
+                    throw new Exception("大小、线宽、描边颜色、透明度、光晕颜色与范围或零时长设置未生效");
+            }
+            ring.style.lineWidth = 1000;
+            ring.style.glowIntensity = 0;
+            using (var mesh = new VertexHelper())
+            {
+                draw.Invoke(ring, new object[] { mesh });
+                var vertex = new UIVertex(); var min = float.MaxValue;
+                for (var i = 0; i < mesh.currentVertCount; i++)
+                {
+                    mesh.PopulateUIVertex(ref vertex, i);
+                    min = Mathf.Min(min, Vector2.Distance(vertex.position, ring.rectTransform.rect.center));
+                }
+                if (Mathf.Abs(min - .5f) > .001f) throw new Exception("过粗线宽必须保留透明圆心");
+            }
+            CaptureFoundRingPreview();
+            File.WriteAllText("Temp/FindDifferences-found-ring.txt", "PASS: Spine retained; fixed width during animation; configurable size, radius offset, width, colors, opacity, glow and zero duration; oversized width retains clear center.");
+            Debug.Log("PASS: fixed-width animated found ring");
         }
-        finally { UnityEngine.Object.Destroy(node); }
+        catch (Exception error) { File.WriteAllText("Temp/FindDifferences-found-ring.txt", "FAIL: " + error); Debug.LogException(error); }
+        finally { PrefabUtility.UnloadPrefabContents(root); }
+    }
+
+    static void CaptureFoundRingPreview()
+    {
+        var preview = new GameObject("Ring preview", typeof(Canvas));
+        var cameraNode = new GameObject("Ring preview camera", typeof(Camera));
+        var target = new RenderTexture(960, 480, 16);
+        var pixels = new Texture2D(960, 480, TextureFormat.RGB24, false);
+        var previous = RenderTexture.active;
+        try
+        {
+            preview.transform.position = new Vector3(10000, 10000, 0);
+            preview.GetComponent<Canvas>().renderMode = RenderMode.WorldSpace;
+            foreach (var size in new[] { 100f, 180f })
+            {
+                var node = new GameObject("Circle", typeof(RectTransform), typeof(DifferenceFoundRing));
+                node.transform.SetParent(preview.transform, false);
+                var ring = node.GetComponent<DifferenceFoundRing>();
+                ring.rectTransform.sizeDelta = Vector2.one * size;
+                ring.rectTransform.anchoredPosition = new Vector2(size == 100 ? -110 : 110, 0);
+                ring.raycastTarget = false;
+                ring.Play(false);
+            }
+            var camera = cameraNode.GetComponent<Camera>();
+            camera.enabled = false;
+            camera.transform.position = preview.transform.position + new Vector3(0, 0, -10);
+            camera.orthographic = true; camera.orthographicSize = 120;
+            camera.clearFlags = CameraClearFlags.SolidColor;
+            camera.backgroundColor = new Color(.16f, .2f, .24f);
+            camera.targetTexture = target;
+            Canvas.ForceUpdateCanvases(); camera.Render();
+            RenderTexture.active = target;
+            pixels.ReadPixels(new Rect(0, 0, 960, 480), 0, 0); pixels.Apply();
+            File.WriteAllBytes("Temp/FindDifferences-found-ring.png", pixels.EncodeToPNG());
+        }
+        finally
+        {
+            RenderTexture.active = previous;
+            UnityEngine.Object.DestroyImmediate(cameraNode); UnityEngine.Object.DestroyImmediate(preview);
+            UnityEngine.Object.DestroyImmediate(target); UnityEngine.Object.DestroyImmediate(pixels);
+        }
     }
 
     [MenuItem("Tools/Find Differences/Check Miss Animation Only")]
@@ -1157,6 +1261,9 @@ public static class DifferenceUiSmokeCheck
             var check = File.ReadAllText(Request).Trim();
             File.Delete(Request);
             if (check == "reward") { CheckRewardCoinsOnly(); return; }
+            if (check == "found-ring") { CheckFoundRingOnly(); return; }
+            if (check == "failure-close") { SessionState.SetBool(Pending + ".FailureClose", true); Start(); return; }
+            if (check == "tutorial") { SessionState.SetBool(Pending + ".Tutorial", true); Start(); return; }
             if (check == "spine-alpha") { BuildAndroidSpineShaderCheck(); return; }
             if (check == "startup-await") { CheckStartupAwaitOnly(); return; }
             if (check == "settings-connect") { DifferenceGameBuilder.ConnectSettingsActions(); CheckSettingsActionsOnly(); return; }
@@ -1184,7 +1291,8 @@ public static class DifferenceUiSmokeCheck
             ScreenCapture.CaptureScreenshot(Path.Combine(Folder, "00-launcher.png"));
             launcherCaptured = true;
         }
-        if (EditorApplication.isPlaying && ui) { SessionState.SetBool(Pending, false); Run(ui); }
+        if (EditorApplication.isPlaying && ui && GameApp.Setting != null && (bool)Field(ui, "interactionsBound"))
+        { SessionState.SetBool(Pending, false); Run(ui); }
         else if (EditorApplication.timeSinceStartup > deadline)
         {
             SessionState.SetBool(Pending, false);
@@ -1215,6 +1323,137 @@ public static class DifferenceUiSmokeCheck
             settings.RemoveSetting(UIDifferences.Key + "RoundContent");
             settings.SetInt(UIDifferences.Key + "Coins", 300);
             ui.levelApiUrl = ""; ui.OnOpen(null);
+            if (SessionState.GetBool(Pending + ".Tutorial", false))
+            {
+                SessionState.SetBool(Pending + ".Tutorial", false);
+                settings.SetBool(UIDifferences.Key + "TutorialComplete", false);
+                ui.SetTesting(false);
+                typeof(UIDifferences).GetMethod("InitializeTutorial", Private).Invoke(ui, null);
+                await Wait(() => ui.Round != null && !ui.IsLoadingLevel, "new player opens first level directly");
+                await Task.Delay(500);
+                Check(ui.SelectedLevel == 0 && !Active(ui, "homeDesign") && (bool)Field(ui, "tutorialPending") && !ui.backButton.gameObject.activeSelf,
+                    "tutorial bypasses home and hides back button");
+                await Capture("tutorial-01-click");
+                var inventory = ui.Hints;
+                ui.ClickImage(.99f, .02f); ui.UseHint(); ui.ShowHome();
+                Check(ui.Round.Count == 0 && ui.Round.Lives == 3 && ui.Hints == inventory && ui.play.activeSelf,
+                    "first tutorial blocks wrong clicks, early hints and home navigation");
+                void ClickTarget()
+                {
+                    var index = (int)Field(ui, "tutorialTarget");
+                    ui.ClickImage(ui.spots[index].x, ui.spots[index].y);
+                }
+                void RefreshGuide()
+                {
+                    typeof(UIDifferences).GetField("tutorialShowAt", Private).SetValue(ui, 0f);
+                    typeof(UIDifferences).GetMethod("AdvanceTutorial", Private).Invoke(ui, null);
+                }
+                ClickTarget();
+                Check(ui.Round.Count == 1 && settings.GetInt(UIDifferences.Key + "TutorialStep") == 1,
+                    "first hit saves zoom lesson and found progress");
+                ui.OnOpen(null);
+                await Wait(() => ui.Round != null && !ui.IsLoadingLevel, "interrupted tutorial restores directly into first level");
+                Check(ui.Round.Count == 1 && (int)settings.GetInt(UIDifferences.Key + "TutorialStep") == 1,
+                    "resume preserves found point and tutorial step");
+                RefreshGuide();
+                Check(ui.tutorialPinchHandSprite && ui.tutorialPinchHandOpenSprite && ui.tutorialZoomArrowSprite, "closed/open pinch hand and zoom arrow sprites are bound");
+                var arrows = (RectTransform[])Field(ui, "tutorialZoomArrows");
+                var hands = (RectTransform[])Field(ui, "tutorialPinchHands");
+                Check(arrows[0].gameObject.activeSelf && arrows[1].gameObject.activeSelf && hands[0].gameObject.activeSelf,
+                    "zoom lesson uses one pinch hand and two arrows per image");
+                for (var i = 0; i < hands.Length; i++)
+                {
+                    var viewport = (RectTransform)(i == 0 ? ui.upperImage.transform.parent : ui.lowerImage.transform.parent);
+                    Check(Vector3.Distance(hands[i].position, viewport.TransformPoint(viewport.rect.center)) < .01f,
+                        "zoom gesture is centered in each image viewport");
+                }
+                var initialArrowPosition = arrows[0].anchoredPosition;
+                void CheckGesture()
+                {
+                    var opening = Mathf.Repeat(Time.unscaledTime, 2.4f) / 2.4f < .5f;
+                    foreach (var hand in hands)
+                        Check(hand.localScale == Vector3.one && hand.GetComponent<Image>().sprite ==
+                            (opening ? ui.tutorialPinchHandOpenSprite : ui.tutorialPinchHandSprite),
+                            "gesture uses the matching open/closed sprite at a fixed scale");
+                }
+                CheckGesture();
+                var initialHandSprite = hands[0].GetComponent<Image>().sprite;
+                await Task.Delay(350); RefreshGuide();
+                Check(Vector2.Distance(initialArrowPosition, arrows[0].anchoredPosition) > 1,
+                    "zoom arrows continue animating");
+                await Wait(() => { RefreshGuide(); return hands[0].GetComponent<Image>().sprite != initialHandSprite; },
+                    "pinch hand switches between open and closed sprites");
+                CheckGesture();
+                await Capture("tutorial-02-zoom");
+                ui.upperImage.GetComponent<DifferenceBoard>().SetZoom(1.5f); RefreshGuide();
+                Check(ui.Round.Count == 1 && settings.GetInt(UIDifferences.Key + "TutorialStep") == 3 && ui.hintButton.interactable &&
+                    !hands[0].gameObject.activeSelf && !hands[1].gameObject.activeSelf,
+                    "actual image zoom goes directly to the clickable hint button lesson");
+                ClickTarget();
+                Check(ui.Round.Count == 1, "hint button lesson blocks additional difference clicks");
+                settings.SetInt(UIDifferences.Key + "TutorialStep", 2);
+                ui.OnOpen(null);
+                await Wait(() => ui.Round != null && !ui.IsLoadingLevel, "legacy second-difference lesson restores");
+                RefreshGuide();
+                Check(ui.Round.Count == 1 && settings.GetInt(UIDifferences.Key + "TutorialStep") == 3 && ui.hintButton.interactable,
+                    "legacy second-difference save migrates directly to the hint button lesson");
+                await Task.Delay(450);
+                Check(((DifferenceHintSpotlight)Field(ui, "tutorialShade")).Ready, "hint button lesson mask is ready");
+                var hintRect = (RectTransform)ui.hintButton.transform;
+                var guidePoints = (RectTransform[])Field(ui, "tutorialPoints");
+                Check(Vector3.Distance(guidePoints[0].position, hintRect.TransformPoint(hintRect.rect.center)) < .01f &&
+                    !guidePoints[1].gameObject.activeSelf,
+                    "third-step hand targets the hint button center regardless of its pivot");
+                await Capture("tutorial-03-hint");
+                ui.UseHint();
+                await Wait(() => ((DifferenceHintSpotlight)Field(ui, "hintSpotlight")).Ready, "tutorial hint opens dual spotlights");
+                RefreshGuide();
+                Check(ui.Hints == inventory && settings.GetInt(UIDifferences.Key + "TutorialStep") == 4 && ui.hintLabel.text == "∞",
+                    "first level hints are unlimited and do not spend inventory");
+                ClickTarget();
+                Check(settings.GetBool(UIDifferences.Key + "TutorialComplete") && !(bool)Field(ui, "tutorialPending") && ui.Round.Count == 2,
+                    "finding hinted target completes tutorial without ending level");
+                await Task.Delay(400); ui.UseHint();
+                Check(ui.Hints == inventory, "first level remains unlimited after tutorial");
+                ui.OnOpen(null);
+                await Wait(() => ui.Round != null && !ui.IsLoadingLevel, "completed tutorial still opens first level directly");
+                Check(ui.SelectedLevel == 0 && ui.play.activeSelf && !Active(ui, "homeDesign") && !(bool)Field(ui, "tutorialPending") && ui.Round.Count == 2,
+                    "first level resumes directly without repeating completed tutorial");
+                settings.SetBool(UIDifferences.Key + "TutorialComplete", false);
+                settings.SetInt(UIDifferences.Key + "Completed", 1); ui.OnOpen(null);
+                Check(ui.home.activeSelf && !(bool)Field(ui, "tutorialPending"), "existing players are not forced into tutorial");
+                File.AppendAllText(Path.Combine(Folder, "report.txt"), "PASS: direct tutorial startup, hit/zoom/hint steps, resume, infinite hints and completed/existing-player startup.\n");
+                return;
+            }
+            if (SessionState.GetBool(Pending + ".FailureClose", false))
+            {
+                SessionState.SetBool(Pending + ".FailureClose", false);
+                ui.StartLevel();
+                ui.ClickImage(ui.spots[0].x, ui.spots[0].y);
+                for (var i = 0; i < 3; i++) ui.ClickImage(.99f, .02f);
+                await Wait(() => Active(ui, "failDesign"), "failure dialog opens with saved progress");
+                var failedMask = ui.Round.FoundMask;
+                Check(failedMask != 0 && ui.Round.Lives == 0 && settings.GetInt(UIDifferences.Key + "RoundMask") == failedMask,
+                    "failure immediately saves found points and zero lives");
+                typeof(UIDifferences).GetMethod("OnApplicationPause", Private).Invoke(ui, new object[] { true });
+                ui.OnOpen(null); ui.StartLevel();
+                Check(ui.Round.FoundMask == failedMask && ui.Round.Lives == 0 && Active(ui, "failDesign"),
+                    "reopening without dismissing restores failed progress and dialog");
+                typeof(UIDifferences).GetField("adInputLocked", Private).SetValue(ui, true);
+                ((Button)Field(ui, "designFailClose")).onClick.Invoke();
+                Check(ui.Round != null && Active(ui, "failDesign"), "ad input lock prevents discarding failed progress");
+                typeof(UIDifferences).GetField("adInputLocked", Private).SetValue(ui, false);
+                ((Button)Field(ui, "designFailClose")).onClick.Invoke();
+                Check(ui.home.activeSelf && ui.Round == null && settings.GetInt(UIDifferences.Key + "RoundLevel") == -1,
+                    "failure close returns home and clears saved round");
+                ui.OnOpen(null); ui.StartLevel();
+                Check(ui.Round.Count == 0 && ui.Round.Lives == 3 && !Active(ui, "failDesign"),
+                    "reopening after failure close starts the same level fresh");
+                ui.ClickImage(ui.spots[0].x, ui.spots[0].y); ui.ShowHome(); ui.StartLevel();
+                Check(ui.Round.Count == 1 && ui.Round.Lives == 3, "ordinary return home still preserves active progress");
+                File.AppendAllText(Path.Combine(Folder, "report.txt"), "PASS: failure close/restart and untouched failure restoration.\n");
+                return;
+            }
             await Capture("01-home");
             Check(Active(ui, "homeDesign"), "new home visible");
             VerifyPrefabLayout(ui);
@@ -1255,7 +1494,8 @@ public static class DifferenceUiSmokeCheck
             await Wait(() => ui.play.activeSelf && ui.Round != null && !Active(ui, "loadingDesign"), "local level opens");
             await Capture("05-gameplay");
             ui.ClickImage(ui.spots[0].x, ui.spots[0].y, true);
-            Check(ui.Round.Count == 1 && ui.topRings[0].isActiveAndEnabled && ui.bottomRings[0].isActiveAndEnabled, "correct click adds both rings");
+            Check(ui.Round.Count == 1 && ui.topRings[0].GetComponentInChildren<DifferenceFoundRing>().isActiveAndEnabled &&
+                ui.bottomRings[0].GetComponentInChildren<DifferenceFoundRing>().isActiveAndEnabled, "correct click adds both rings");
             var flight = ui.play.GetComponentInChildren<DifferenceFoundFlight>();
             Check(flight, "correct click launches progress flight");
             Check(flight.GetComponentsInChildren<ParticleSystem>().Length > 0, "prefab particles are present");

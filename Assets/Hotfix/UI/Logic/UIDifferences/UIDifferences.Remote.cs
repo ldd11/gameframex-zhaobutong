@@ -52,6 +52,7 @@ namespace Hotfix.UI
                 FailAnalyticsLoad(request.Error, request.Level);
                 Debug.LogWarning("后台关卡加载失败：" + request.Error);
                 request.Dispose();
+                if (!testing && completed == 0 && index == 0) { ShowFirstLevelLoadError("第1关暂时无法加载，请检查网络后重试。"); yield break; }
                 ShowHome();
                 Notice("Failed to load level " + (index + 1) + ". Please try again later.", 3f);
                 yield break;

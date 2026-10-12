@@ -77,7 +77,7 @@ namespace Hotfix.UI
         void UpdateAdsVisibility()
         {
             if (!adUiOpen) return;
-            var visible = !testing && isActiveAndEnabled && currentPage == play && play.activeInHierarchy &&
+            var visible = !testing && !tutorialPending && isActiveAndEnabled && currentPage == play && play.activeInHierarchy &&
                 Round != null && !Round.Finished && !IsLoadingLevel && !figmaResultActive && !AdInputBlocked &&
                 !modal.activeSelf && !settings.activeSelf && !profile.activeSelf && !musicPanel.activeSelf &&
                 !achievements.activeSelf && !album.activeSelf && !(hintDesign && hintDesign.activeSelf);

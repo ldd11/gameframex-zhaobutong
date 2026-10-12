@@ -41,6 +41,9 @@ namespace Hotfix.UI
         public GameObject foundRingEffectPrefab;
         public Spine.Unity.SkeletonDataAsset foundRingSpine;
         public Material foundRingMaterial;
+        [SerializeField] bool useSpineFoundRing;
+        [Header("命中圆圈：统一调整双图所有圆圈")]
+        public DifferenceFoundRing.Style foundRingStyle = new DifferenceFoundRing.Style();
         public UnityEngine.UI.Image upperImage, lowerImage, profileAvatar, homeAvatar, profileFrame, homeFrame, resultIcon;
         public UnityEngine.UI.InputField nicknameInput;
         public UnityEngine.UI.Graphic crossTop, crossBottom;
@@ -243,6 +246,7 @@ namespace Hotfix.UI
             totalFound = Mathf.Max(0, GetInt("TotalFound", 0)); perfect = Mathf.Max(0, GetInt("Perfect", 0));
             settled = false; Round = null; pendingHint = -1;
             ShowHomeInternal(); PlayMusic(); OpenAds();
+            InitializeTutorial();
         }
 
         void AlignWideScreenControls()
@@ -290,12 +294,14 @@ namespace Hotfix.UI
             AdvanceDesignLoading();
             AdvanceTabTransition(Time.unscaledDeltaTime);
             AdvancePatches(Time.unscaledDeltaTime);
+            AdvanceTutorial();
             if (Input.GetMouseButton(0) || Input.touchCount > 0 || Input.mouseScrollDelta.sqrMagnitude > 0) hintIdle = 0;
             if (!testing) AdvanceHintGuide(Time.unscaledDeltaTime);
             if (Input.GetKeyDown(KeyCode.Escape))
             {
+                if (tutorialPending) return;
                 if (hintDesign && hintDesign.activeSelf) CloseDesignHint();
-                else if (figmaResultActive) { CloseFigmaResult(); ShowHome(); }
+                else if (figmaResultActive) CloseResultToHome();
                 else if (modal.activeSelf) { if (modalClose.gameObject.activeSelf) modal.SetActive(false); }
                 else if (profile.activeSelf) profile.SetActive(false);
                 else if (musicPanel.activeSelf) musicPanel.SetActive(false);
@@ -453,6 +459,7 @@ namespace Hotfix.UI
         public void ShowHome()
         {
             if (AdInputBlocked) return;
+            if (tutorialPending && (Round == null || !Round.Finished)) return;
             ShowHomeInternal();
         }
 
@@ -539,6 +546,7 @@ namespace Hotfix.UI
             }
             levelLabel.text = "第" + (level + 1) + "关";
             UpdateHUD(); SaveRound();
+            OpenTutorial(restored);
             if (Round.Finished) ShowRoundResult(false, 0);
             else Notice(Round.Count > 0 ? "Level progress restored." : "Find " + Round.Total + " differences.", 2.5f);
             RestoreHint();
@@ -584,6 +592,7 @@ namespace Hotfix.UI
         public void ClickImage(float x, float y, bool fromLower = false)
         {
             if (AdInputBlocked) return;
+            if (!TutorialAllowsClick(x, y)) return;
             if (!play.activeSelf || modal.activeSelf || settings.activeSelf || (hintDesign && hintDesign.activeSelf) || IsLoadingLevel || Round == null || settled) return;
             hintIdle = 0; hintHand.Show(false);
             var source = fromLower ? lowerImage.rectTransform : upperImage.rectTransform;
@@ -608,6 +617,7 @@ namespace Hotfix.UI
         public void UseHint()
         {
             if (AdInputBlocked) return;
+            if (TutorialRunning && (tutorialStep != TutorialStep.HintButton || Time.unscaledTime < tutorialShowAt)) return;
             if (!play.activeSelf || modal.activeSelf || settings.activeSelf || (hintDesign && hintDesign.activeSelf) || IsLoadingLevel || Round == null || Round.Finished || settled || HintActive) return;
             if (pendingHint >= 0) { RestoreHint(true); return; }
             if (!UnlimitedHints && hints == 0) { RefreshHintRewardLabel(); hintDesign.SetActive(true); hintDesign.transform.SetAsLastSibling(); UpdateAdsVisibility(); return; }
@@ -620,6 +630,7 @@ namespace Hotfix.UI
             Save();
             RestoreHint(true);
             UpdateHUD();
+            TutorialHintUsed(result);
         }
 
         void RestoreHint(bool playSound = false)
@@ -634,6 +645,7 @@ namespace Hotfix.UI
 
         void AdvanceHintGuide(float deltaTime)
         {
+            if (tutorialPending) { hintHand.Show(false); return; }
             var available = play.activeSelf && Round != null && !Round.Finished && !settled && (UnlimitedHints || hints > 0) &&
                 !HintActive && !modal.activeSelf && !settings.activeSelf && !(hintDesign && hintDesign.activeSelf) && !IsLoadingLevel;
             if (!available) hintIdle = 0;
@@ -649,6 +661,7 @@ namespace Hotfix.UI
             PlayResultVibration(result);
             if (result >= 0)
             {
+                TutorialFound(result);
                 patchElapsed[result] = 0;
                 originalPatchImages[result].color = changedFlashImages[result].color = new Color(1, 1, 1, 0);
                 originalPatchImages[result].transform.parent.gameObject.SetActive(true);
@@ -687,25 +700,44 @@ namespace Hotfix.UI
 
         void ShowFoundRing(UnityEngine.UI.Image marker, bool animate)
         {
-            if (!foundRingSpine) return;
-            var ring = marker.GetComponentInChildren<Spine.Unity.SkeletonGraphic>(true);
-            if (!ring)
-            {
-                ring = Spine.Unity.SkeletonGraphic.NewSkeletonGraphicGameObject(foundRingSpine, marker.transform, foundRingMaterial);
-                ring.name = "FoundSpine";
-                ring.gameObject.layer = marker.gameObject.layer;
-                ring.raycastTarget = false;
-                ring.UnscaledTime = true;
-            }
             marker.enabled = false;
-            var oldRing = marker.GetComponent<DifferenceFoundRing>();
-            if (oldRing) oldRing.enabled = false;
-            ring.rectTransform.anchoredPosition = Vector2.zero;
-            var data = foundRingSpine.GetSkeletonData(false);
-            var diameter = Mathf.Min(marker.rectTransform.rect.width, marker.rectTransform.rect.height);
-            ring.transform.localScale = Vector3.one * (diameter / Mathf.Max(.001f, Mathf.Max(data.Width, data.Height)));
-            ring.AnimationState.SetAnimation(0, animate ? "a2" : "a1", false);
-            if (animate) ring.AnimationState.AddAnimation(0, "a1", false, 0);
+            var outline = marker.GetComponentInChildren<DifferenceFoundRing>(true);
+            if (!outline)
+            {
+                var node = new GameObject("Outline", typeof(RectTransform), typeof(DifferenceFoundRing));
+                node.layer = marker.gameObject.layer;
+                node.transform.SetParent(marker.transform, false);
+                outline = node.GetComponent<DifferenceFoundRing>();
+                outline.rectTransform.anchorMin = Vector2.zero;
+                outline.rectTransform.anchorMax = Vector2.one;
+                outline.rectTransform.offsetMin = outline.rectTransform.offsetMax = Vector2.zero;
+                outline.raycastTarget = false;
+            }
+            var showSpine = useSpineFoundRing && foundRingSpine;
+            outline.style = foundRingStyle;
+            outline.gameObject.SetActive(!showSpine);
+            outline.enabled = !showSpine;
+            if (!showSpine) outline.Play(animate);
+            foreach (var existing in marker.GetComponentsInChildren<Spine.Unity.SkeletonGraphic>(true))
+                existing.gameObject.SetActive(showSpine);
+            if (showSpine)
+            {
+                var ring = marker.GetComponentInChildren<Spine.Unity.SkeletonGraphic>(true);
+                if (!ring)
+                {
+                    ring = Spine.Unity.SkeletonGraphic.NewSkeletonGraphicGameObject(foundRingSpine, marker.transform, foundRingMaterial);
+                    ring.name = "FoundSpine";
+                    ring.gameObject.layer = marker.gameObject.layer;
+                    ring.raycastTarget = false;
+                    ring.UnscaledTime = true;
+                }
+                ring.rectTransform.anchoredPosition = Vector2.zero;
+                var data = foundRingSpine.GetSkeletonData(false);
+                var diameter = Mathf.Min(marker.rectTransform.rect.width, marker.rectTransform.rect.height);
+                ring.transform.localScale = Vector3.one * (diameter / Mathf.Max(.001f, Mathf.Max(data.Width, data.Height)));
+                ring.AnimationState.SetAnimation(0, animate ? "a2" : "a1", false);
+                if (animate) ring.AnimationState.AddAnimation(0, "a1", false, 0);
+            }
             if (!animate || !foundRingEffectPrefab) return;
             var effect = Instantiate(foundRingEffectPrefab, marker.transform, false);
             effect.name = "FoundRingParticles";
@@ -726,6 +758,24 @@ namespace Hotfix.UI
             }
             StartCoroutine(ClearRingParticles(effect, duration + .1f));
         }
+
+#if UNITY_EDITOR
+        void OnValidate()
+        {
+            foreach (var markers in new[] { topRings, bottomRings })
+            {
+                if (markers == null) continue;
+                foreach (var marker in markers)
+                {
+                    if (!marker) continue;
+                    var ring = marker.GetComponentInChildren<DifferenceFoundRing>(true);
+                    if (!ring) continue;
+                    ring.style = foundRingStyle;
+                    ring.SetVerticesDirty();
+                }
+            }
+        }
+#endif
 
         IEnumerator ClearRingParticles(GameObject effect, float duration)
         {
@@ -1084,7 +1134,7 @@ namespace Hotfix.UI
             var sweep = play ? play.transform.Find("CompletionSweep") : null;
             if (sweep) { sweep.gameObject.SetActive(false); Destroy(sweep.gameObject); }
         }
-        public void SetTesting(bool value) { testing = value; if (value) { analyticsSuppressedRound = true; FinishTabTransition(); } }
+        public void SetTesting(bool value) { testing = value; if (value) { StopTutorial(); analyticsSuppressedRound = true; FinishTabTransition(); } }
         void PlayTone(AudioClip clip) { if (sound && clip) audioSource.PlayOneShot(clip, .4f); }
         void ShowCross(float x, float y)
         {

@@ -19,14 +19,17 @@ namespace Hotfix.UI
         public bool Visible => isActiveAndEnabled;
 
         public static DifferenceHintHand Create(UnityEngine.UI.Button button, Sprite sprite)
+            => Create((RectTransform)button.transform, sprite);
+
+        public static DifferenceHintHand Create(RectTransform target, Sprite sprite)
         {
             var root = new GameObject("HintGuide", typeof(RectTransform), typeof(DifferenceHintHand));
-            root.layer = button.gameObject.layer;
+            root.layer = target.gameObject.layer;
             var rect = (RectTransform)root.transform;
-            rect.SetParent(button.transform, false);
+            rect.SetParent(target, false);
             rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(.5f, .5f);
             rect.anchoredPosition = GuideOffset;
-            rect.sizeDelta = ((RectTransform)button.transform).rect.size;
+            rect.sizeDelta = target.rect.size;
             var guide = root.GetComponent<DifferenceHintHand>();
             guide.raycastTarget = false;
 
