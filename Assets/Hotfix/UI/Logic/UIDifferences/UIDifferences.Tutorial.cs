@@ -21,7 +21,8 @@ namespace Hotfix.UI
         readonly RectTransform[] tutorialZoomArrows = new RectTransform[4];
         Text tutorialMessage;
         bool TutorialRunning => tutorialPending && level == 0 && Round != null && !Round.Finished && play.activeSelf;
-        public bool TutorialAllowsView => !TutorialRunning || tutorialStep == TutorialStep.Zoom;
+        public bool TutorialAllowsView => !TutorialRunning ||
+            (tutorialStep == TutorialStep.Zoom && (!tutorialShade || !tutorialShade.gameObject.activeSelf));
 
         void InitializeTutorial()
         {
@@ -59,7 +60,12 @@ namespace Hotfix.UI
             tutorialShown = -1;
             GameApp.Setting.SetInt(Key + "TutorialStep", (int)step);
             SaveRound();
-            HideTutorialVisuals();
+            if (step == TutorialStep.Zoom)
+            {
+                if (tutorialShade) tutorialShade.Dismiss();
+                if (tutorialVisuals) tutorialVisuals.gameObject.SetActive(false);
+            }
+            else HideTutorialVisuals();
         }
 
         void TutorialFound(int index)
@@ -84,6 +90,7 @@ namespace Hotfix.UI
             if (!TutorialRunning) return true;
             if (Time.unscaledTime < tutorialShowAt || tutorialStep == TutorialStep.Zoom || tutorialStep == TutorialStep.HintButton)
                 return false;
+            if (tutorialStep == TutorialStep.FirstDifference && (!tutorialShade || !tutorialShade.Ready)) return false;
             return Round.HitIndex(x, y) == tutorialTarget;
         }
 
@@ -120,6 +127,7 @@ namespace Hotfix.UI
             hintButton.interactable = tutorialStep == TutorialStep.HintButton && Time.unscaledTime >= tutorialShowAt;
             hintHand.Show(false);
             noticeLabel.transform.parent.gameObject.SetActive(false);
+            if (tutorialStep == TutorialStep.Zoom && tutorialShade && tutorialShade.gameObject.activeSelf) return;
             if (Time.unscaledTime < tutorialShowAt) return;
             if (tutorialStep == TutorialStep.Zoom && upperImage.transform.localScale.x >= 1.25f)
             {
@@ -175,7 +183,7 @@ namespace Hotfix.UI
             {
                 var spot = spots[tutorialTarget];
                 tutorialShade.Show(upperImage.GetComponent<DifferenceBoard>(), upperImage.rectTransform, lowerImage.rectTransform,
-                    new Vector2(spot.x, spot.y), tutorialTarget, false);
+                    new Vector2(spot.x, spot.y), tutorialTarget);
             }
             else if (tutorialStep == TutorialStep.HintButton)
             {

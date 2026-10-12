@@ -1333,6 +1333,11 @@ public static class DifferenceUiSmokeCheck
                 await Task.Delay(500);
                 Check(ui.SelectedLevel == 0 && !Active(ui, "homeDesign") && (bool)Field(ui, "tutorialPending") && !ui.backButton.gameObject.activeSelf,
                     "tutorial bypasses home and hides back button");
+                await Wait(() => Field(ui, "tutorialShade") is DifferenceHintSpotlight shade && shade.Ready,
+                    "first tutorial automatically zooms and focuses before allowing a click");
+                Check(Mathf.Abs(ui.upperImage.transform.localScale.x - 2) < .001f &&
+                    ui.lowerImage.transform.localScale == ui.upperImage.transform.localScale,
+                    "first tutorial uses the hint spotlight zoom on both images");
                 await Capture("tutorial-01-click");
                 var inventory = ui.Hints;
                 ui.ClickImage(.99f, .02f); ui.UseHint(); ui.ShowHome();
@@ -1351,6 +1356,21 @@ public static class DifferenceUiSmokeCheck
                 ClickTarget();
                 Check(ui.Round.Count == 1 && settings.GetInt(UIDifferences.Key + "TutorialStep") == 1,
                     "first hit saves zoom lesson and found progress");
+                Check(Mathf.Abs(ui.upperImage.transform.localScale.x - 2) < .001f && !ui.TutorialAllowsView,
+                    "first tutorial click starts the tips close animation without snapping back");
+                var firstShade = (DifferenceHintSpotlight)Field(ui, "tutorialShade");
+                typeof(DifferenceHintSpotlight).GetMethod("Advance", Private).Invoke(firstShade, new object[] { .1f });
+                RefreshGuide();
+                Check(ui.upperImage.transform.localScale.x > 1 && ui.upperImage.transform.localScale.x < 2 &&
+                    ui.lowerImage.transform.localScale == ui.upperImage.transform.localScale &&
+                    settings.GetInt(UIDifferences.Key + "TutorialStep") == 1 &&
+                    !((RectTransform)Field(ui, "tutorialVisuals")).gameObject.activeSelf,
+                    "both images shrink smoothly before the manual zoom guide appears");
+                await Task.Delay(500); RefreshGuide();
+                Check(ui.upperImage.transform.localScale == Vector3.one && ui.lowerImage.transform.localScale == Vector3.one,
+                    "tips close animation restores both images to their original size");
+                Check(settings.GetInt(UIDifferences.Key + "TutorialStep") == 1,
+                    "automatic first-step zoom does not skip the manual zoom lesson");
                 ui.OnOpen(null);
                 await Wait(() => ui.Round != null && !ui.IsLoadingLevel, "interrupted tutorial restores directly into first level");
                 Check(ui.Round.Count == 1 && (int)settings.GetInt(UIDifferences.Key + "TutorialStep") == 1,
@@ -1378,8 +1398,7 @@ public static class DifferenceUiSmokeCheck
                 }
                 CheckGesture();
                 var initialHandSprite = hands[0].GetComponent<Image>().sprite;
-                await Task.Delay(350); RefreshGuide();
-                Check(Vector2.Distance(initialArrowPosition, arrows[0].anchoredPosition) > 1,
+                await Wait(() => { RefreshGuide(); return Vector2.Distance(initialArrowPosition, arrows[0].anchoredPosition) > 1; },
                     "zoom arrows continue animating");
                 await Wait(() => { RefreshGuide(); return hands[0].GetComponent<Image>().sprite != initialHandSprite; },
                     "pinch hand switches between open and closed sprites");
