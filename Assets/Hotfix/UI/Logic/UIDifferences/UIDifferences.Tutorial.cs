@@ -155,13 +155,18 @@ namespace Hotfix.UI
                 var spread = (1 - Mathf.Cos(cycle * Mathf.PI * 2)) * .5f;
                 tutorialPinchHands[i].gameObject.SetActive(zoom);
                 tutorialPinchHands[i].GetComponent<Image>().sprite = opening ? tutorialPinchHandOpenSprite : tutorialPinchHandSprite;
+                tutorialPinchHands[i].GetComponent<Image>().SetNativeSize();
+                //tutorialPinchHands[i].anchoredPosition = new Vector2(100, -50);
                 for (var arrow = 0; arrow < 2; arrow++)
                 {
                     var rect = tutorialZoomArrows[i * 2 + arrow];
                     rect.gameObject.SetActive(zoom);
                     var top = arrow == 0;
-                    rect.anchoredPosition = new Vector2(-48, (top ? 1 : -1) * Mathf.Lerp(34, 78, spread));
-                    rect.localRotation = Quaternion.Euler(0, 0, (top == opening ? 0 : 180) + (top ? -15 : 15));
+                    var vector = top ?1:-1;
+                    float v = Mathf.Lerp(34, 78, spread);
+                    v = vector * v;
+                    rect.anchoredPosition = new Vector2((top?0:-115)+v,(top?150:-50)+v);
+                    rect.localRotation = Quaternion.Euler(0, 0, (top == opening ? 0 : 180));
                 }
             }
             var upperView = (RectTransform)upperImage.transform.parent;
@@ -210,15 +215,17 @@ namespace Hotfix.UI
             {
                 tutorialPoints[i] = TutorialRect(tutorialVisuals, "Target" + i, Vector2.zero);
                 tutorialHands[i] = DifferenceHintHand.Create(tutorialPoints[i], hintHandSprite);
-                tutorialHands[i].transform.localScale = Vector3.one * .6f;
-                var hand = TutorialRect(tutorialPoints[i], "PinchHand", new Vector2(160, 160));
+                //tutorialHands[i].transform.localScale = Vector3.one * .6f;
+                var hand = TutorialRect(tutorialPoints[i], "PinchHand",Vector2.zero);
                 var handImage = hand.gameObject.AddComponent<Image>(); handImage.sprite = tutorialPinchHandSprite;
+                handImage.SetNativeSize();
                 handImage.preserveAspect = true; handImage.raycastTarget = false;
                 tutorialPinchHands[i] = hand;
                 for (var arrow = 0; arrow < 2; arrow++)
                 {
-                    var rect = TutorialRect(tutorialPoints[i], "ZoomArrow" + arrow, new Vector2(44, 60));
+                    var rect = TutorialRect(tutorialPoints[i], "ZoomArrow" + arrow, new Vector2(110, 115));
                     var visual = rect.gameObject.AddComponent<Image>(); visual.sprite = tutorialZoomArrowSprite;
+                    visual.SetNativeSize();
                     visual.preserveAspect = true; visual.raycastTarget = false;
                     tutorialZoomArrows[i * 2 + arrow] = rect;
                 }

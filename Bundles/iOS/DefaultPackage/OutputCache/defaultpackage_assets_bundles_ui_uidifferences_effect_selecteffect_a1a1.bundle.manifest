@@ -1,0 +1,44 @@
+ManifestFileVersion: 0
+CRC: 1643297399
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: 5d44f9c4da4790fb550e9eed1e5669dd
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: f5cb982e1af72a206af1d05a6c485765
+  IncrementalBuildHash:
+    serializedVersion: 2
+    Hash: 5d44f9c4da4790fb550e9eed1e5669dd
+HashAppended: 0
+ClassTypes:
+- Class: 1
+  Script: {instanceID: 0}
+- Class: 21
+  Script: {instanceID: 0}
+- Class: 28
+  Script: {instanceID: 0}
+- Class: 48
+  Script: {instanceID: 0}
+- Class: 198
+  Script: {instanceID: 0}
+- Class: 199
+  Script: {instanceID: 0}
+- Class: 213
+  Script: {instanceID: 0}
+- Class: 222
+  Script: {instanceID: 0}
+- Class: 224
+  Script: {instanceID: 0}
+SerializeReferenceClassIdentifiers: []
+Assets:
+- Assets/Bundles/UI/UIDifferences/Effect/SelectEffect/a1a1/quan.mat
+- Assets/Bundles/UI/UIDifferences/Effect/SelectEffect/a1a1/xingxingtuowei2.prefab
+- Assets/Bundles/UI/UIDifferences/Effect/SelectEffect/a1a1/guang.png
+- Assets/Bundles/UI/UIDifferences/Effect/SelectEffect/a1a1/Circle.png
+- Assets/Bundles/UI/UIDifferences/Effect/SelectEffect/a1a1/wujiaoxing.png
+- Assets/Bundles/UI/UIDifferences/Effect/SelectEffect/a1a1/wujiaoxing.mat
+- Assets/Bundles/UI/UIDifferences/Effect/SelectEffect/a1a1/guang.mat
+- Assets/Bundles/UI/UIDifferences/Effect/SelectEffect/a1a1/dagoufaguang.prefab
+- Assets/Bundles/UI/UIDifferences/Effect/SelectEffect/a1a1/quanfaguang.prefab
+Dependencies: []

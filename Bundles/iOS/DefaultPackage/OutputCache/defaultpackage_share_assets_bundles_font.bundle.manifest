@@ -1,0 +1,32 @@
+ManifestFileVersion: 0
+CRC: 1166876594
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: 159569a1c1974d32d6b79f8ac3508bd2
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: 9372662e05ede815898c391bbc5766da
+  IncrementalBuildHash:
+    serializedVersion: 2
+    Hash: 159569a1c1974d32d6b79f8ac3508bd2
+HashAppended: 0
+ClassTypes:
+- Class: 21
+  Script: {instanceID: 0}
+- Class: 28
+  Script: {instanceID: 0}
+- Class: 48
+  Script: {instanceID: 0}
+- Class: 128
+  Script: {instanceID: 0}
+SerializeReferenceClassIdentifiers: []
+Assets:
+- Assets/Bundles/Font/Inter-UI-Medium-3.ttf
+- Assets/Bundles/Font/Inter-UI-MediumItalic-8.ttf
+- Assets/Bundles/Font/Inter-UI-Regular-2.ttf
+- Assets/Bundles/Font/Inter-UI-Italic-6.ttf
+- Assets/Bundles/Font/Inter-UI-BoldItalic-7.ttf
+- Assets/Bundles/Font/Inter-UI-Bold-5.ttf
+- Assets/Bundles/Font/Inter-UI-Black-4.ttf
+Dependencies: []

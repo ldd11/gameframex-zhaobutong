@@ -72,7 +72,7 @@ namespace Hotfix.UI
             if (level) Place(level, new Vector2(center.x, headerTop - headerHeight * .5f));
             var footerCenter = board.yMin - border - gap - footerHeight * .5f;
             Place(hint, new Vector2(center.x, footerCenter));
-            Place(zoom, new Vector2(board.xMax - Size(zoom).x * .5f, footerCenter));
+            Place(zoom, new Vector2(board.xMax - Size(zoom).x * .5f, footerCenter+100));
             return resized;
         }
 

@@ -1,0 +1,26 @@
+ManifestFileVersion: 0
+CRC: 2867373913
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: dfe2c26c4bde87aebadb4f7367d6a3bd
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: 5e762ccb57c4caaabbb5a4199ac82c23
+  IncrementalBuildHash:
+    serializedVersion: 2
+    Hash: dfe2c26c4bde87aebadb4f7367d6a3bd
+HashAppended: 0
+ClassTypes:
+- Class: 21
+  Script: {instanceID: 0}
+- Class: 48
+  Script: {instanceID: 0}
+SerializeReferenceClassIdentifiers: []
+Assets:
+- Packages/com.esotericsoftware.spine.spine-unity/Runtime/spine-unity/Materials/UI-PMATexture/SkeletonGraphicScreen.mat
+- Packages/com.esotericsoftware.spine.spine-unity/Runtime/spine-unity/Materials/UI-PMATexture/SkeletonGraphicAdditive.mat
+- Packages/com.esotericsoftware.spine.spine-unity/Runtime/spine-unity/Materials/UI-PMATexture/SkeletonGraphicMultiply.mat
+- Packages/com.esotericsoftware.spine.spine-unity/Runtime/spine-unity/Materials/UI-PMATexture/SkeletonGraphicDefault.mat
+Dependencies:
+- C:/UGit/gameframex-zhaobutong/Bundles/iOS/DefaultPackage/OutputCache/defaultpackage_unityshaders.bundle

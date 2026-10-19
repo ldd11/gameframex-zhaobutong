@@ -693,6 +693,22 @@ namespace Hotfix.UI
 			get { return Stage_Play_Background;}
 		}
 
+		[UGUIElementProperty("Stage/Play/ConnerLeft")]
+		private UnityEngine.UI.Image Stage_Play_ConnerLeft;
+
+		public UnityEngine.UI.Image m_Stage_Play_ConnerLeft
+		{
+			get { return Stage_Play_ConnerLeft;}
+		}
+
+		[UGUIElementProperty("Stage/Play/ConnerRight")]
+		private UnityEngine.UI.Image Stage_Play_ConnerRight;
+
+		public UnityEngine.UI.Image m_Stage_Play_ConnerRight
+		{
+			get { return Stage_Play_ConnerRight;}
+		}
+
 		[UGUIElementProperty("Stage/Play/Back")]
 		private UnityEngine.UI.Button Stage_Play_Back;
 
@@ -1691,22 +1707,6 @@ namespace Hotfix.UI
 		public UnityEngine.UI.Text m_Stage_Play_Count
 		{
 			get { return Stage_Play_Count;}
-		}
-
-		[UGUIElementProperty("Stage/Play/Zoom/Label")]
-		private UnityEngine.UI.Text Stage_Play_Zoom_Label;
-
-		public UnityEngine.UI.Text m_Stage_Play_Zoom_Label
-		{
-			get { return Stage_Play_Zoom_Label;}
-		}
-
-		[UGUIElementProperty("Stage/Play/Zoom/Caption")]
-		private UnityEngine.UI.Text Stage_Play_Zoom_Caption;
-
-		public UnityEngine.UI.Text m_Stage_Play_Zoom_Caption
-		{
-			get { return Stage_Play_Zoom_Caption;}
 		}
 
 		[UGUIElementProperty("Stage/Play/Zoom")]
@@ -4077,36 +4077,12 @@ namespace Hotfix.UI
 			get { return Stage_FigmaVictory_Bg;}
 		}
 
-		[UGUIElementProperty("Stage/FigmaVictory/Glow")]
-		private UnityEngine.UI.Image Stage_FigmaVictory_Glow;
-
-		public UnityEngine.UI.Image m_Stage_FigmaVictory_Glow
-		{
-			get { return Stage_FigmaVictory_Glow;}
-		}
-
 		[UGUIElementProperty("Stage/FigmaVictory/TittleSpine")]
 		private UnityEngine.RectTransform Stage_FigmaVictory_TittleSpine;
 
 		public UnityEngine.RectTransform m_Stage_FigmaVictory_TittleSpine
 		{
 			get { return Stage_FigmaVictory_TittleSpine;}
-		}
-
-		[UGUIElementProperty("Stage/FigmaVictory/Title")]
-		private UnityEngine.UI.Image Stage_FigmaVictory_Title;
-
-		public UnityEngine.UI.Image m_Stage_FigmaVictory_Title
-		{
-			get { return Stage_FigmaVictory_Title;}
-		}
-
-		[UGUIElementProperty("Stage/FigmaVictory/Caption")]
-		private UnityEngine.UI.Text Stage_FigmaVictory_Caption;
-
-		public UnityEngine.UI.Text m_Stage_FigmaVictory_Caption
-		{
-			get { return Stage_FigmaVictory_Caption;}
 		}
 
 		[UGUIElementProperty("Stage/FigmaVictory/caidaipenchu/caidai")]
@@ -4131,6 +4107,14 @@ namespace Hotfix.UI
 		public UnityEngine.RectTransform m_Stage_FigmaVictory_caidaipenchu
 		{
 			get { return Stage_FigmaVictory_caidaipenchu;}
+		}
+
+		[UGUIElementProperty("Stage/FigmaVictory/Light")]
+		private UnityEngine.RectTransform Stage_FigmaVictory_Light;
+
+		public UnityEngine.RectTransform m_Stage_FigmaVictory_Light
+		{
+			get { return Stage_FigmaVictory_Light;}
 		}
 
 		[UGUIElementProperty("Stage/FigmaVictory/PreviewFrame/Clip/Preview/RewardCoinOrigin")]
@@ -4211,6 +4195,38 @@ namespace Hotfix.UI
 		public UnityEngine.UI.Button m_Stage_FigmaVictory_Next
 		{
 			get { return Stage_FigmaVictory_Next;}
+		}
+
+		[UGUIElementProperty("Stage/FigmaVictory/RewardCoin/Label")]
+		private UnityEngine.UI.Text Stage_FigmaVictory_RewardCoin_Label;
+
+		public UnityEngine.UI.Text m_Stage_FigmaVictory_RewardCoin_Label
+		{
+			get { return Stage_FigmaVictory_RewardCoin_Label;}
+		}
+
+		[UGUIElementProperty("Stage/FigmaVictory/RewardCoin/Coin/Count")]
+		private UnityEngine.UI.Text Stage_FigmaVictory_RewardCoin_Coin_Count;
+
+		public UnityEngine.UI.Text m_Stage_FigmaVictory_RewardCoin_Coin_Count
+		{
+			get { return Stage_FigmaVictory_RewardCoin_Coin_Count;}
+		}
+
+		[UGUIElementProperty("Stage/FigmaVictory/RewardCoin/Coin")]
+		private UnityEngine.UI.Button Stage_FigmaVictory_RewardCoin_Coin;
+
+		public UnityEngine.UI.Button m_Stage_FigmaVictory_RewardCoin_Coin
+		{
+			get { return Stage_FigmaVictory_RewardCoin_Coin;}
+		}
+
+		[UGUIElementProperty("Stage/FigmaVictory/RewardCoin")]
+		private UnityEngine.UI.Button Stage_FigmaVictory_RewardCoin;
+
+		public UnityEngine.UI.Button m_Stage_FigmaVictory_RewardCoin
+		{
+			get { return Stage_FigmaVictory_RewardCoin;}
 		}
 
 		[UGUIElementProperty("Stage/FigmaVictory/RewardWallet/Coin")]
@@ -4372,6 +4388,8 @@ namespace Hotfix.UI
 			Stage_Ranking_PlayerName = gameObject.transform.FindChildName("Stage/Ranking/PlayerName").GetComponent<UnityEngine.UI.Text>();
 			Stage_Ranking = gameObject.transform.FindChildName("Stage/Ranking").GetComponent<UnityEngine.RectTransform>();
 			Stage_Play_Background = gameObject.transform.FindChildName("Stage/Play/Background").GetComponent<UnityEngine.UI.Image>();
+			Stage_Play_ConnerLeft = gameObject.transform.FindChildName("Stage/Play/ConnerLeft").GetComponent<UnityEngine.UI.Image>();
+			Stage_Play_ConnerRight = gameObject.transform.FindChildName("Stage/Play/ConnerRight").GetComponent<UnityEngine.UI.Image>();
 			Stage_Play_Back = gameObject.transform.FindChildName("Stage/Play/Back").GetComponent<UnityEngine.UI.Button>();
 			Stage_Play_Level = gameObject.transform.FindChildName("Stage/Play/Level").GetComponent<UnityEngine.UI.Text>();
 			Stage_Play_LifeBadge_HeartAni = gameObject.transform.FindChildName("Stage/Play/LifeBadge/HeartAni").GetComponent<UnityEngine.RectTransform>();
@@ -4497,8 +4515,6 @@ namespace Hotfix.UI
 			Stage_Play_Hint_Count = gameObject.transform.FindChildName("Stage/Play/Hint/Count").GetComponent<UnityEngine.UI.Text>();
 			Stage_Play_Hint = gameObject.transform.FindChildName("Stage/Play/Hint").GetComponent<UnityEngine.UI.Button>();
 			Stage_Play_Count = gameObject.transform.FindChildName("Stage/Play/Count").GetComponent<UnityEngine.UI.Text>();
-			Stage_Play_Zoom_Label = gameObject.transform.FindChildName("Stage/Play/Zoom/Label").GetComponent<UnityEngine.UI.Text>();
-			Stage_Play_Zoom_Caption = gameObject.transform.FindChildName("Stage/Play/Zoom/Caption").GetComponent<UnityEngine.UI.Text>();
 			Stage_Play_Zoom = gameObject.transform.FindChildName("Stage/Play/Zoom").GetComponent<UnityEngine.UI.Button>();
 			Stage_Play = gameObject.transform.FindChildName("Stage/Play").GetComponent<UnityEngine.RectTransform>();
 			Stage_Navigation_Footer = gameObject.transform.FindChildName("Stage/Navigation/Footer").GetComponent<UnityEngine.UI.Image>();
@@ -4795,13 +4811,11 @@ namespace Hotfix.UI
 			Stage_FigmaHint_Card = gameObject.transform.FindChildName("Stage/FigmaHint/Card").GetComponent<UnityEngine.UI.Image>();
 			Stage_FigmaHint = gameObject.transform.FindChildName("Stage/FigmaHint").GetComponent<UnityEngine.UI.Image>();
 			Stage_FigmaVictory_Bg = gameObject.transform.FindChildName("Stage/FigmaVictory/Bg").GetComponent<UnityEngine.UI.Image>();
-			Stage_FigmaVictory_Glow = gameObject.transform.FindChildName("Stage/FigmaVictory/Glow").GetComponent<UnityEngine.UI.Image>();
 			Stage_FigmaVictory_TittleSpine = gameObject.transform.FindChildName("Stage/FigmaVictory/TittleSpine").GetComponent<UnityEngine.RectTransform>();
-			Stage_FigmaVictory_Title = gameObject.transform.FindChildName("Stage/FigmaVictory/Title").GetComponent<UnityEngine.UI.Image>();
-			Stage_FigmaVictory_Caption = gameObject.transform.FindChildName("Stage/FigmaVictory/Caption").GetComponent<UnityEngine.UI.Text>();
 			Stage_FigmaVictory_caidaipenchu_caidai = gameObject.transform.FindChildName("Stage/FigmaVictory/caidaipenchu/caidai").GetComponent<UnityEngine.RectTransform>();
 			Stage_FigmaVictory_caidaipenchu_caidai1 = gameObject.transform.FindChildName("Stage/FigmaVictory/caidaipenchu/caidai (1)").GetComponent<UnityEngine.RectTransform>();
 			Stage_FigmaVictory_caidaipenchu = gameObject.transform.FindChildName("Stage/FigmaVictory/caidaipenchu").GetComponent<UnityEngine.RectTransform>();
+			Stage_FigmaVictory_Light = gameObject.transform.FindChildName("Stage/FigmaVictory/Light").GetComponent<UnityEngine.RectTransform>();
 			Stage_FigmaVictory_PreviewFrame_Clip_Preview_RewardCoinOrigin = gameObject.transform.FindChildName("Stage/FigmaVictory/PreviewFrame/Clip/Preview/RewardCoinOrigin").GetComponent<UnityEngine.RectTransform>();
 			Stage_FigmaVictory_PreviewFrame_Clip_Preview = gameObject.transform.FindChildName("Stage/FigmaVictory/PreviewFrame/Clip/Preview").GetComponent<UnityEngine.UI.Image>();
 			Stage_FigmaVictory_PreviewFrame_Clip = gameObject.transform.FindChildName("Stage/FigmaVictory/PreviewFrame/Clip").GetComponent<UnityEngine.UI.Image>();
@@ -4812,6 +4826,10 @@ namespace Hotfix.UI
 			Stage_FigmaVictory_Next_Label = gameObject.transform.FindChildName("Stage/FigmaVictory/Next/Label").GetComponent<UnityEngine.UI.Text>();
 			Stage_FigmaVictory_Next_anim = gameObject.transform.FindChildName("Stage/FigmaVictory/Next/anim").GetComponent<UnityEngine.RectTransform>();
 			Stage_FigmaVictory_Next = gameObject.transform.FindChildName("Stage/FigmaVictory/Next").GetComponent<UnityEngine.UI.Button>();
+			Stage_FigmaVictory_RewardCoin_Label = gameObject.transform.FindChildName("Stage/FigmaVictory/RewardCoin/Label").GetComponent<UnityEngine.UI.Text>();
+			Stage_FigmaVictory_RewardCoin_Coin_Count = gameObject.transform.FindChildName("Stage/FigmaVictory/RewardCoin/Coin/Count").GetComponent<UnityEngine.UI.Text>();
+			Stage_FigmaVictory_RewardCoin_Coin = gameObject.transform.FindChildName("Stage/FigmaVictory/RewardCoin/Coin").GetComponent<UnityEngine.UI.Button>();
+			Stage_FigmaVictory_RewardCoin = gameObject.transform.FindChildName("Stage/FigmaVictory/RewardCoin").GetComponent<UnityEngine.UI.Button>();
 			Stage_FigmaVictory_RewardWallet_Coin = gameObject.transform.FindChildName("Stage/FigmaVictory/RewardWallet/Coin").GetComponent<UnityEngine.UI.Image>();
 			Stage_FigmaVictory_RewardWallet_Coins = gameObject.transform.FindChildName("Stage/FigmaVictory/RewardWallet/Coins").GetComponent<UnityEngine.UI.Text>();
 			Stage_FigmaVictory_RewardWallet = gameObject.transform.FindChildName("Stage/FigmaVictory/RewardWallet").GetComponent<UnityEngine.UI.Image>();

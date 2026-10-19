@@ -29,6 +29,9 @@ namespace Hotfix.UI
         [SerializeField] RectTransform rewardWallet, rewardCoinOrigin;
         [SerializeField] Text rewardCoinsLabel;
         [SerializeField] Image rewardCoinIcon;
+        [SerializeField] RectTransform rewardSummary;
+        [SerializeField] Text rewardSummaryLabel;
+        CanvasGroup rewardSummaryGroup;
         Coroutine rewardRoutine;
         GameObject rewardFlights;
         bool figmaResultActive, figmaResultWon, localLoading;
@@ -39,6 +42,14 @@ namespace Hotfix.UI
         // All page objects and graphics are authored in UIDifferences.prefab.
         void BindFigmaDesign()
         {
+            if (rewardSummary)
+            {
+                rewardSummaryGroup = rewardSummary.GetComponent<CanvasGroup>();
+                if (!rewardSummaryGroup) rewardSummaryGroup = rewardSummary.gameObject.AddComponent<CanvasGroup>();
+                rewardSummaryGroup.interactable = rewardSummaryGroup.blocksRaycasts = false;
+                rewardSummaryGroup.alpha = 0;
+                rewardSummary.gameObject.SetActive(false);
+            }
             if (homeDesign && !homeDesign.GetComponent<DifferenceHomeMotion>())
                 homeDesign.AddComponent<DifferenceHomeMotion>();
             loadingMagnifierCenter = ((RectTransform)loadingMagnifier.transform).anchoredPosition;
@@ -116,7 +127,11 @@ namespace Hotfix.UI
             victoryPreview.sprite = upperImage.sprite;
             failProgress.text = "You completed " + Mathf.RoundToInt(100f * Round.Count / Mathf.Max(1, Round.Total)) + "%.";
             UpdateFigmaDesign(currentPage);
-            if (won) { SetVictoryVote(0); ReplayVictoryAnimation(); }
+            if (won)
+            {
+                designNextButton.GetComponentInChildren<Text>(true).text = level + 1 < LevelLimit ? "Level " + (level + 2) : "Home";
+                SetVictoryVote(0); ReplayVictoryAnimation();
+            }
             PlayTone(won ? winSound : failSound);
         }
 
@@ -129,7 +144,7 @@ namespace Hotfix.UI
                 animation.freeze = false;
                 animation.AnimationState.ClearTracks();
                 animation.Skeleton.SetToSetupPose();
-                animation.AnimationState.SetAnimation(0, animation.startingAnimation, false);
+                animation.AnimationState.SetAnimation(0, animation.startingAnimation, animation.startingLoop);
                 animation.Update(0);
             }
         }
@@ -210,14 +225,15 @@ namespace Hotfix.UI
         void StartRewardCoins(int reward)
         {
             CancelRewardCoins();
-            if (reward <= 0 || !rewardWallet || !rewardCoinsLabel || !rewardCoinIcon) return;
+            if (reward < 0 || !rewardWallet || !rewardCoinsLabel || !rewardCoinIcon) return;
+            if (rewardSummaryLabel) rewardSummaryLabel.text = "x" + reward;
             rewardRoutine = StartCoroutine(AnimateRewardCoins(reward));
         }
 
         IEnumerator AnimateRewardCoins(int reward)
         {
             var finalBalance = coins;
-            rewardWallet.gameObject.SetActive(true);
+            rewardWallet.gameObject.SetActive(reward > 0);
             rewardWallet.SetAsLastSibling();
             rewardCoinsLabel.text = (finalBalance - reward).ToString();
             rewardFlights = new GameObject("RewardCoinFlights", typeof(RectTransform));
@@ -265,9 +281,19 @@ namespace Hotfix.UI
                 yield return null;
             }
             rewardCoinsLabel.text = finalBalance.ToString();
-            yield return new WaitForSecondsRealtime(.3f);
             rewardWallet.gameObject.SetActive(false);
-            Destroy(rewardFlights); rewardFlights = null; rewardRoutine = null;
+            Destroy(rewardFlights); rewardFlights = null;
+            if (rewardSummary && rewardSummaryGroup)
+            {
+                rewardSummary.gameObject.SetActive(true);
+                for (var time = 0f; time < .45f; time += Time.unscaledDeltaTime)
+                {
+                    rewardSummaryGroup.alpha = Mathf.SmoothStep(0, 1, time / .45f);
+                    yield return null;
+                }
+                rewardSummaryGroup.alpha = 1;
+            }
+            rewardRoutine = null;
         }
 
         void CancelRewardCoins()
@@ -275,6 +301,8 @@ namespace Hotfix.UI
             if (rewardRoutine != null) { StopCoroutine(rewardRoutine); rewardRoutine = null; }
             if (rewardFlights) { Destroy(rewardFlights); rewardFlights = null; }
             if (rewardWallet) rewardWallet.gameObject.SetActive(false);
+            if (rewardSummary) rewardSummary.gameObject.SetActive(false);
+            if (rewardSummaryGroup) rewardSummaryGroup.alpha = 0;
         }
 
         void ToggleVibration()

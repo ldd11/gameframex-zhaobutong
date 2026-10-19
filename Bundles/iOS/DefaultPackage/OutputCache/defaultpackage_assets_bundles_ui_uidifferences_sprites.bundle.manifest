@@ -1,0 +1,42 @@
+ManifestFileVersion: 0
+CRC: 13165185
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: 6bda96d4da6dc5ebfc1655abb9e33644
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: 2d8df09e698f722ada1caa03d3413830
+  IncrementalBuildHash:
+    serializedVersion: 2
+    Hash: 6bda96d4da6dc5ebfc1655abb9e33644
+HashAppended: 0
+ClassTypes:
+- Class: 28
+  Script: {instanceID: 0}
+- Class: 213
+  Script: {instanceID: 0}
+SerializeReferenceClassIdentifiers: []
+Assets:
+- Assets/Bundles/UI/UIDifferences/Sprites/AvatarsV2_2.asset
+- Assets/Bundles/UI/UIDifferences/Sprites/UIIconsV2_10.asset
+- Assets/Bundles/UI/UIDifferences/Sprites/UIIconsV2_3.asset
+- Assets/Bundles/UI/UIDifferences/Sprites/UIIconsV2_1.asset
+- Assets/Bundles/UI/UIDifferences/Sprites/AvatarsV2_4.asset
+- Assets/Bundles/UI/UIDifferences/Sprites/AvatarsV2_3.asset
+- Assets/Bundles/UI/UIDifferences/Sprites/AvatarsV2_5.asset
+- Assets/Bundles/UI/UIDifferences/Sprites/UIIconsV2_7.asset
+- Assets/Bundles/UI/UIDifferences/Sprites/AvatarsV2_7.asset
+- Assets/Bundles/UI/UIDifferences/Sprites/UIIconsV2_6.asset
+- Assets/Bundles/UI/UIDifferences/Sprites/UIIconsV2_9.asset
+- Assets/Bundles/UI/UIDifferences/Sprites/UIIconsV2_4.asset
+- Assets/Bundles/UI/UIDifferences/Sprites/AvatarsV2_6.asset
+- Assets/Bundles/UI/UIDifferences/Sprites/UIIconsV2_0.asset
+- Assets/Bundles/UI/UIDifferences/Sprites/UIIconsV2_5.asset
+- Assets/Bundles/UI/UIDifferences/Sprites/UIIconsV2_2.asset
+- Assets/Bundles/UI/UIDifferences/Sprites/AvatarsV2_0.asset
+- Assets/Bundles/UI/UIDifferences/Sprites/UIIconsV2_8.asset
+- Assets/Bundles/UI/UIDifferences/Sprites/UIIconsV2_11.asset
+- Assets/Bundles/UI/UIDifferences/Sprites/AvatarsV2_1.asset
+Dependencies:
+- C:/UGit/gameframex-zhaobutong/Bundles/iOS/DefaultPackage/OutputCache/defaultpackage_assets_bundles_ui_uidifferences_art.bundle

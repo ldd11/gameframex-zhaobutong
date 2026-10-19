@@ -1,0 +1,40 @@
+ManifestFileVersion: 0
+CRC: 3063872693
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: 110dfda26c99adf8c806a8ea9d5f5b7f
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: 9a7257142156f9c66a06bbc4d9da4ff6
+  IncrementalBuildHash:
+    serializedVersion: 2
+    Hash: 110dfda26c99adf8c806a8ea9d5f5b7f
+HashAppended: 0
+ClassTypes:
+- Class: 21
+  Script: {instanceID: 0}
+- Class: 28
+  Script: {instanceID: 0}
+- Class: 48
+  Script: {instanceID: 0}
+- Class: 49
+  Script: {instanceID: 0}
+- Class: 114
+  Script: {fileID: 11500000, guid: a6b194f808b1af6499c93410e504af42, type: 3}
+- Class: 114
+  Script: {fileID: 11500000, guid: f1b3b4b945939a54ea0b23d3396115fb, type: 3}
+- Class: 115
+  Script: {instanceID: 0}
+SerializeReferenceClassIdentifiers:
+- AssemblyName: spine-unity
+  ClassName: Spine.Unity.BlendModeMaterials
+Assets:
+- Assets/Bundles/UI/UIDifferences/Spine/Dingdan/dingdan.png
+- Assets/Bundles/UI/UIDifferences/Spine/Dingdan/dingdan_Atlas.asset
+- Assets/Bundles/UI/UIDifferences/Spine/Dingdan/dingdan_SkeletonData.asset
+- Assets/Bundles/UI/UIDifferences/Spine/Dingdan/dingdan_Material.mat
+- Assets/Bundles/UI/UIDifferences/Spine/Dingdan/dingdan.json
+- Assets/Bundles/UI/UIDifferences/Spine/Dingdan/dingdan.atlas.txt
+Dependencies:
+- C:/UGit/gameframex-zhaobutong/Bundles/iOS/DefaultPackage/OutputCache/defaultpackage_unityshaders.bundle

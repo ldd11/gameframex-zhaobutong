@@ -1,0 +1,20 @@
+ManifestFileVersion: 0
+CRC: 3861560762
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: b90c453b0b915b7388e4cd6546f064aa
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: 5ad585dd02dfb5016c0dad519eab8f49
+  IncrementalBuildHash:
+    serializedVersion: 2
+    Hash: b90c453b0b915b7388e4cd6546f064aa
+HashAppended: 0
+ClassTypes:
+- Class: 49
+  Script: {instanceID: 0}
+SerializeReferenceClassIdentifiers: []
+Assets:
+- Assets/Bundles/UI/UIBag/UIBag_fui.bytes
+Dependencies: []

@@ -1,0 +1,72 @@
+ManifestFileVersion: 0
+CRC: 2597260639
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: 27b480aa3cf772851c44759a3f3f1a9d
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: 2d8df09e698f722ada1caa03d3413830
+  IncrementalBuildHash:
+    serializedVersion: 2
+    Hash: 27b480aa3cf772851c44759a3f3f1a9d
+HashAppended: 0
+ClassTypes:
+- Class: 28
+  Script: {instanceID: 0}
+- Class: 213
+  Script: {instanceID: 0}
+SerializeReferenceClassIdentifiers: []
+Assets:
+- Assets/Bundles/Sprites/avatar/22.png
+- Assets/Bundles/Sprites/avatar/40.png
+- Assets/Bundles/Sprites/avatar/12.png
+- Assets/Bundles/Sprites/avatar/46.png
+- Assets/Bundles/Sprites/avatar/47.png
+- Assets/Bundles/Sprites/avatar/26.png
+- Assets/Bundles/Sprites/avatar/39.png
+- Assets/Bundles/Sprites/avatar/32.png
+- Assets/Bundles/Sprites/avatar/9.png
+- Assets/Bundles/Sprites/avatar/21.png
+- Assets/Bundles/Sprites/avatar/41.png
+- Assets/Bundles/Sprites/avatar/42.png
+- Assets/Bundles/Sprites/avatar/3.png
+- Assets/Bundles/Sprites/avatar/50.png
+- Assets/Bundles/Sprites/avatar/43.png
+- Assets/Bundles/Sprites/avatar/33.png
+- Assets/Bundles/Sprites/avatar/1.png
+- Assets/Bundles/Sprites/avatar/29.png
+- Assets/Bundles/Sprites/avatar/48.png
+- Assets/Bundles/Sprites/avatar/15.png
+- Assets/Bundles/Sprites/avatar/49.png
+- Assets/Bundles/Sprites/avatar/7.png
+- Assets/Bundles/Sprites/avatar/16.png
+- Assets/Bundles/Sprites/avatar/14.png
+- Assets/Bundles/Sprites/avatar/35.png
+- Assets/Bundles/Sprites/avatar/13.png
+- Assets/Bundles/Sprites/avatar/0.png
+- Assets/Bundles/Sprites/avatar/5.png
+- Assets/Bundles/Sprites/avatar/24.png
+- Assets/Bundles/Sprites/avatar/27.png
+- Assets/Bundles/Sprites/avatar/45.png
+- Assets/Bundles/Sprites/avatar/23.png
+- Assets/Bundles/Sprites/avatar/38.png
+- Assets/Bundles/Sprites/avatar/2.png
+- Assets/Bundles/Sprites/avatar/11.png
+- Assets/Bundles/Sprites/avatar/36.png
+- Assets/Bundles/Sprites/avatar/28.png
+- Assets/Bundles/Sprites/avatar/34.png
+- Assets/Bundles/Sprites/avatar/44.png
+- Assets/Bundles/Sprites/avatar/30.png
+- Assets/Bundles/Sprites/avatar/10.png
+- Assets/Bundles/Sprites/avatar/8.png
+- Assets/Bundles/Sprites/avatar/17.png
+- Assets/Bundles/Sprites/avatar/6.png
+- Assets/Bundles/Sprites/avatar/19.png
+- Assets/Bundles/Sprites/avatar/31.png
+- Assets/Bundles/Sprites/avatar/37.png
+- Assets/Bundles/Sprites/avatar/25.png
+- Assets/Bundles/Sprites/avatar/4.png
+- Assets/Bundles/Sprites/avatar/18.png
+- Assets/Bundles/Sprites/avatar/20.png
+Dependencies: []

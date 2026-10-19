@@ -1,0 +1,142 @@
+ManifestFileVersion: 0
+CRC: 3157909446
+AssetBundleManifest:
+  AssetBundleInfos:
+    Info_0:
+      Name: defaultpackage_assets_bundles_aotcode.bundle
+      Dependencies: {}
+    Info_1:
+      Name: defaultpackage_assets_bundles_code.bundle
+      Dependencies: {}
+    Info_2:
+      Name: defaultpackage_assets_bundles_ui_uibag.bundle
+      Dependencies: {}
+    Info_3:
+      Name: defaultpackage_assets_bundles_ui_uicommon.bundle
+      Dependencies: {}
+    Info_4:
+      Name: defaultpackage_assets_bundles_ui_uicommonavatar.bundle
+      Dependencies: {}
+    Info_5:
+      Name: defaultpackage_assets_bundles_ui_uidifferences_art.bundle
+      Dependencies:
+        Dependency_0: defaultpackage_unityshaders.bundle
+    Info_6:
+      Name: defaultpackage_assets_bundles_ui_uidifferences_art_figma.bundle
+      Dependencies: {}
+    Info_7:
+      Name: defaultpackage_unityshaders.bundle
+      Dependencies: {}
+    Info_8:
+      Name: defaultpackage_assets_bundles_ui_uidifferences_audio.bundle
+      Dependencies: {}
+    Info_9:
+      Name: defaultpackage_assets_bundles_ui_uidifferences_effect_selecteffect_a1a1.bundle
+      Dependencies: {}
+    Info_10:
+      Name: defaultpackage_assets_bundles_ui_uidifferences_effect_selecteffect_snow.bundle
+      Dependencies: {}
+    Info_11:
+      Name: defaultpackage_assets_bundles_ui_uidifferences_effect_vectorygreat_caizhi.bundle
+      Dependencies:
+        Dependency_0: defaultpackage_assets_bundles_ui_uidifferences_effect_vectorygreat_tu.bundle
+    Info_12:
+      Name: defaultpackage_assets_bundles_ui_uidifferences_effect_vectorygreat_tu.bundle
+      Dependencies:
+        Dependency_0: defaultpackage_assets_bundles_ui_uidifferences_effect_vectorygreat_caizhi.bundle
+    Info_13:
+      Name: defaultpackage_assets_bundles_ui_uidifferences_spine_buttonlight.bundle
+      Dependencies:
+        Dependency_0: defaultpackage_unityshaders.bundle
+    Info_14:
+      Name: defaultpackage_assets_bundles_ui_uidifferences_spine_circle.bundle
+      Dependencies:
+        Dependency_0: defaultpackage_unityshaders.bundle
+    Info_15:
+      Name: defaultpackage_assets_bundles_ui_uidifferences_spine_dingdan.bundle
+      Dependencies:
+        Dependency_0: defaultpackage_unityshaders.bundle
+    Info_16:
+      Name: defaultpackage_assets_bundles_ui_uidifferences_spine_logo.bundle
+      Dependencies:
+        Dependency_0: defaultpackage_unityshaders.bundle
+    Info_17:
+      Name: defaultpackage_assets_bundles_ui_uidifferences_spine_lovedecode.bundle
+      Dependencies:
+        Dependency_0: defaultpackage_unityshaders.bundle
+    Info_18:
+      Name: defaultpackage_assets_bundles_ui_uidifferences_spine_victory.bundle
+      Dependencies:
+        Dependency_0: defaultpackage_unityshaders.bundle
+    Info_19:
+      Name: defaultpackage_assets_bundles_ui_uidifferences_sprites.bundle
+      Dependencies:
+        Dependency_0: defaultpackage_assets_bundles_ui_uidifferences_art.bundle
+    Info_20:
+      Name: defaultpackage_assets_bundles_ui_uidifferences.bundle
+      Dependencies:
+        Dependency_0: defaultpackage_assets_bundles_ui_uidifferences_art.bundle
+        Dependency_1: defaultpackage_assets_bundles_ui_uidifferences_art_figma.bundle
+        Dependency_2: defaultpackage_assets_bundles_ui_uidifferences_audio.bundle
+        Dependency_3: defaultpackage_assets_bundles_ui_uidifferences_effect_selecteffect_a1a1.bundle
+        Dependency_4: defaultpackage_assets_bundles_ui_uidifferences_effect_selecteffect_snow.bundle
+        Dependency_5: defaultpackage_assets_bundles_ui_uidifferences_effect_vectorygreat_caizhi.bundle
+        Dependency_6: defaultpackage_assets_bundles_ui_uidifferences_spine_buttonlight.bundle
+        Dependency_7: defaultpackage_assets_bundles_ui_uidifferences_spine_circle.bundle
+        Dependency_8: defaultpackage_assets_bundles_ui_uidifferences_spine_logo.bundle
+        Dependency_9: defaultpackage_assets_bundles_ui_uidifferences_spine_lovedecode.bundle
+        Dependency_10: defaultpackage_assets_bundles_ui_uidifferences_spine_victory.bundle
+        Dependency_11: defaultpackage_assets_bundles_ui_uidifferences_sprites.bundle
+        Dependency_12: defaultpackage_share_assets_bundles_font.bundle
+        Dependency_13: defaultpackage_share_packages_com_esotericsoftware_spine_spine-unity_runtime_spine-unity_materials_ui-pmatexture.bundle
+        Dependency_14: defaultpackage_share_packages_com_esotericsoftware_spine_spine-unity_runtime_spine-unity_materials_ui-straightalphatex.bundle
+    Info_21:
+      Name: defaultpackage_assets_bundles_ui_uiloading.bundle
+      Dependencies: {}
+    Info_22:
+      Name: defaultpackage_assets_bundles_ui_uilogin.bundle
+      Dependencies: {}
+    Info_23:
+      Name: defaultpackage_assets_bundles_ui_uimain.bundle
+      Dependencies:
+        Dependency_0: defaultpackage_assets_bundles_ui_uilogin.bundle
+    Info_24:
+      Name: defaultpackage_assets_bundles_ui_uiplayer.bundle
+      Dependencies: {}
+    Info_25:
+      Name: defaultpackage_assets_bundles_ui_uiroom.bundle
+      Dependencies:
+        Dependency_0: defaultpackage_assets_bundles_sprites_rps.bundle
+    Info_26:
+      Name: defaultpackage_assets_bundles_config.bundle
+      Dependencies: {}
+    Info_27:
+      Name: defaultpackage_assets_bundles_image_home.bundle
+      Dependencies: {}
+    Info_28:
+      Name: defaultpackage_assets_bundles_image_item.bundle
+      Dependencies: {}
+    Info_29:
+      Name: defaultpackage_assets_bundles_sprites_avatar.bundle
+      Dependencies: {}
+    Info_30:
+      Name: defaultpackage_assets_bundles_sprites_rps.bundle
+      Dependencies: {}
+    Info_31:
+      Name: defaultpackage_share_packages_com_esotericsoftware_spine_spine-unity_editor_spine-unity_editor_gui.bundle
+      Dependencies: {}
+    Info_32:
+      Name: defaultpackage_share_packages_com_esotericsoftware_spine_spine-unity_runtime_spine-unity_skeletondatamodifierassets_blendmodematerials.bundle
+      Dependencies:
+        Dependency_0: defaultpackage_unityshaders.bundle
+    Info_33:
+      Name: defaultpackage_share_assets_bundles_font.bundle
+      Dependencies: {}
+    Info_34:
+      Name: defaultpackage_share_packages_com_esotericsoftware_spine_spine-unity_runtime_spine-unity_materials_ui-pmatexture.bundle
+      Dependencies:
+        Dependency_0: defaultpackage_unityshaders.bundle
+    Info_35:
+      Name: defaultpackage_share_packages_com_esotericsoftware_spine_spine-unity_runtime_spine-unity_materials_ui-straightalphatex.bundle
+      Dependencies:
+        Dependency_0: defaultpackage_unityshaders.bundle

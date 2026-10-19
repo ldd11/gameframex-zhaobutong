@@ -1,12 +1,15 @@
 victory.png
-size:1024,512
+size:2048,512
 filter:Linear,Linear
-Victory Wordmark
-bounds:2,198,968,261
-offsets:42,22,1040,365
+Victory Wordmark2
+bounds:1124,319,794,175
+offsets:8,44,809,270
 guang
-bounds:2,2,66,101
+bounds:1124,216,66,101
 offsets:3,0,72,101
+piaodai
+bounds:2,95,1120,399
+offsets:0,0,1120,435
 xingxing
-bounds:2,105,91,91
+bounds:2,2,91,91
 offsets:5,5,101,101

@@ -9,7 +9,7 @@ namespace Hotfix.UI
         const float Period = 1.5f;
         static readonly Vector2 Lift = new Vector2(12, -14);
         static readonly Vector2 GuideOffset = new Vector2(10, 6.3f);
-        static readonly Vector2 HandSize = new Vector2(220, 234);
+        static readonly Vector2 HandSize = new Vector2(289, 289);
         static readonly Vector2 HandPivot = new Vector2(.145f, .875f);
         // Lowest point during the animation, measured down from the button's center.
         public static float BottomExtent => HandSize.y * HandPivot.y - GuideOffset.y - Lift.y;

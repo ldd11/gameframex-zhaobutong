@@ -308,16 +308,27 @@ public static class DifferenceUiSmokeCheck
             var ui = root.GetComponent<UIDifferences>();
             var page = (GameObject)Field(ui, "victoryDesign");
             var replay = typeof(UIDifferences).GetMethod("ReplayVictoryAnimation", Private);
-            var spine = page.GetComponentInChildren<Spine.Unity.SkeletonGraphic>(true);
-            if (!spine) throw new Exception("成功页缺少 Spine");
+            var animations = page.GetComponentsInChildren<Spine.Unity.SkeletonGraphic>(true);
+            if (animations.Length == 0) throw new Exception("成功页缺少 Spine");
+            if (page.transform.Find("TittleSpine").GetComponent<Spine.Unity.SkeletonGraphic>().startingLoop ||
+                !page.transform.Find("Light").GetComponent<Spine.Unity.SkeletonGraphic>().startingLoop ||
+                !page.transform.Find("Next").GetComponentInChildren<Spine.Unity.SkeletonGraphic>(true).startingLoop)
+                throw new Exception("标题应单次播放，背景光和按钮流光应循环播放");
             for (var i = 0; i < 2; i++)
             {
                 page.SetActive(true);
                 replay.Invoke(ui, null);
-                var track = spine.AnimationState.GetCurrent(0);
-                if (track == null || track.Animation.Name != "animation" || track.TrackTime != 0 || track.Loop || !spine.UnscaledTime)
-                    throw new Exception("成功页动画未从头播放");
-                spine.Update(track.Animation.Duration + .1f);
+                foreach (var spine in animations)
+                {
+                    if (!spine.gameObject.activeInHierarchy) continue;
+                    var track = spine.AnimationState.GetCurrent(0);
+                    if (track == null || track.Animation.Name != spine.startingAnimation || track.TrackTime != 0 ||
+                        track.Loop != spine.startingLoop || !spine.UnscaledTime)
+                        throw new Exception("成功页动画未按预制体设置从头播放: " + spine.name);
+                    spine.Update(track.Animation.Duration * 2 + .1f);
+                    if (track.Loop && (track.TrackTime <= track.Animation.Duration * 2 || track.AnimationTime >= track.Animation.Duration))
+                        throw new Exception("成功页循环动画未持续播放: " + spine.name);
+                }
                 page.SetActive(false);
             }
             Debug.Log("PASS: victory Spine restarts on first and subsequent openings");
@@ -400,6 +411,10 @@ public static class DifferenceUiSmokeCheck
             if (!origin || origin.anchorMin.y > .2f) throw new Exception("金币应从结算图片底部产生");
             var label = (Text)typeof(UIDifferences).GetField("rewardCoinsLabel", Private).GetValue(ui);
             var balance = ui.Coins;
+            var summary = (RectTransform)Field(ui, "rewardSummary");
+            var summaryLabel = (Text)Field(ui, "rewardSummaryLabel");
+            if (!summary || !summaryLabel) throw new Exception("RewardCoin 奖励展示未绑定");
+            var summaryGroup = summary.GetComponent<CanvasGroup>();
             var source = new Vector3(0, -100, 0);
             var target = new Vector3(-250, 500, 0);
             var atStart = DifferenceRewardCoin.Position(source, target, 100, 0, 0, out var flight);
@@ -407,8 +422,11 @@ public static class DifferenceUiSmokeCheck
             if (atStart != source || Vector3.Distance(atEnd, target) > .001f || flight != 1)
                 throw new Exception("金币轨迹起点或终点不正确");
             start.Invoke(ui, new object[] { 10 });
+            if (summary.gameObject.activeSelf || summaryGroup.alpha != 0 || summaryLabel.text != "x10")
+                throw new Exception("奖励展示应先隐藏并使用本次奖励金额");
             if (!wallet.gameObject.activeSelf || label.text != (balance - 10).ToString()) throw new Exception("奖励起始数字不正确");
             await RewardFrames(.45f);
+            if (summary.gameObject.activeSelf) throw new Exception("金币飞行结束前不能显示奖励展示");
             var sample = page.GetComponentInChildren<DifferenceRewardCoin>();
             if (!sample) throw new Exception("未生成金币: page=" + page.activeInHierarchy + ", all=" + page.GetComponentsInChildren<DifferenceRewardCoin>(true).Length + ", routine=" + (Field(ui, "rewardRoutine") != null));
             sample.SetAppearance(Mathf.PI / 2 / 10.5f, 0, 0);
@@ -418,13 +436,27 @@ public static class DifferenceUiSmokeCheck
             ScreenCapture.CaptureScreenshot("Temp/reward-coins-pop.png");
             await RewardFrames(.6f);
             ScreenCapture.CaptureScreenshot("Temp/reward-coins-flight.png");
-            await RewardFrames(2.2f);
+            await Wait(() => !wallet.gameObject.activeSelf, "reward coin flights finish and wallet hides");
             if (wallet.gameObject.activeSelf || label.text != balance.ToString() || ui.Coins != balance)
                 throw new Exception("结算显示/隐藏不正确，或动画重复发奖");
+            if (!summary.gameObject.activeSelf)
+                throw new Exception("金币飞完后应立即开始奖励渐显，不等待礼花特效");
+            await RewardFrames(.1f);
+            if (summaryGroup.alpha <= 0 || summaryGroup.alpha >= 1)
+                throw new Exception("奖励展示应渐显而非立即显示");
+            await Wait(() => Field(ui, "rewardRoutine") == null, "reward summary fade completes");
+            if (summaryGroup.alpha != 1 || summaryLabel.text != "x10" || ui.Coins != balance)
+                throw new Exception("奖励展示金额或淡入结束状态错误");
+            ScreenCapture.CaptureScreenshot("Temp/reward-coins-summary.png");
             start.Invoke(ui, new object[] { 10 });
             cancel.Invoke(ui, null);
-            if (wallet.gameObject.activeSelf || ui.Coins != balance) throw new Exception("取消结算未清理");
-            File.WriteAllText("Temp/reward-coins-check.txt", "PASS: bottom origin, trajectory, edge thickness, count, hide, cancellation; balance unchanged");
+            if (wallet.gameObject.activeSelf || summary.gameObject.activeSelf || summaryGroup.alpha != 0 || ui.Coins != balance)
+                throw new Exception("取消结算未清理");
+            start.Invoke(ui, new object[] { 0 });
+            await Wait(() => Field(ui, "rewardRoutine") == null, "zero reward summary completes");
+            if (summaryLabel.text != "x0" || !summary.gameObject.activeSelf || ui.Coins != balance)
+                throw new Exception("零奖励应显示 x0 且不重复发奖");
+            File.WriteAllText("Temp/reward-coins-check.txt", "PASS: coin flights, delayed summary fade, actual reward, zero reward, cancellation; balance unchanged");
             Debug.Log("PASS: reward coin motion and lifecycle");
         }
         catch (Exception error)
@@ -971,6 +1003,24 @@ public static class DifferenceUiSmokeCheck
             foreach (var won in new[] { true, false })
             {
                 typeof(UIDifferences).GetMethod("ShowFigmaResult", Private).Invoke(ui, new object[] { won });
+                if (won)
+                {
+                    var nextLabel = ((Button)Field(ui, "designNextButton")).GetComponentInChildren<Text>(true);
+                    var levelField = typeof(UIDifferences).GetField("level", Private);
+                    var limit = (int)typeof(UIDifferences).GetProperty("LevelLimit", Private).GetValue(ui);
+                    var savedLevel = ui.SelectedLevel;
+                    try
+                    {
+                        foreach (var index in new[] { 0, limit - 1, savedLevel })
+                        {
+                            levelField.SetValue(ui, index);
+                            typeof(UIDifferences).GetMethod("ShowFigmaResult", Private).Invoke(ui, new object[] { true });
+                            if (nextLabel.text != (index + 1 < limit ? "Level " + (index + 2) : "Home"))
+                                throw new Exception("胜利按钮未显示下一关编号，或最后一关未显示 Home");
+                        }
+                    }
+                    finally { levelField.SetValue(ui, savedLevel); }
+                }
                 await Task.Delay(400);
                 if (!Active(ui, won ? "victoryDesign" : "failDesign")) throw new InvalidOperationException("Result page missing.");
                 typeof(UIDifferences).GetMethod("CloseFigmaResult", Private).Invoke(ui, null);
@@ -1272,6 +1322,7 @@ public static class DifferenceUiSmokeCheck
             if (check == "responsive") { CheckResponsivePlayLayoutOnly(); return; }
             if (check == "sdk-check") { DifferenceSdkCheck.Run(); return; }
             if (check == "victory-votes") { CheckVictoryVotesOnly(); return; }
+            if (check == "victory-replay") { CheckVictoryReplayOnly(); File.WriteAllText("Temp/victory-replay-check.txt", "PASS: victory Spine loop settings and replay on repeated openings"); return; }
             if (check == "coin-audio-connect") { DifferenceGameBuilder.RefreshUIBindingsOnly(); CheckAudioOnly(); File.WriteAllText("Temp/FindDifferences-coin-audio.txt", "PASS: CoinCreate and all audio bindings verified."); return; }
             if (check == "victory-votes-connect") { DifferenceGameBuilder.RefreshUIBindingsOnly(); CheckVictoryVotesOnly(); return; }
             if (check == "home-entrance") { CheckHomeEntranceOnly(); return; }
@@ -1531,6 +1582,8 @@ public static class DifferenceUiSmokeCheck
             Check((bool)Field(ui, "figmaResultWon") && Active(ui, "victoryDesign"), "victory visual active");
             await Capture("07-victory");
             var previousLevel = ui.SelectedLevel;
+            Check(((Button)Field(ui, "designNextButton")).GetComponentInChildren<Text>(true).text == "Level " + (previousLevel + 2),
+                "victory button shows the level it will open");
             await Click(((Button)Field(ui, "designNextButton")));
             await Wait(() => ui.Round != null && !ui.Round.Finished && !Active(ui, "loadingDesign"), "next level opens");
             Check(ui.SelectedLevel == previousLevel + 1 && !(bool)Field(ui, "figmaResultActive"), "victory next level advances once");

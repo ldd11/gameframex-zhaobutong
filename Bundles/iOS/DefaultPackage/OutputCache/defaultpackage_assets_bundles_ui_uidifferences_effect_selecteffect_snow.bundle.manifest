@@ -1,0 +1,36 @@
+ManifestFileVersion: 0
+CRC: 3525804670
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: d6266ef9205054adf7aaa5a19fc1f3dc
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: ba2e729d9c86a39f04f9d642bd346c7f
+  IncrementalBuildHash:
+    serializedVersion: 2
+    Hash: d6266ef9205054adf7aaa5a19fc1f3dc
+HashAppended: 0
+ClassTypes:
+- Class: 1
+  Script: {instanceID: 0}
+- Class: 21
+  Script: {instanceID: 0}
+- Class: 28
+  Script: {instanceID: 0}
+- Class: 48
+  Script: {instanceID: 0}
+- Class: 198
+  Script: {instanceID: 0}
+- Class: 199
+  Script: {instanceID: 0}
+- Class: 213
+  Script: {instanceID: 0}
+- Class: 224
+  Script: {instanceID: 0}
+SerializeReferenceClassIdentifiers: []
+Assets:
+- Assets/Bundles/UI/UIDifferences/Effect/SelectEffect/Snow/xue.png
+- Assets/Bundles/UI/UIDifferences/Effect/SelectEffect/Snow/xue.prefab
+- Assets/Bundles/UI/UIDifferences/Effect/SelectEffect/Snow/xue.mat
+Dependencies: []

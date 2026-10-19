@@ -1,0 +1,40 @@
+ManifestFileVersion: 0
+CRC: 1040699343
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: 4faa95df63217cee712e981a75f43d00
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: 9a7257142156f9c66a06bbc4d9da4ff6
+  IncrementalBuildHash:
+    serializedVersion: 2
+    Hash: 4faa95df63217cee712e981a75f43d00
+HashAppended: 0
+ClassTypes:
+- Class: 21
+  Script: {instanceID: 0}
+- Class: 28
+  Script: {instanceID: 0}
+- Class: 48
+  Script: {instanceID: 0}
+- Class: 49
+  Script: {instanceID: 0}
+- Class: 114
+  Script: {fileID: 11500000, guid: a6b194f808b1af6499c93410e504af42, type: 3}
+- Class: 114
+  Script: {fileID: 11500000, guid: f1b3b4b945939a54ea0b23d3396115fb, type: 3}
+- Class: 115
+  Script: {instanceID: 0}
+SerializeReferenceClassIdentifiers:
+- AssemblyName: spine-unity
+  ClassName: Spine.Unity.BlendModeMaterials
+Assets:
+- Assets/Bundles/UI/UIDifferences/Spine/Victory/victory.atlas.txt
+- Assets/Bundles/UI/UIDifferences/Spine/Victory/victory_Material.mat
+- Assets/Bundles/UI/UIDifferences/Spine/Victory/victory_Atlas.asset
+- Assets/Bundles/UI/UIDifferences/Spine/Victory/victory.png
+- Assets/Bundles/UI/UIDifferences/Spine/Victory/victory.json
+- Assets/Bundles/UI/UIDifferences/Spine/Victory/victory_SkeletonData.asset
+Dependencies:
+- C:/UGit/gameframex-zhaobutong/Bundles/iOS/DefaultPackage/OutputCache/defaultpackage_unityshaders.bundle
