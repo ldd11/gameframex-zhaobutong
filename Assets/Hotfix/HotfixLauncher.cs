@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using GameFrameX;
 using GameFrameX.Event.Runtime;
-using GameFrameX.Localization.Runtime;
 #if ENABLE_UI_FAIRYGUI
 using GameFrameX.UI.FairyGUI.Runtime;
 #endif
@@ -43,8 +42,9 @@ namespace Hotfix
 #if ENABLE_UI_UGUI
         private static async Task LaunchDifferences()
         {
-            var home = await GameApp.UI.OpenFullScreenAsync<UIDifferences>();
+            var home = await GameApp.UI.OpenFullScreenAsync<UIDifferences>(userData: UIDifferences.StartupDataMarker);
             DifferenceStartupAnalytics.PrepareHome(home);
+            await home.PrepareStartupDataAsync();
             // Keep the launcher visible through the home's first layout/update frame.
             await UniTask.NextFrame();
             Canvas.ForceUpdateCanvases();
@@ -95,90 +95,7 @@ namespace Hotfix
                     return;
                 }
 
-                var value = string.Empty;
-                // 根据不同的语言读取不同的值，这个地方可以自行优化
-                switch (GameApp.Localization.Language)
-                {
-                    case LocalizationCode.ChineseSimplified:
-                        value = localization.ChineseSimplified;
-                        break;
-                    case LocalizationCode.ChineseTraditionalTW:
-                        value = localization.ChineseTraditional;
-                        break;
-                    case LocalizationCode.ChineseTraditionalHK:
-                        value = localization.ChineseTraditional;
-                        break;
-                    case LocalizationCode.English:
-                        value = localization.English;
-                        break;
-                    case LocalizationCode.French:
-                        value = localization.French;
-                        break;
-                    case LocalizationCode.German:
-                        value = localization.German;
-                        break;
-                    case LocalizationCode.Italian:
-                        value = localization.Italian;
-                        break;
-                    case LocalizationCode.Japanese:
-                        value = localization.Japanese;
-                        break;
-                    case LocalizationCode.Korean:
-                        value = localization.Korean;
-                        break;
-                    case LocalizationCode.Portuguese:
-                    case LocalizationCode.PortugueseBR:
-                    case LocalizationCode.PortugueseAO:
-                    case LocalizationCode.PortugueseCV:
-                    case LocalizationCode.PortugueseGW:
-                    case LocalizationCode.PortugueseMZ:
-                    case LocalizationCode.PortugueseST:
-                    case LocalizationCode.PortugueseTL:
-                        value = localization.PortuguesePortugal;
-                        break;
-                    case LocalizationCode.SpanishAR:
-                    case LocalizationCode.SpanishBO:
-                    case LocalizationCode.SpanishCL:
-                    case LocalizationCode.SpanishCO:
-                    case LocalizationCode.SpanishCR:
-                    case LocalizationCode.SpanishDO:
-                    case LocalizationCode.SpanishEC:
-                    case LocalizationCode.SpanishGQ:
-                    case LocalizationCode.SpanishGT:
-                    case LocalizationCode.SpanishHN:
-                    case LocalizationCode.SpanishMX:
-                    case LocalizationCode.SpanishNI:
-                    case LocalizationCode.SpanishPA:
-                    case LocalizationCode.SpanishPE:
-                    case LocalizationCode.SpanishPR:
-                    case LocalizationCode.SpanishSV:
-                    case LocalizationCode.SpanishUY:
-                    case LocalizationCode.SpanishVE:
-                        value = localization.Spanish;
-                        break;
-                    case LocalizationCode.Thai:
-                        value = localization.Thai;
-                        break;
-                    case LocalizationCode.Vietnamese:
-                        value = localization.Vietnamese;
-                        break;
-                    case LocalizationCode.Russian:
-                        value = localization.Russian;
-                        break;
-                    case LocalizationCode.Indonesian:
-                        value = localization.Indonesian;
-                        break;
-                    default:
-                    {
-                        if (GameApp.Localization.DefaultLanguage == LocalizationCode.English)
-                        {
-                            value = localization.English;
-                        }
-                    }
-                        break;
-                }
-
-                GameApp.Localization.AddRawString(localization.Key, value);
+                GameApp.Localization.AddRawString(localization.Key, localization.English);
             });
 
             // 刷新Luban配置表中的本地化内容

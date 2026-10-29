@@ -49,7 +49,7 @@ namespace Hotfix.UI
 
     public sealed partial class UIDifferences
     {
-        const string AnalyticsRoundKey = Key + "AnalyticsRound";
+        string AnalyticsRoundKey => RoundSettingKey("AnalyticsRound");
         DifferenceRoundAnalyticsClock analyticsClock;
         DifferenceRound analyticsRound;
         bool analyticsSuppressedRound, analyticsPaused, analyticsUnfocused, analyticsTerminalTracked;
@@ -62,7 +62,7 @@ namespace Hotfix.UI
 
         bool AnalyticsOperable => adUiOpen && isActiveAndEnabled && !analyticsPaused && !analyticsUnfocused &&
             currentPage == play && play.activeInHierarchy && Round != null && !Round.Finished && !settled &&
-            !IsLoadingLevel && !AdInputBlocked && !figmaResultActive && !modal.activeSelf && !settings.activeSelf &&
+            !IsLoadingLevel && !AdInputBlocked && !PauseInputBlocked && !figmaResultActive && !modal.activeSelf && !settings.activeSelf &&
             !profile.activeSelf && !musicPanel.activeSelf && !achievements.activeSelf && !album.activeSelf &&
             !(hintDesign && hintDesign.activeSelf);
 
@@ -171,7 +171,7 @@ namespace Hotfix.UI
         void UpdateRewardEntryAnalytics()
         {
             var shown = AnalyticsEnabled && !analyticsSuppressedRound && adUiOpen && isActiveAndEnabled &&
-                !analyticsPaused && !analyticsUnfocused && !AdInputBlocked && !IsLoadingLevel && !modal.activeSelf && !settings.activeSelf;
+                !analyticsPaused && !analyticsUnfocused && !AdInputBlocked && !PauseInputBlocked && !IsLoadingLevel && !modal.activeSelf && !settings.activeSelf;
             var hint = shown && hintDesign && hintDesign.activeInHierarchy && designFreeButton && designFreeButton.IsActive() && designFreeButton.IsInteractable();
             var revive = shown && figmaResultActive && !figmaResultWon && designContinueButton && designContinueButton.IsActive() && designContinueButton.IsInteractable();
             if (hint && !analyticsHintVisible) DifferenceAnalytics.Track("reward_ad_entry_show", "trigger_timing", "hint_1");
@@ -205,7 +205,7 @@ namespace Hotfix.UI
         void FailAnalyticsLoad(string error, DifferenceLevel data)
         {
             if (!analyticsLoading || !AnalyticsEnabled) return;
-            var cause = error != null && error.StartsWith("关卡下载失败", StringComparison.Ordinal) ? "level_download_failed" : "invalid_level_data";
+            var cause = error != null && error.StartsWith("Level download failed", StringComparison.Ordinal) ? "level_download_failed" : "invalid_level_data";
             DifferenceAnalytics.Track("splash_to_jigsaw_fail", "image_id", Known(data?.analyticsPicId), "cause", cause, "network", DifferenceAnalytics.Network);
             CancelAnalyticsLoad();
         }

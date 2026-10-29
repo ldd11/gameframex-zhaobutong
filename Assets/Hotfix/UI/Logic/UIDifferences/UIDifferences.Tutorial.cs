@@ -20,9 +20,36 @@ namespace Hotfix.UI
         readonly RectTransform[] tutorialPinchHands = new RectTransform[2];
         readonly RectTransform[] tutorialZoomArrows = new RectTransform[4];
         Text tutorialMessage;
+        public Material hintDisabledMaterial;
+        Graphic[] hintButtonGraphics;
+        Material[] hintButtonMaterials;
         bool TutorialRunning => tutorialPending && level == 0 && Round != null && !Round.Finished && play.activeSelf;
-        public bool TutorialAllowsView => !TutorialRunning ||
-            (tutorialStep == TutorialStep.Zoom && (!tutorialShade || !tutorialShade.gameObject.activeSelf));
+        public bool TutorialAllowsView => !PauseInputBlocked && (!TutorialRunning ||
+            (tutorialStep == TutorialStep.Zoom && (!tutorialShade || !tutorialShade.gameObject.activeSelf)));
+
+        void InitializeHintButtonLook()
+        {
+            if (hintButtonGraphics != null) return;
+#if UNITY_EDITOR
+            // Android bundles may not include a shader program for the Editor's graphics API.
+            if (hintDisabledMaterial && !hintDisabledMaterial.shader.isSupported)
+                hintDisabledMaterial = UnityEditor.AssetDatabase.LoadAssetAtPath<Material>("Assets/Bundles/UI/UIDifferences/Art/HintDisabled.mat");
+#endif
+            var colors = hintButton.colors;
+            colors.disabledColor = Color.white;
+            hintButton.colors = colors;
+            hintButtonGraphics = System.Array.FindAll(hintButton.GetComponentsInChildren<Graphic>(true),
+                graphic => !graphic.GetComponentInParent<DifferenceHintHand>());
+            hintButtonMaterials = System.Array.ConvertAll(hintButtonGraphics, graphic => graphic.material);
+        }
+
+        void SetHintInteractable(bool interactable)
+        {
+            if (hintButtonGraphics == null) InitializeHintButtonLook();
+            hintButton.interactable = interactable;
+            for (var i = 0; i < hintButtonGraphics.Length; i++)
+                if (hintButtonGraphics[i]) hintButtonGraphics[i].material = interactable ? hintButtonMaterials[i] : hintDisabledMaterial;
+        }
 
         void InitializeTutorial()
         {
@@ -30,12 +57,6 @@ namespace Hotfix.UI
             // Players who have already cleared a level keep their normal startup flow.
             tutorialPending = !testing && completed == 0 && !GameApp.Setting.GetBool(Key + "TutorialComplete", false);
             if (!testing && completed == 0) BeginLevel(0, true);
-        }
-
-        void ShowFirstLevelLoadError(string error)
-        {
-            homeDesign.SetActive(false);
-            ShowDialog("关卡加载失败", error, "重试", () => BeginLevel(0, true), terminal: true);
         }
 
         void OpenTutorial(bool restored)
@@ -100,7 +121,7 @@ namespace Hotfix.UI
             GameApp.Setting.SetInt(Key + "TutorialStep", (int)TutorialStep.Complete);
             SaveRound(); GameApp.Setting.Save();
             StopTutorial();
-            Notice("引导完成！继续寻找其他不同之处。第1关提示不限次数。", 3);
+            Notice("Tutorial complete! Keep finding differences. Level 1 has unlimited hints.", 3);
         }
 
         void StopTutorial()
@@ -108,7 +129,7 @@ namespace Hotfix.UI
             tutorialPending = false; tutorialShown = -1;
             HideTutorialVisuals();
             if (backButton) backButton.gameObject.SetActive(true);
-            if (hintButton) hintButton.interactable = true;
+            if (hintButton) SetHintInteractable(true);
         }
 
         void HideTutorialVisuals()
@@ -119,12 +140,12 @@ namespace Hotfix.UI
 
         void AdvanceTutorial()
         {
-            if (!TutorialRunning || IsLoadingLevel || AdInputBlocked || modal.activeSelf || settings.activeSelf ||
+            if (!TutorialRunning || IsLoadingLevel || AdInputBlocked || PauseInputBlocked || modal.activeSelf || settings.activeSelf ||
                 (!testing && !GameFrameX.Startup.Application.ApplicationStartupEntry.HomeReady))
             { HideTutorialVisuals(); tutorialShown = -1; return; }
-            backButton.gameObject.SetActive(false);
+            backButton.gameObject.SetActive(true);
             resetZoomButton.gameObject.SetActive(false);
-            hintButton.interactable = tutorialStep == TutorialStep.HintButton && Time.unscaledTime >= tutorialShowAt;
+            SetHintInteractable(tutorialStep == TutorialStep.HintButton && Time.unscaledTime >= tutorialShowAt);
             hintHand.Show(false);
             noticeLabel.transform.parent.gameObject.SetActive(false);
             if (tutorialStep == TutorialStep.Zoom && tutorialShade && tutorialShade.gameObject.activeSelf) return;
@@ -132,7 +153,7 @@ namespace Hotfix.UI
             if (tutorialStep == TutorialStep.Zoom && upperImage.transform.localScale.x >= 1.25f)
             {
                 SetTutorialStep(TutorialStep.HintButton);
-                hintButton.interactable = true;
+                SetHintInteractable(true);
             }
             EnsureTutorialVisuals();
             if (tutorialShown != (int)tutorialStep) ShowTutorialStep();
@@ -173,6 +194,7 @@ namespace Hotfix.UI
             var lowerView = (RectTransform)lowerImage.transform.parent;
             tutorialMessage.rectTransform.parent.position = (upperView.TransformPoint(new Vector2(upperView.rect.center.x, upperView.rect.yMin)) +
                 lowerView.TransformPoint(new Vector2(lowerView.rect.center.x, lowerView.rect.yMax))) * .5f;
+            LayoutTutorialMessage();
         }
 
         Vector3 TutorialPoint(RectTransform image)
@@ -196,11 +218,14 @@ namespace Hotfix.UI
                 tutorialShade.Show(upperImage.GetComponent<DifferenceBoard>(), button, button, new Vector2(.5f, .5f), -1, false);
             }
             else tutorialShade.Cancel();
-            tutorialMessage.text = tutorialStep == TutorialStep.Zoom ? (Application.isMobilePlatform ? "双指向外滑动，放大图片" : "双指向外滑动，放大图片（电脑可滚动滚轮）") :
-                tutorialStep == TutorialStep.HintButton ? "点击提示按钮，找到不同之处 · 本关无限提示" :
-                tutorialStep == TutorialStep.HintDifference ? "点击高亮位置，找到这处不同" : "点击高亮位置，上下任意一张图都可以";
+            tutorialMessage.text = tutorialStep == TutorialStep.Zoom ? (Application.isMobilePlatform ? "Pinch out to zoom in." : "Pinch out to zoom in.\nOn a computer, scroll to zoom.") :
+                tutorialStep == TutorialStep.HintButton ? "Tap Hint to find a difference.\nUnlimited hints in this level." :
+                tutorialStep == TutorialStep.HintDifference ? "Tap the highlighted spot\nto find this difference." : "Tap the highlighted spot\nin either picture.";
             tutorialVisuals.gameObject.SetActive(true);
+            // Keep the disabled hint at half brightness instead of darkening it again with the tutorial shade.
+            hintButton.transform.SetAsLastSibling();
             tutorialVisuals.SetAsLastSibling();
+            backButton.transform.SetAsLastSibling();
         }
 
         void EnsureTutorialVisuals()
@@ -230,13 +255,25 @@ namespace Hotfix.UI
                     tutorialZoomArrows[i * 2 + arrow] = rect;
                 }
             }
-            var message = TutorialRect(tutorialVisuals, "Instruction", new Vector2(560, 72));
+            var message = TutorialRect(tutorialVisuals, "Instruction", new Vector2(900, 144));
             var background = message.gameObject.AddComponent<Image>(); background.color = new Color(.95f, 1, .95f); background.raycastTarget = false;
             var border = message.gameObject.AddComponent<Outline>(); border.effectColor = new Color(.1f, .65f, .45f); border.effectDistance = new Vector2(3, -3);
-            var text = TutorialRect(message, "Text", new Vector2(536, 66));
+            var text = TutorialRect(message, "Text", Vector2.zero);
+            text.anchorMin = Vector2.zero; text.anchorMax = Vector2.one;
+            text.offsetMin = Vector2.one * 16; text.offsetMax = Vector2.one * -16;
             tutorialMessage = text.gameObject.AddComponent<Text>(); tutorialMessage.font = noticeLabel.font;
-            tutorialMessage.fontSize = 23; tutorialMessage.alignment = TextAnchor.MiddleCenter;
+            tutorialMessage.fontSize = 48; tutorialMessage.alignment = TextAnchor.MiddleCenter;
+            tutorialMessage.horizontalOverflow = HorizontalWrapMode.Wrap;
             tutorialMessage.color = new Color(.1f, .4f, .3f); tutorialMessage.raycastTarget = false;
+        }
+
+        void LayoutTutorialMessage()
+        {
+            var layout = play.GetComponent<DifferencePlayLayout>();
+            var width = layout && layout.frame ? layout.frame.rect.width : ((RectTransform)upperImage.transform.parent).rect.width;
+            var panel = (RectTransform)tutorialMessage.transform.parent;
+            panel.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, Mathf.Max(1, Mathf.Min(900, width - 48)));
+            panel.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, Mathf.Max(144, tutorialMessage.preferredHeight + 32));
         }
 
         static RectTransform TutorialRect(RectTransform parent, string name, Vector2 size)

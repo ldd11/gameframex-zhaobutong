@@ -98,8 +98,15 @@ namespace Hotfix.UI
             settingsDesign.SetActive(settings.activeSelf && !loading && !figmaResultActive);
             if (designCoins) designCoins.text = coins.ToString();
             foreach (var layer in new[] { homeDesign, loadingDesign, victoryDesign, failDesign, hintDesign, settingsDesign })
-                if (layer.activeSelf) layer.transform.SetAsLastSibling();
+                if (layer.activeSelf)
+                {
+                    layer.transform.SetAsLastSibling();
+                    if (layer != homeDesign && layer != victoryDesign) DifferencePopupMotion.SortAboveGameParticles(layer);
+                }
+            UpdateJourneyDesign();
             if (modal.activeSelf) modal.transform.SetAsLastSibling();
+            if (pauseDesign && pauseDesign.activeSelf) pauseDesign.transform.SetAsLastSibling();
+            if (leaveDesign && leaveDesign.activeSelf) leaveDesign.transform.SetAsLastSibling();
             UpdateAdsVisibility();
         }
 
@@ -179,47 +186,23 @@ namespace Hotfix.UI
                 var horizontal = spots[a].x.CompareTo(spots[b].x);
                 return horizontal != 0 ? horizontal : spots[a].y.CompareTo(spots[b].y);
             });
-            // One root allows cancellation to remove all replay particles immediately.
-            var root = new GameObject("CompletionSweep", typeof(RectTransform));
-            root.transform.SetParent(play.transform, false);
-            try
+            var nextStart = Time.unscaledTime;
+            for (var i = 0; i < count; i++)
             {
-                for (var i = 0; i < count; i++)
+                if (i < ringOrder.Length)
                 {
-                    if (i < ringOrder.Length)
-                    {
-                        var index = ringOrder[i];
-                        ClearRingParticlesNow(topRings[index]);
-                        ClearRingParticlesNow(bottomRings[index]);
-                        ShowFoundRing(topRings[index], true);
-                        ShowFoundRing(bottomRings[index], true);
-                    }
-                    var target = progressDots[i].rectTransform;
-                    StartCoroutine(Pulse(target));
-                    PlayTone(foundSound);
-                    if (foundArrivalPrefab)
-                    {
-                        var effect = Instantiate(foundArrivalPrefab, root.transform, false);
-                        effect.transform.position = target.TransformPoint(target.rect.center);
-                        var canvas = play.GetComponentInParent<Canvas>();
-                        foreach (var child in effect.GetComponentsInChildren<Transform>(true)) child.gameObject.layer = play.layer;
-                        foreach (var particle in effect.GetComponentsInChildren<ParticleSystem>(true))
-                        {
-                            particle.Stop(false, ParticleSystemStopBehavior.StopEmittingAndClear);
-                            var main = particle.main;
-                            main.loop = false; main.useUnscaledTime = true;
-                            var renderer = particle.GetComponent<ParticleSystemRenderer>();
-                            renderer.sortingLayerID = canvas.sortingLayerID;
-                            renderer.sortingOrder = canvas.sortingOrder + 2;
-                            particle.Play(false);
-                        }
-                    }
-                    yield return new WaitForSecondsRealtime(.065f);
+                    var index = ringOrder[i];
+                    ClearRingParticlesNow(topRings[index]);
+                    ClearRingParticlesNow(bottomRings[index]);
+                    ShowFoundRing(topRings[index], true);
+                    ShowFoundRing(bottomRings[index], true);
                 }
-                var ringAnimation = useSpineFoundRing && foundRingSpine ? foundRingSpine.GetSkeletonData(false).FindAnimation("a2") : null;
-                yield return new WaitForSecondsRealtime(ringAnimation == null ? Mathf.Max(0, foundRingStyle.animationDuration) : ringAnimation.Duration);
+                PlayProgressTransition(progressDots[i], "a4");
+                PlayTone(progressCompleteSound);
+                nextStart += .065f;
+                yield return new WaitForSecondsRealtime(Mathf.Max(0, nextStart - Time.unscaledTime));
             }
-            finally { if (root) Destroy(root); }
+            while (count > 0 && progressDots[count - 1].AnimationState.GetCurrent(0).Animation.Name != "a3") yield return null;
         }
 
         void StartRewardCoins(int reward)
@@ -259,15 +242,16 @@ namespace Hotfix.UI
                 icons[i] = DifferenceRewardCoin.Create(parent, rewardCoinIcon.sprite, width * .075f);
                 icons[i].gameObject.SetActive(false);
             }
-            for (var time = 0f; arrived < count; time += Time.unscaledDeltaTime)
+            for (var time = 0f; arrived < count;)
             {
+                if (AdInputBlocked) { yield return null; continue; }
                 var target = parent.InverseTransformPoint(rewardCoinIcon.rectTransform.TransformPoint(rewardCoinIcon.rectTransform.rect.center));
                 for (var i = arrived; i < count; i++)
                 {
                     var age = time - DifferenceRewardCoin.SpawnDelay - i * DifferenceRewardCoin.Stagger;
                     if (age < 0) continue;
                     var coin = icons[i];
-                    if (!coin.gameObject.activeSelf) PlayTone(coinCreateSound);
+                    if (i == 0 && !coin.gameObject.activeSelf) PlayTone(coinCreateSound);
                     coin.gameObject.SetActive(true);
                     coin.transform.localPosition = DifferenceRewardCoin.Position(origin, target, spread, age, i, out var flight);
                     coin.SetAppearance(age, i, flight);
@@ -279,17 +263,22 @@ namespace Hotfix.UI
                     }
                 }
                 yield return null;
+                // Fullscreen ads can cover the game while Unity keeps rendering, or suspend it until a long resume frame.
+                if (!AdInputBlocked) time += Mathf.Min(Time.unscaledDeltaTime, .1f);
             }
+            while (AdInputBlocked) yield return null;
             rewardCoinsLabel.text = finalBalance.ToString();
             rewardWallet.gameObject.SetActive(false);
             Destroy(rewardFlights); rewardFlights = null;
             if (rewardSummary && rewardSummaryGroup)
             {
                 rewardSummary.gameObject.SetActive(true);
-                for (var time = 0f; time < .45f; time += Time.unscaledDeltaTime)
+                for (var time = 0f; time < .45f;)
                 {
+                    if (AdInputBlocked) { yield return null; continue; }
                     rewardSummaryGroup.alpha = Mathf.SmoothStep(0, 1, time / .45f);
                     yield return null;
+                    if (!AdInputBlocked) time += Mathf.Min(Time.unscaledDeltaTime, .1f);
                 }
                 rewardSummaryGroup.alpha = 1;
             }

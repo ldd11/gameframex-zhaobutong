@@ -37,6 +37,7 @@ namespace Hotfix.UI
             group.alpha = 1;
             transform.SetAsLastSibling();
             gameObject.SetActive(true);
+            DifferencePopupMotion.SortAboveGameParticles(gameObject);
         }
 
         void Update() { Advance(Time.unscaledDeltaTime); }

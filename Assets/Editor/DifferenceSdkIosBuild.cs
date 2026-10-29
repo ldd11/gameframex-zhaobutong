@@ -129,6 +129,14 @@ public sealed class DifferenceSdkIosBuild : IPreprocessBuildWithReport
         foreach (var target in new[] { mainTarget, frameworkTarget })
         {
             project.UpdateBuildProperty(target, "OTHER_LDFLAGS", new[] { "-ObjC", "-lc++" }, null);
+            foreach (var name in project.BuildConfigNames())
+            foreach (var property in new[] { "OTHER_LDFLAGS", "LD_RUNPATH_SEARCH_PATHS" })
+            {
+                var config = project.BuildConfigByName(target, name);
+                // Unity may store several runpaths as one space-separated PBX value.
+                if (!(project.GetBuildPropertyForConfig(config, property) ?? "").Contains("$(inherited)"))
+                    project.AddBuildPropertyForConfig(config, property, "$(inherited)");
+            }
             project.SetBuildProperty(target, "GCC_ENABLE_OBJC_EXCEPTIONS", "YES");
             project.SetBuildProperty(target, "CLANG_ENABLE_MODULES", "YES");
             project.SetBuildProperty(target, "ENABLE_BITCODE", "NO");
@@ -225,6 +233,14 @@ end
         Directory.CreateDirectory(Path.Combine(path, "Unity-iPhone.xcodeproj"));
         File.Copy(Path.Combine(template, "Unity-iPhone.xcodeproj/project.pbxproj"), PBXProject.GetPBXProjectPath(path));
         File.Copy(Path.Combine(template, "Info.plist"), Path.Combine(path, "Info.plist"));
+        var project = new PBXProject();
+        project.ReadFromFile(PBXProject.GetPBXProjectPath(path));
+        foreach (var target in new[] { project.GetUnityMainTargetGuid(), project.GetUnityFrameworkTargetGuid() })
+        {
+            project.UpdateBuildProperty(target, "OTHER_LDFLAGS", new[] { "-Wl,-dead_strip" }, new[] { "$(inherited)" });
+            project.SetBuildProperty(target, "LD_RUNPATH_SEARCH_PATHS", "@executable_path/Frameworks @loader_path/FixtureFrameworks");
+        }
+        project.WriteToFile(PBXProject.GetPBXProjectPath(path));
         var input = new PlistDocument();
         foreach (var key in new[] { "GOOGLE_APP_ID", "GCM_SENDER_ID", "PROJECT_ID", "API_KEY" }) input.root.SetString(key, "test-only");
         input.root.SetString("BUNDLE_ID", "com.example.sdkcheck");
@@ -232,6 +248,19 @@ end
         input.WriteToFile(config);
         ConfigureExport(path, config, "test-only", "ca-app-pub-3940256099942544~1458002511", "Test permission", "com.example.sdkcheck", MinimumIosVersion);
         ConfigureExport(path, config, "test-only", "ca-app-pub-3940256099942544~1458002511", "Test permission", "com.example.sdkcheck", MinimumIosVersion);
+        project.ReadFromFile(PBXProject.GetPBXProjectPath(path));
+        foreach (var target in new[] { project.GetUnityMainTargetGuid(), project.GetUnityFrameworkTargetGuid() })
+        foreach (var name in project.BuildConfigNames())
+        {
+            var buildConfig = project.BuildConfigByName(target, name);
+            var flags = project.GetBuildPropertyForConfig(buildConfig, "OTHER_LDFLAGS");
+            var runpaths = project.GetBuildPropertyForConfig(buildConfig, "LD_RUNPATH_SEARCH_PATHS");
+            if (flags.Split(new[] { "$(inherited)" }, StringSplitOptions.None).Length != 2 ||
+                runpaths.Split(new[] { "$(inherited)" }, StringSplitOptions.None).Length != 2 ||
+                !flags.Contains("-Wl,-dead_strip") || !flags.Contains("-ObjC") || !flags.Contains("-lc++") ||
+                !runpaths.Contains("@loader_path/FixtureFrameworks"))
+                throw new BuildFailedException("Repeated SDK export must inherit Pods settings and retain existing linker flags/runpaths: " + name);
+        }
         var appPods = File.ReadAllText(Path.Combine(path, "Podfile")).Split(new[] { "target 'Unity-iPhone' do" }, StringSplitOptions.None).Last();
         if (!appPods.Contains("pod 'AdjustSignature', '3.35.2'"))
             throw new BuildFailedException("Unity-iPhone must embed AdjustSignature to avoid a missing AdjustSigSdk crash.");
@@ -243,7 +272,7 @@ end
         try { ValidateOutputFolder(path, false); }
         catch (BuildFailedException) { rejected = true; }
         if (!rejected) throw new BuildFailedException("Plain export accepted a directory containing an old SDK export.");
-        Debug.Log("iOS SDK export setup PASS: native project, Podfile, plist, repeated export, mismatched Bundle ID and plain export isolation. " + path);
+        Debug.Log("iOS SDK export setup PASS: native project, Podfile, plist, repeated export with inherited Pods settings, mismatched Bundle ID and plain export isolation. " + path);
     }
 }
 #endif

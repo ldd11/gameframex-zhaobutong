@@ -134,34 +134,73 @@ public static class DifferenceUiSmokeCheck
             var ui = root.GetComponent<UIDifferences>();
             var layout = ui.play.GetComponent<DifferencePlayLayout>();
             if (!layout) throw new Exception("游戏页没有绑定适配组件");
+            ui.play.SetActive(true);
             var rect = (RectTransform)root.transform;
             rect.anchorMin = rect.anchorMax = rect.pivot = Vector2.one * .5f;
-            var items = new[] { layout.upper, layout.lower, layout.frame, layout.progress, layout.back, layout.life, layout.hint, layout.zoom };
+            rect.sizeDelta = new Vector2(1179, 2556);
+            rect.ForceUpdateRectTransforms();
+            var items = new[] { layout.upper, layout.lower, layout.frame, layout.progress, layout.back, layout.life, layout.hint, layout.zoom, layout.level };
             var anchors = items.Select(r => new Vector4(r.anchorMin.x, r.anchorMin.y, r.anchorMax.x, r.anchorMax.y)).ToArray();
+            foreach (var field in typeof(DifferencePlayLayout).GetFields().Where(field => field.Name.EndsWith("Offset", StringComparison.Ordinal)))
+                field.SetValue(layout, Vector2.zero);
+            var controls = new[] { layout.back, layout.life, layout.hint, layout.zoom };
+            var controlSizes = controls.Select(control => control.sizeDelta).ToArray();
+            var controlScales = controls.Select(control => control.localScale).ToArray();
+            var titleFontSize = layout.level.GetComponent<Text>().fontSize;
+            var dotSizes = ui.progressDots.Select(dot => dot.rectTransform.sizeDelta).ToArray();
+            var row = layout.progress.GetComponent<HorizontalLayoutGroup>();
+            var dotSpacing = row.spacing;
             var guide = DifferenceHintHand.Create(ui.hintButton, ui.hintHandSprite);
             guide.Show(true);
             var hand = (RectTransform)guide.transform.Find("Hand");
             var advanceHand = typeof(DifferenceHintHand).GetMethod("Advance", Private);
             var report = new System.Text.StringBuilder();
+            Rect Bounds(RectTransform item)
+            {
+                var min = (Vector2)ui.play.transform.InverseTransformPoint(item.TransformPoint(item.rect.min));
+                var max = (Vector2)ui.play.transform.InverseTransformPoint(item.TransformPoint(item.rect.max));
+                return Rect.MinMaxRect(min.x, min.y, max.x, max.y);
+            }
+            if (Application.isPlaying) throw new Exception("请先退出 Play 模式，再检查无参数的编辑模式布局");
+            var nativeArea = ((RectTransform)ui.play.transform).rect;
+            layout.ApplyLayout();
+            var nativePositions = items.Select(item => item.localPosition).ToArray();
+            var nativeSizes = items.Select(item => item.rect.size).ToArray();
+            layout.ApplyLayout(nativeArea);
+            for (var i = 0; i < items.Length; i++)
+                if (Vector3.Distance(items[i].localPosition, nativePositions[i]) > .01f || Vector2.Distance(items[i].rect.size, nativeSizes[i]) > .01f)
+                    throw new Exception("编辑模式无参数布局与显式 Play.rect 布局不同");
+            var nativeBack = Bounds(layout.back); var nativeLife = Bounds(layout.life); var nativeLevel = Bounds(layout.level);
+            var nativeHeaderWidth = Mathf.Min(nativeArea.width - Mathf.Max(0, layout.edgePadding.x) * 2, Mathf.Max(1, layout.headerMaxWidth));
+            if (Mathf.Abs(nativeBack.xMin - (nativeArea.center.x - nativeHeaderWidth * .5f)) > .1f ||
+                Mathf.Abs(nativeLife.xMax - (nativeArea.center.x + nativeHeaderWidth * .5f)) > .1f ||
+                Mathf.Abs(nativeBack.center.y - nativeLife.center.y) > .1f || Mathf.Abs(nativeBack.center.y - nativeLevel.center.y) > .1f ||
+                Mathf.Abs(nativeArea.yMax - Mathf.Max(nativeBack.yMax, Mathf.Max(nativeLife.yMax, nativeLevel.yMax)) - layout.edgePadding.y) > .1f)
+                throw new Exception("编辑模式无参数布局没有遵守 Play.rect 的安全边距、Header 最大宽度与顶部基线");
+            report.AppendLine("PASS EditMode ApplyLayout() equals ApplyLayout(Play.rect); centered header respects safe margins, maximum width and a shared baseline.");
+            var heightLimited = 0;
             foreach (var adHeight in new[] { 0f, 120f, 240f })
             foreach (var screen in new[] { new Vector2(1179,2556), new Vector2(1080,1920), new Vector2(1080,2400),
-                         new Vector2(1536,2048), new Vector2(2048,1536), new Vector2(720,1280) })
+                         new Vector2(1536,2048), new Vector2(2048,1536), new Vector2(720,1280), new Vector2(1440,2960) })
+            foreach (var inset in new[] { false, true })
             {
                 layout.bottomAdHeight = adHeight;
-                rect.sizeDelta = new Vector2(screen.x * 2556 / screen.y, 2556);
-                rect.ForceUpdateRectTransforms();
-                layout.ApplyLayout();
+                var page = ((RectTransform)ui.play.transform).rect;
+                var size = new Vector2(page.height * screen.x / screen.y, page.height);
+                var area = new Rect(page.center - size * .5f, size);
+                if (inset) area = Rect.MinMaxRect(area.xMin + 35, area.yMin + 55, area.xMax - 65, area.yMax - 110);
+                for (var i = 0; i < ui.progressDots.Length; i++) ui.progressDots[i].rectTransform.sizeDelta = dotSizes[i];
+                row.spacing = dotSpacing;
+                layout.ApplyLayout(area);
                 foreach (var item in items) item.ForceUpdateRectTransforms();
-                Rect Bounds(RectTransform item)
-                {
-                    var min = (Vector2)ui.play.transform.InverseTransformPoint(item.TransformPoint(item.rect.min));
-                    var max = (Vector2)ui.play.transform.InverseTransformPoint(item.TransformPoint(item.rect.max));
-                    return Rect.MinMaxRect(min.x,min.y,max.x,max.y);
-                }
+                LayoutRebuilder.ForceRebuildLayoutImmediate(layout.progress);
                 var a = Bounds(layout.upper); var b = Bounds(layout.lower); var f = Bounds(layout.frame);
                 var p = Bounds(layout.progress); var back = Bounds(layout.back); var life = Bounds(layout.life);
+                var level = Bounds(layout.level);
                 var hint = Bounds(layout.hint); var zoom = Bounds(layout.zoom);
-                var area = ((RectTransform)ui.play.transform).rect;
+                var gap = Mathf.Max(0, layout.sectionGap);
+                var padding = Vector2.Max(Vector2.zero, layout.edgePadding);
+                var border = Mathf.Max(0, layout.framePadding);
                 foreach (var item in items)
                 {
                     var bounds = Bounds(item);
@@ -176,19 +215,83 @@ public static class DifferenceUiSmokeCheck
                         throw new Exception(screen + ": 提示手势覆盖广告位");
                 }
                 if (Mathf.Abs(a.width / a.height - UIDifferences.ImageAspect) > .001f ||
-                    Mathf.Abs(b.width / b.height - UIDifferences.ImageAspect) > .001f ||
-                    b.yMax > a.yMin || p.yMin < f.yMax || back.yMin < p.yMax || life.yMin < p.yMax ||
-                    hint.yMax > f.yMin || zoom.yMax > f.yMin)
+                    Mathf.Abs(b.width / b.height - UIDifferences.ImageAspect) > .001f || Mathf.Abs(a.width - b.width) > .1f ||
+                    Mathf.Abs(a.xMin - b.xMin) > .1f || Mathf.Abs(a.yMin - b.yMax - Mathf.Max(0, layout.pictureGap)) > .1f ||
+                    Mathf.Abs(f.xMin - (a.xMin - border)) > .1f || Mathf.Abs(f.xMax - (a.xMax + border)) > .1f ||
+                    Mathf.Abs(f.yMax - (a.yMax + border)) > .1f || Mathf.Abs(f.yMin - (b.yMin - border)) > .1f)
                     throw new Exception(screen + ": 图片变形或操作区重叠");
+                var headerBottom = Mathf.Min(back.yMin, Mathf.Min(life.yMin, level.yMin));
+                if (headerBottom - p.yMax < gap - .1f || Mathf.Abs(p.yMin - f.yMax - gap) > .1f ||
+                    Mathf.Abs(f.yMin - Mathf.Max(hint.yMax, zoom.yMax) - gap) > .1f || Mathf.Abs(hint.center.y - zoom.center.y) > .1f)
+                    throw new Exception(screen + ": Header、Progress、Frame、Hint/Zoom 没有按顺序留出间距并对齐底部按钮");
+                var headerWidth = Mathf.Min(area.width - padding.x * 2, Mathf.Max(1, layout.headerMaxWidth));
+                if (Mathf.Abs(back.xMin - (area.center.x - headerWidth * .5f)) > .1f ||
+                    Mathf.Abs(life.xMax - (area.center.x + headerWidth * .5f)) > .1f ||
+                    Mathf.Abs(level.center.x - area.center.x) > .1f || Mathf.Abs(back.center.y - life.center.y) > .1f ||
+                    Mathf.Abs(back.center.y - level.center.y) > .1f)
+                    throw new Exception(screen + ": Header 没有独立遵守安全区域边距和最大宽度");
+                var titleReserve = Mathf.Max(back.width + layout.backOffset.x - layout.levelOffset.x,
+                    life.width - layout.lifeOffset.x + layout.levelOffset.x);
+                var titleWidth = Mathf.Max(1, headerWidth - 2 * (titleReserve + gap));
+                if (Mathf.Abs(level.width - titleWidth) > .1f || Mathf.Abs(level.height - Mathf.Max(back.height, life.height)) > .1f)
+                    throw new Exception(screen + ": Level 标题没有使用 Header 剩余宽度和按钮行高");
+                CheckSingleLineLevelTitle(layout.level, titleFontSize);
+                var fullWidth = area.width - padding.x * 2 - border * 2;
+                var footerReserve = Mathf.Max(Mathf.Max(hint.height, zoom.height) * .5f,
+                    DifferenceHintHand.BottomExtent * Mathf.Abs(layout.hint.localScale.y));
+                var topSlack = headerBottom - gap - p.yMax;
+                var bottomSlack = hint.center.y - footerReserve - (area.yMin + adHeight + padding.y);
+                if (Mathf.Abs(topSlack - bottomSlack) > .1f)
+                    throw new Exception(screen + ": 包含提示手势的内容组没有在 Header 与底部广告预留之间垂直居中");
+                if (a.width > fullWidth + .1f || bottomSlack < -.1f || a.width < fullWidth - .1f && bottomSlack > .2f)
+                    throw new Exception(screen + ": 图片没有在完整显示及底部预留范围内尽量放大");
+                if (a.width < fullWidth - .1f)
+                {
+                    heightLimited++;
+                    if (headerWidth > f.width + .2f && (back.xMin >= f.xMin - .1f || life.xMax <= f.xMax + .1f))
+                        throw new Exception(screen + ": 高度不足缩图时 Header 仍然跟随图片宽度内缩");
+                }
+                foreach (var dot in ui.progressDots)
+                    if (dot.gameObject.activeSelf && (Bounds(dot.rectTransform).yMax > p.yMax + .1f || Bounds(dot.rectTransform).yMin < p.yMin - .1f))
+                        throw new Exception(screen + ": " + dot.name + " " + Bounds(dot.rectTransform) + " 超出进度区域 " + p);
                 for (var i = 0; i < items.Length; i++)
                     if (anchors[i] != new Vector4(items[i].anchorMin.x,items[i].anchorMin.y,items[i].anchorMax.x,items[i].anchorMax.y))
                         throw new Exception("适配修改了原有锚点");
+                for (var i = 0; i < controls.Length; i++)
+                    if (controls[i].sizeDelta != controlSizes[i] || controls[i].localScale != controlScales[i])
+                        throw new Exception(screen + ": " + controls[i].name + " 的原有尺寸或缩放被布局修改");
                 typeof(UIDifferences).GetMethod("FitProgressRow", Private).Invoke(ui, new object[] { 30 });
-                var row = layout.progress.GetComponent<HorizontalLayoutGroup>();
                 if (ui.progressDots[0].rectTransform.rect.width * 30 + row.spacing * 29 + row.padding.horizontal > p.width + .1f)
                     throw new Exception("30 个进度点超出图片宽度");
-                report.AppendLine($"PASS {screen.x}x{screen.y}, ad={adHeight}: board={a.width:F1}x{a.height:F1}; controls and hand above ad; original anchors; 30 dots fit");
+                report.AppendLine($"PASS {screen.x}x{screen.y}, area={area.width:F1}x{area.height:F1}, ad={adHeight}, inset={inset}: board={a.width:F1}x{a.height:F1}; capped safe header; centered content; ordered gaps; maximum fitting images; unchanged buttons; hand above banner; 30 dots fit");
             }
+            if (heightLimited == 0) throw new Exception("缺少宽屏高度不足时缩图的检查结果");
+            foreach (var width in new[] { 1200f, 2400f })
+            {
+                var size = new Vector2(width, nativeArea.height);
+                var area = new Rect(nativeArea.center - size * .5f, size);
+                layout.headerMaxWidth = float.MaxValue;
+                layout.ApplyLayout(area);
+                var unlimited = items.Select(Bounds).ToArray();
+                layout.headerMaxWidth = 1600;
+                layout.ApplyLayout(area);
+                var fullHeaderWidth = area.width - Mathf.Max(0, layout.edgePadding.x) * 2;
+                var shift = Mathf.Max(0, fullHeaderWidth - 1600) * .5f;
+                for (var i = 0; i < items.Length; i++)
+                {
+                    var actual = Bounds(items[i]);
+                    var expectedCenter = unlimited[i].center;
+                    if (i == 4) expectedCenter.x += shift;
+                    if (i == 5) expectedCenter.x -= shift;
+                    var sizeChanged = Vector2.Distance(actual.size, unlimited[i].size) > .1f;
+                    if (i == 8 && shift > 0)
+                        sizeChanged = Mathf.Abs(actual.height - unlimited[i].height) > .1f || actual.width > unlimited[i].width + .1f;
+                    if (Vector2.Distance(actual.center, expectedCenter) > .1f || sizeChanged)
+                        throw new Exception(width + ": Header 限宽改变了手机布局、内容位置/尺寸或 Header 高度");
+                }
+                report.AppendLine($"PASS headerMaxWidth 1600 vs unlimited at area width {width:F0}: phone unchanged; tablet only narrows Back/Life X and optional title width; content and header Y unchanged.");
+            }
+            layout.headerMaxWidth = 1600;
             File.WriteAllText("Temp/responsive-play-layout-check.txt", report.ToString());
             Debug.Log(report.ToString());
         }
@@ -198,6 +301,187 @@ public static class DifferenceUiSmokeCheck
             Debug.LogException(error);
         }
         finally { PrefabUtility.UnloadPrefabContents(root); }
+    }
+
+    [MenuItem("Tools/Find Differences/Check Play Layout Offsets Only")]
+    public static void CheckPlayLayoutOffsetsOnly()
+    {
+        const string report = "Temp/FindDifferences-play-layout-offsets.txt";
+        var root = PrefabUtility.LoadPrefabContents("Assets/Bundles/UI/UIDifferences/UIDifferences.prefab");
+        try
+        {
+            var layout = root.GetComponent<UIDifferences>().play.GetComponent<DifferencePlayLayout>();
+            var names = new[] { "upper", "lower", "frame", "progress", "back", "life", "hint", "zoom", "level" };
+            var items = names.Select(name => (RectTransform)typeof(DifferencePlayLayout).GetField(name).GetValue(layout)).ToArray();
+            var fields = names.Select(name => typeof(DifferencePlayLayout).GetField(name + "Offset")).ToArray();
+            var offsets = names.Select((_, i) => new Vector2((i + 1) * 7, -(i + 1) * 11) * (i % 2 == 0 ? 1 : -1)).ToArray();
+            var rect = (RectTransform)root.transform;
+            rect.anchorMin = rect.anchorMax = rect.pivot = Vector2.one * .5f;
+            rect.sizeDelta = new Vector2(1179, 2556);
+            rect.ForceUpdateRectTransforms();
+            foreach (var screen in new[] { new Vector2(1179, 2556), new Vector2(1440, 2960), new Vector2(1536, 2048), new Vector2(2048, 1536) })
+            {
+                foreach (var field in fields) field.SetValue(layout, Vector2.zero);
+                var page = ((RectTransform)layout.transform).rect;
+                var size = new Vector2(page.height * screen.x / screen.y, page.height);
+                var area = new Rect(page.center - size * .5f, size);
+                layout.ApplyLayout(area);
+                var positions = items.Select(item => item.localPosition).ToArray();
+                var sizes = items.Select(item => item.rect.size).ToArray();
+                var scales = items.Select(item => item.localScale).ToArray();
+                var anchors = items.Select(item => new Vector4(item.anchorMin.x, item.anchorMin.y, item.anchorMax.x, item.anchorMax.y)).ToArray();
+                var pivots = items.Select(item => item.pivot).ToArray();
+                for (var i = 0; i < fields.Length; i++) fields[i].SetValue(layout, new Vector2(offsets[i].x, 0));
+                for (var pass = 0; pass < 3; pass++)
+                {
+                    layout.ApplyLayout(area);
+                    for (var i = 0; i < items.Length; i++)
+                    {
+                        var expected = positions[i] + new Vector3(offsets[i].x, 0, 0);
+                        var expectedSize = sizes[i];
+                        if (i == 8)
+                        {
+                            var headerWidth = Mathf.Min(area.width - Mathf.Max(0, layout.edgePadding.x) * 2, Mathf.Max(1, layout.headerMaxWidth));
+                            var reserve = Mathf.Max(layout.back.rect.width * Mathf.Abs(layout.back.localScale.x) + layout.backOffset.x - layout.levelOffset.x,
+                                layout.life.rect.width * Mathf.Abs(layout.life.localScale.x) - layout.lifeOffset.x + layout.levelOffset.x);
+                            expectedSize.x = Mathf.Max(1, headerWidth - 2 * (reserve + Mathf.Max(0, layout.sectionGap))) /
+                                Mathf.Max(.001f, Mathf.Abs(layout.level.localScale.x));
+                        }
+                        if (Vector3.Distance(items[i].localPosition, expected) > .01f || Vector2.Distance(items[i].rect.size, expectedSize) > .01f ||
+                            new Vector4(items[i].anchorMin.x, items[i].anchorMin.y, items[i].anchorMax.x, items[i].anchorMax.y) != anchors[i] || items[i].pivot != pivots[i])
+                            throw new Exception(screen + ": " + names[i] + " offset changed size/anchors or accumulated across layout passes.");
+                    }
+                }
+                for (var i = 0; i < fields.Length; i++) fields[i].SetValue(layout, offsets[i]);
+                layout.ApplyLayout(area);
+                var shiftedPositions = items.Select(item => item.localPosition).ToArray();
+                var shiftedSizes = items.Select(item => item.rect.size).ToArray();
+                Rect Bounds(RectTransform item)
+                {
+                    var min = (Vector2)layout.transform.InverseTransformPoint(item.TransformPoint(item.rect.min));
+                    var max = (Vector2)layout.transform.InverseTransformPoint(item.TransformPoint(item.rect.max));
+                    return Rect.MinMaxRect(min.x, min.y, max.x, max.y);
+                }
+                var progress = Bounds(layout.progress); var frame = Bounds(layout.frame);
+                var back = Bounds(layout.back); var life = Bounds(layout.life); var level = Bounds(layout.level);
+                var hint = Bounds(layout.hint); var zoom = Bounds(layout.zoom);
+                var gap = Mathf.Max(0, layout.sectionGap);
+                if (Mathf.Min(back.yMin, Mathf.Min(life.yMin, level.yMin)) - progress.yMax < gap - .1f ||
+                    progress.yMin - frame.yMax < gap - .1f || frame.yMin - Mathf.Max(hint.yMax, zoom.yMax) < gap - .1f)
+                    throw new Exception(screen + ": vertical offsets did not reserve the actual header/progress/frame/footer gaps.");
+                var bottom = area.yMin + Mathf.Max(0, layout.bottomAdHeight) + Mathf.Max(0, layout.edgePadding.y);
+                if (Mathf.Min(Mathf.Min(hint.yMin, zoom.yMin), hint.center.y - DifferenceHintHand.BottomExtent * Mathf.Abs(layout.hint.localScale.y)) < bottom - .1f)
+                    throw new Exception(screen + ": vertical offsets moved buttons or the hint hand into the bottom reservation.");
+                for (var pass = 0; pass < 3; pass++)
+                {
+                    layout.ApplyLayout(area);
+                    for (var i = 0; i < items.Length; i++)
+                        if (Vector3.Distance(items[i].localPosition, shiftedPositions[i]) > .01f || Vector2.Distance(items[i].rect.size, shiftedSizes[i]) > .01f ||
+                            items[i].localScale != scales[i] || items[i].pivot != pivots[i] ||
+                            new Vector4(items[i].anchorMin.x, items[i].anchorMin.y, items[i].anchorMax.x, items[i].anchorMax.y) != anchors[i] ||
+                            i >= 4 && i < 8 && Vector2.Distance(items[i].rect.size, sizes[i]) > .01f)
+                            throw new Exception(screen + ": " + names[i] + " vertical offset did not settle after reserving its space.");
+                }
+                foreach (var field in fields) field.SetValue(layout, Vector2.zero);
+                layout.ApplyLayout(area);
+                for (var i = 0; i < items.Length; i++)
+                    if (Vector3.Distance(items[i].localPosition, positions[i]) > .01f || Vector2.Distance(items[i].rect.size, sizes[i]) > .01f)
+                        throw new Exception(screen + ": clearing " + names[i] + " offset did not restore automatic layout.");
+                foreach (var buttonIndex in new[] { 6, 7 })
+                {
+                    var baselineGap = Bounds(layout.frame).yMin - Bounds(items[buttonIndex]).yMax;
+                    foreach (var drop in new[] { 40f, 100f })
+                    {
+                        foreach (var field in fields) field.SetValue(layout, Vector2.zero);
+                        fields[buttonIndex].SetValue(layout, new Vector2(0, -drop));
+                        layout.ApplyLayout(area);
+                        var actualGap = Bounds(layout.frame).yMin - Bounds(items[buttonIndex]).yMax;
+                        if (Mathf.Abs(actualGap - baselineGap - drop) > .1f)
+                            throw new Exception(screen + ": " + names[buttonIndex] + " Y=-" + drop + " did not increase the frame-to-button gap by " + drop + ".");
+                        var droppedHint = Bounds(layout.hint); var droppedZoom = Bounds(layout.zoom);
+                        if (Mathf.Min(Mathf.Min(droppedHint.yMin, droppedZoom.yMin),
+                            droppedHint.center.y - DifferenceHintHand.BottomExtent * Mathf.Abs(layout.hint.localScale.y)) < bottom - .1f)
+                            throw new Exception(screen + ": " + names[buttonIndex] + " Y=-" + drop + " moved a button or the hint hand into the bottom reservation.");
+                        var droppedPositions = items.Select(item => item.localPosition).ToArray();
+                        var droppedSizes = items.Select(item => item.rect.size).ToArray();
+                        for (var pass = 0; pass < 3; pass++)
+                        {
+                            layout.ApplyLayout(area);
+                            for (var i = 0; i < items.Length; i++)
+                                if (Vector3.Distance(items[i].localPosition, droppedPositions[i]) > .01f || Vector2.Distance(items[i].rect.size, droppedSizes[i]) > .01f)
+                                    throw new Exception(screen + ": " + names[buttonIndex] + " Y=-" + drop + " accumulated across layout passes.");
+                        }
+                        foreach (var field in fields) field.SetValue(layout, Vector2.zero);
+                        layout.ApplyLayout(area);
+                        for (var i = 0; i < items.Length; i++)
+                            if (Vector3.Distance(items[i].localPosition, positions[i]) > .01f || Vector2.Distance(items[i].rect.size, sizes[i]) > .01f)
+                                throw new Exception(screen + ": clearing " + names[buttonIndex] + " Y=-" + drop + " did not restore " + names[i] + ".");
+                    }
+                }
+            }
+            layout.level = null; layout.ApplyLayout(((RectTransform)layout.transform).rect);
+            File.WriteAllText(report, "PASS: nine independent offsets at four screen ratios; horizontal offsets preserve size while title width adapts to header reserves at a stable height; vertical offsets reserve section gaps, banner and hand space without accumulation; Hint/Zoom Y=-40/-100 increase their frame gaps by 40/100 and keep buttons/hand above the banner; button sizes/scales, anchors and pivots preserved; zero restores automatic positions and sizes; optional Level is safe.");
+        }
+        catch (Exception error) { File.WriteAllText(report, "FAIL: " + error); Debug.LogException(error); }
+        finally { PrefabUtility.UnloadPrefabContents(root); }
+    }
+
+    [MenuItem("Tools/Find Differences/Check Level Title Layout Only")]
+    public static void CheckLevelTitleLayoutOnly()
+    {
+        const string report = "Temp/FindDifferences-level-title-layout.txt";
+        var root = PrefabUtility.LoadPrefabContents("Assets/Bundles/UI/UIDifferences/UIDifferences.prefab");
+        try
+        {
+            var ui = root.GetComponent<UIDifferences>();
+            ui.play.SetActive(true);
+            var layout = ui.play.GetComponent<DifferencePlayLayout>();
+            var title = layout.level;
+            var fontSize = title.GetComponent<Text>().fontSize;
+            var center = ((RectTransform)layout.transform).rect.center;
+            var normal = new Rect(center - new Vector2(1179, 2556) * .5f, new Vector2(1179, 2556));
+            var narrow = new Rect(center - new Vector2(500, 2556) * .5f, new Vector2(500, 2556));
+            title.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 0);
+            title.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 0);
+            layout.ApplyLayout(normal);
+            CheckSingleLineLevelTitle(title, fontSize);
+            var expected = title.rect.size;
+            layout.ApplyLayout(narrow);
+            if (title.rect.width <= 0 || title.rect.width >= expected.x - .1f)
+                throw new Exception("窄区域没有为 Level 标题生成独立的有效宽度");
+            layout.ApplyLayout(normal);
+            if (Vector2.Distance(title.rect.size, expected) > .1f)
+                throw new Exception("Level 标题宽度依赖上一帧窄区域尺寸");
+            var validate = typeof(DifferencePlayLayout).GetMethod("OnValidate", Private);
+            for (var pass = 0; pass < 3; pass++)
+            {
+                validate.Invoke(layout, null);
+                layout.ApplyLayout(normal);
+                layout.ApplyLayout(normal);
+                if (Vector2.Distance(title.rect.size, expected) > .1f)
+                    throw new Exception("Level 标题尺寸在 OnValidate 或重复布局后改变");
+                CheckSingleLineLevelTitle(title, fontSize);
+            }
+            File.WriteAllText(report, "PASS: zero-sized Level recovers a valid one-line rect; narrow-to-normal and OnValidate/repeated layout restore independent dimensions; Level 1 stays one line at the authored font size. Text, prefab and player settings unchanged.");
+        }
+        catch (Exception error) { File.WriteAllText(report, "FAIL: " + error); Debug.LogException(error); }
+        finally { PrefabUtility.UnloadPrefabContents(root); }
+    }
+
+    static void CheckSingleLineLevelTitle(RectTransform level, int fontSize)
+    {
+        var text = level.GetComponent<Text>();
+        var original = text.text;
+        try
+        {
+            text.text = "Level 1";
+            if (level.rect.width <= 1 || level.rect.height <= 1 || text.fontSize != fontSize || text.preferredHeight > level.rect.height + .1f)
+                throw new Exception("Level 标题尺寸不足以容纳原字号单行文本");
+            using (var generator = new TextGenerator())
+                if (!generator.Populate(text.text, text.GetGenerationSettings(level.rect.size)) || generator.lineCount != 1)
+                    throw new Exception("Level 1 标题仍然换行");
+        }
+        finally { text.text = original; }
     }
 
     [MenuItem("Tools/Find Differences/Check Settings Actions Only")]
@@ -340,7 +624,7 @@ public static class DifferenceUiSmokeCheck
     public static void CheckAudioOnly()
     {
         var ui = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Bundles/UI/UIDifferences/UIDifferences.prefab").GetComponent<UIDifferences>();
-        foreach (var binding in new[] { "buttonSound|Click_Btn.wav", "failSound|False.wav", "foundSound|Found.wav", "missSound|Miss.wav", "winSound|Win.wav", "coinCreateSound|CoinCreate.WAV", "tipsSound|Tips.WAV", "homeMusic|MusicHome.wav", "gameMusic|MusicGame.wav" })
+        foreach (var binding in new[] { "buttonSound|Click_Btn.wav", "failSound|False.wav", "foundSound|Found.wav", "missSound|Miss.wav", "winSound|Win.wav", "coinCreateSound|CoinCreate.WAV", "progressCompleteSound|Successtips.wav", "tipsSound|Tips.WAV", "homeMusic|MusicHome.wav", "gameMusic|MusicGame.wav" })
         {
             var pair = binding.Split('|');
             var clip = (AudioClip)typeof(UIDifferences).GetField(pair[0]).GetValue(ui);
@@ -387,16 +671,19 @@ public static class DifferenceUiSmokeCheck
         var wasActive = false;
         var wasResult = false;
         var wasWon = false;
+        var wasAdPending = false;
         var background = Application.runInBackground;
         try
         {
             Application.runInBackground = true;
             ui = UnityEngine.Object.FindObjectOfType<UIDifferences>();
             if (!Application.isPlaying || !ui) throw new Exception("请先运行游戏");
+            if (ui.AdInputBlocked) throw new Exception("Wait for the active ad to finish before checking reward coins.");
             page = (GameObject)typeof(UIDifferences).GetField("victoryDesign", Private).GetValue(ui);
             wasActive = page.activeSelf;
             wasResult = (bool)Field(ui, "figmaResultActive");
             wasWon = (bool)Field(ui, "figmaResultWon");
+            wasAdPending = (bool)Field(ui, "adTransitionPending");
             typeof(UIDifferences).GetMethod("CancelRemoteLoad", Private).Invoke(ui, null);
             typeof(UIDifferences).GetField("figmaResultActive", Private).SetValue(ui, true);
             typeof(UIDifferences).GetField("figmaResultWon", Private).SetValue(ui, true);
@@ -421,10 +708,16 @@ public static class DifferenceUiSmokeCheck
             var atEnd = DifferenceRewardCoin.Position(source, target, 100, 5, 0, out flight);
             if (atStart != source || Vector3.Distance(atEnd, target) > .001f || flight != 1)
                 throw new Exception("金币轨迹起点或终点不正确");
+            typeof(UIDifferences).GetField("adTransitionPending", Private).SetValue(ui, true);
             start.Invoke(ui, new object[] { 10 });
             if (summary.gameObject.activeSelf || summaryGroup.alpha != 0 || summaryLabel.text != "x10")
                 throw new Exception("奖励展示应先隐藏并使用本次奖励金额");
             if (!wallet.gameObject.activeSelf || label.text != (balance - 10).ToString()) throw new Exception("奖励起始数字不正确");
+            await RewardFrames(DifferenceRewardCoin.EndTime(10) + .3f);
+            if (!wallet.gameObject.activeInHierarchy || label.text != (balance - 10).ToString() || summary.gameObject.activeSelf ||
+                page.GetComponentsInChildren<DifferenceRewardCoin>().Length != 0 || ui.Coins != balance)
+                throw new Exception("A fullscreen ad consumed the reward animation, hid the collection wallet or changed the balance.");
+            typeof(UIDifferences).GetField("adTransitionPending", Private).SetValue(ui, false);
             await RewardFrames(.45f);
             if (summary.gameObject.activeSelf) throw new Exception("金币飞行结束前不能显示奖励展示");
             var sample = page.GetComponentInChildren<DifferenceRewardCoin>();
@@ -456,7 +749,7 @@ public static class DifferenceUiSmokeCheck
             await Wait(() => Field(ui, "rewardRoutine") == null, "zero reward summary completes");
             if (summaryLabel.text != "x0" || !summary.gameObject.activeSelf || ui.Coins != balance)
                 throw new Exception("零奖励应显示 x0 且不重复发奖");
-            File.WriteAllText("Temp/reward-coins-check.txt", "PASS: coin flights, delayed summary fade, actual reward, zero reward, cancellation; balance unchanged");
+            File.WriteAllText("Temp/reward-coins-check.txt", "PASS: fullscreen ad preserves the visible collection wallet and defers coin flights/counting; unlock resumes coin flights and delayed summary fade, actual reward, zero reward and cancellation; balance unchanged");
             Debug.Log("PASS: reward coin motion and lifecycle");
         }
         catch (Exception error)
@@ -467,9 +760,10 @@ public static class DifferenceUiSmokeCheck
         finally
         {
             Application.runInBackground = background;
-            if (ui) typeof(UIDifferences).GetMethod("CancelRewardCoins", Private).Invoke(ui, null);
-            if (ui)
+            if (ui && page) typeof(UIDifferences).GetMethod("CancelRewardCoins", Private).Invoke(ui, null);
+            if (ui && page)
             {
+                typeof(UIDifferences).GetField("adTransitionPending", Private).SetValue(ui, wasAdPending);
                 typeof(UIDifferences).GetField("figmaResultActive", Private).SetValue(ui, wasResult);
                 typeof(UIDifferences).GetField("figmaResultWon", Private).SetValue(ui, wasWon);
                 typeof(UIDifferences).GetMethod("UpdateFigmaDesign", Private).Invoke(ui, new object[] { Field(ui, "currentPage") });
@@ -525,6 +819,7 @@ public static class DifferenceUiSmokeCheck
         try
         {
             var ui = root.GetComponent<UIDifferences>();
+            ui.upperImage.transform.parent.localScale = Vector3.one; // This fixture checks local units; the alignment check covers authored viewport scaling.
             typeof(UIDifferences).GetField("useSpineFoundRing", Private).SetValue(ui, false);
             var marker = ui.topRings[0];
             marker.gameObject.SetActive(true);
@@ -536,6 +831,8 @@ public static class DifferenceUiSmokeCheck
                 throw new Exception("固定线宽圈必须显示，Spine 仅隐藏且资源与粒子保留");
             var draw = typeof(DifferenceFoundRing).GetMethod("OnPopulateMesh", Private | BindingFlags.DeclaredOnly);
             var advance = typeof(DifferenceFoundRing).GetMethod("Advance", Private);
+            ring.style = new DifferenceFoundRing.Style();
+            ring.style.minDiameter = 1; ring.style.maxDiameter = 10000;
             foreach (var size in new[] { 46f, 180f })
             {
                 marker.rectTransform.sizeDelta = Vector2.one * size;
@@ -564,7 +861,7 @@ public static class DifferenceUiSmokeCheck
                 if ((float)typeof(DifferenceFoundRing).GetField("elapsed", Private).GetValue(ring) != ring.style.animationDuration) throw new Exception("恢复进度必须直接显示最终圆环");
             }
             ring.style = new DifferenceFoundRing.Style {
-                sizeMultiplier = 1.5f, radiusOffset = 3, lineWidth = 10, opacity = .5f,
+                sizeMultiplier = 1.5f, radiusOffset = 3, minDiameter = 1, maxDiameter = 10000, lineWidth = 10, opacity = .5f,
                 glowIntensity = .6f, glowWidth = 12, glowColor = Color.magenta,
                 highlightIntensity = 0, animationDuration = 0, segments = 64
             };
@@ -602,8 +899,46 @@ public static class DifferenceUiSmokeCheck
                 }
                 if (Mathf.Abs(min - .5f) > .001f) throw new Exception("过粗线宽必须保留透明圆心");
             }
+            ring.style = new DifferenceFoundRing.Style { animationDuration = 0 };
+            void CheckRadius(float expected)
+            {
+                using (var mesh = new VertexHelper())
+                {
+                    draw.Invoke(ring, new object[] { mesh });
+                    var vertex = new UIVertex(); var maximum = 0f;
+                    for (var i = 0; i < mesh.currentVertCount; i++)
+                    {
+                        mesh.PopulateUIVertex(ref vertex, i);
+                        maximum = Mathf.Max(maximum, Vector2.Distance(vertex.position, ring.rectTransform.rect.center));
+                    }
+                    if (mesh.currentVertCount == 0 || Mathf.Abs(ring.Radius - expected) > .001f || Mathf.Abs(maximum - expected) > .001f)
+                        throw new Exception("圆环最终半径不符合直径范围：" + expected);
+                }
+            }
+            foreach (var size in new[] { 20f, 160f, 600f })
+            {
+                marker.rectTransform.sizeDelta = Vector2.one * size;
+                ring.rectTransform.ForceUpdateRectTransforms(); ring.Play(false);
+                CheckRadius(Mathf.Clamp(size, 100, 220) * .5f);
+            }
+            marker.rectTransform.sizeDelta = Vector2.one * 160;
+            ring.rectTransform.ForceUpdateRectTransforms();
+            ring.style.sizeMultiplier = .25f; ring.style.radiusOffset = -20; CheckRadius(50);
+            ring.style.sizeMultiplier = 4; ring.style.radiusOffset = 10; CheckRadius(110);
+            ring.style.sizeMultiplier = 1; ring.style.radiusOffset = -10; CheckRadius(70);
+            ring.style.minDiameter = 180; ring.style.maxDiameter = 40; CheckRadius(90);
+            ring.style.minDiameter = -1; ring.style.maxDiameter = -20;
+            if (ring.Radius != .5f || ring.InnerRadius != 0)
+                throw new Exception("无效直径范围必须保留有限的最小半径");
+            ring.style = new DifferenceFoundRing.Style();
+            marker.rectTransform.sizeDelta = Vector2.one * 600;
+            ring.rectTransform.ForceUpdateRectTransforms(); ring.Play(true);
+            if (Mathf.Abs(ring.Radius - 88) > .001f) throw new Exception("直径上限必须在出现动画之前生效");
+            advance.Invoke(ring, new object[] { .18f });
+            if (ring.Radius <= 110) throw new Exception("直径上限不能取消出现动画的回弹");
+            advance.Invoke(ring, new object[] { .22f }); CheckRadius(110);
             CaptureFoundRingPreview();
-            File.WriteAllText("Temp/FindDifferences-found-ring.txt", "PASS: Spine retained; fixed width during animation; configurable size, radius offset, width, colors, opacity, glow and zero duration; oversized width retains clear center.");
+            File.WriteAllText("Temp/FindDifferences-found-ring.txt", "PASS: Spine retained; fixed width during animation; configurable size, radius offset, width, colors, opacity, glow and zero duration; oversized width retains clear center; final diameter limits, multiplier/offset clamping, invalid ranges and animated overshoot.");
             Debug.Log("PASS: fixed-width animated found ring");
         }
         catch (Exception error) { File.WriteAllText("Temp/FindDifferences-found-ring.txt", "FAIL: " + error); Debug.LogException(error); }
@@ -651,6 +986,103 @@ public static class DifferenceUiSmokeCheck
         }
     }
 
+    [MenuItem("Tools/Find Differences/Check Found Flash Mask Only")]
+    public static void CheckFoundFlashMaskOnly()
+    {
+        const string report = "Temp/FindDifferences-found-flash-mask.txt";
+        var preview = new GameObject("Flash mask preview", typeof(RectTransform), typeof(Canvas));
+        var cameraNode = new GameObject("Flash mask preview camera", typeof(Camera));
+        var target = new RenderTexture(512, 512, 24);
+        var pixels = new Texture2D(512, 512, TextureFormat.RGB24, false);
+        var previous = RenderTexture.active;
+        try
+        {
+            preview.transform.position = new Vector3(10000, 10000, 0);
+            var canvas = preview.GetComponent<Canvas>(); canvas.renderMode = RenderMode.WorldSpace;
+            ((RectTransform)preview.transform).sizeDelta = Vector2.one * 512;
+            RectTransform Rect(Transform parent, string name, Vector2 size, Vector2 position)
+            {
+                var rect = (RectTransform)new GameObject(name, typeof(RectTransform)).transform;
+                rect.SetParent(parent, false); rect.sizeDelta = size; rect.anchoredPosition = position;
+                return rect;
+            }
+            var board = Rect(preview.transform, "Board", Vector2.one * 420, Vector2.zero);
+            var background = board.gameObject.AddComponent<UnityEngine.UI.Image>();
+            background.color = Color.blue; background.raycastTarget = false;
+            var marker = Rect(board, "Marker", Vector2.one * 160, new Vector2(11, 17));
+            var markerImage = marker.gameObject.AddComponent<UnityEngine.UI.Image>(); markerImage.enabled = false;
+            var ringRect = Rect(marker, "Outline", marker.sizeDelta, Vector2.zero);
+            var ring = ringRect.gameObject.AddComponent<DifferenceFoundRing>();
+            ring.style = new DifferenceFoundRing.Style {
+                minDiameter = 1, maxDiameter = 10000, lineWidth = 12, animationDuration = 1,
+                initialSize = .6f, overshoot = 0, opacity = 0, segments = 64
+            };
+            ring.raycastTarget = false;
+            var patch = Rect(board, "Flash", new Vector2(100, 140), new Vector2(-13, 9));
+            patch.gameObject.AddComponent<UnityEngine.UI.RectMask2D>();
+            var picture = Rect(patch, "Picture", board.sizeDelta, -patch.anchoredPosition);
+            var flash = picture.gameObject.AddComponent<UnityEngine.UI.Image>();
+            flash.color = Color.red; flash.raycastTarget = false;
+            typeof(UIDifferences).GetMethod("MaskPatchFlash", BindingFlags.Static | BindingFlags.NonPublic)
+                .Invoke(null, new object[] { flash, markerImage });
+            var mask = patch.GetComponent<DifferenceFoundMask>();
+            var stencil = patch.GetComponent<UnityEngine.UI.Mask>();
+            if (!mask || mask.ring != ring || !stencil || stencil.showMaskGraphic || mask.raycastTarget || !flash.maskable)
+                throw new Exception("闪烁图必须绑定原生圆形遮罩并保留图片裁剪与点击穿透");
+            var camera = cameraNode.GetComponent<Camera>(); camera.enabled = false;
+            camera.transform.position = preview.transform.position + new Vector3(0, 0, -10);
+            camera.orthographic = true; camera.orthographicSize = 180;
+            camera.clearFlags = CameraClearFlags.SolidColor; camera.backgroundColor = Color.blue;
+            camera.targetTexture = target; canvas.worldCamera = camera;
+            var advance = typeof(DifferenceFoundRing).GetMethod("Advance", Private);
+            var draw = typeof(DifferenceFoundMask).GetMethod("OnPopulateMesh", Private | BindingFlags.DeclaredOnly);
+            Color Sample(Vector2 point)
+            {
+                var viewport = camera.WorldToViewportPoint(ringRect.TransformPoint(ringRect.rect.center + point));
+                return pixels.GetPixel(Mathf.Clamp((int)(viewport.x * pixels.width), 0, pixels.width - 1),
+                    Mathf.Clamp((int)(viewport.y * pixels.height), 0, pixels.height - 1));
+            }
+            foreach (var zoom in new[] { 1f, 2f })
+            foreach (var phase in new[] { 0f, .4f })
+            {
+                board.localScale = Vector3.one * zoom;
+                ring.Play(true); advance.Invoke(ring, new object[] { phase }); mask.SetVerticesDirty();
+                using (var mesh = new VertexHelper())
+                {
+                    draw.Invoke(mask, new object[] { mesh });
+                    var vertex = new UIVertex(); var maximum = 0f;
+                    for (var i = 0; i < mesh.currentVertCount; i++)
+                    {
+                        mesh.PopulateUIVertex(ref vertex, i);
+                        var local = (Vector2)ringRect.InverseTransformPoint(patch.TransformPoint(vertex.position)) - ringRect.rect.center;
+                        maximum = Mathf.Max(maximum, local.magnitude);
+                        if (local.magnitude > ring.InnerRadius + .001f || (i == 0 && local.sqrMagnitude > .000001f))
+                            throw new Exception("圆形遮罩未跟随圆圈中心、缩放或动画半径");
+                    }
+                    if (mesh.currentVertCount < 3 || Mathf.Abs(maximum - ring.InnerRadius) > .001f)
+                        throw new Exception("圆形遮罩没有覆盖圆圈内径");
+                }
+                Canvas.ForceUpdateCanvases(); camera.Render(); RenderTexture.active = target;
+                pixels.ReadPixels(new Rect(0, 0, 512, 512), 0, 0); pixels.Apply();
+                var center = Sample(Vector2.zero);
+                var corner = Sample(Vector2.one * (-.8f * ring.InnerRadius));
+                var outsideRectangle = Sample(Vector2.right * (.9f * ring.InnerRadius));
+                if (center.r < .8f || center.b > .2f || corner.b < .8f || corner.r > .2f ||
+                    outsideRectangle.b < .8f || outsideRectangle.r > .2f)
+                    throw new Exception($"zoom={zoom}, phase={phase}: 圆内应显示红色闪图，圆外及矩形裁剪外必须保留蓝色底图");
+            }
+            File.WriteAllBytes("Temp/FindDifferences-found-flash-mask.png", pixels.EncodeToPNG());
+            File.WriteAllText(report, "PASS: native circular stencil and existing RectMask2D; red center and blue corners; translated patch, shared animated inner radius, zoom 1/2 and two animation phases; mask vertices remain inside the circle.");
+        }
+        catch (Exception error) { File.WriteAllText(report, "FAIL: " + error); Debug.LogException(error); }
+        finally
+        {
+            RenderTexture.active = previous;
+            UnityEngine.Object.DestroyImmediate(cameraNode); UnityEngine.Object.DestroyImmediate(preview);
+            UnityEngine.Object.DestroyImmediate(target); UnityEngine.Object.DestroyImmediate(pixels);
+        }
+    }
+
     [MenuItem("Tools/Find Differences/Check Miss Animation Only")]
     public static void CheckMissAnimationOnly()
     {
@@ -677,6 +1109,40 @@ public static class DifferenceUiSmokeCheck
         finally { PrefabUtility.UnloadPrefabContents(root); }
     }
 
+    [MenuItem("Tools/Find Differences/Fix Life Spine Alpha")]
+    public static void FixLifeSpineAlpha()
+    {
+        if (EditorApplication.isPlaying) throw new Exception("请先退出 Play 模式");
+        const string path = "Assets/Bundles/UI/UIDifferences/UIDifferences.prefab";
+        const string spine = "Assets/Bundles/UI/UIDifferences/Spine/LoveDecode/xin";
+        var data = AssetDatabase.LoadAssetAtPath<Spine.Unity.SkeletonDataAsset>(spine + "_SkeletonData.asset");
+        var material = AssetDatabase.LoadAssetAtPath<Material>("Packages/com.esotericsoftware.spine.spine-unity/Runtime/spine-unity/Materials/UI-StraightAlphaTex/SkeletonGraphicDefault-Straight.mat");
+        var atlasMaterial = AssetDatabase.LoadAssetAtPath<Material>(spine + "_Material.mat");
+        if (!data || !material || !atlasMaterial) throw new Exception("缺少生命值 Spine 资源或 Straight Alpha 材质");
+        var stage = UnityEditor.SceneManagement.PrefabStageUtility.GetCurrentPrefabStage();
+        var editing = stage != null && stage.assetPath == path;
+        var root = editing ? stage.prefabContentsRoot : PrefabUtility.LoadPrefabContents(path);
+        try
+        {
+            var graphics = root.GetComponentsInChildren<Spine.Unity.SkeletonGraphic>(true).Where(graphic => graphic.skeletonDataAsset == data).ToArray();
+            if (graphics.Length != 3) throw new Exception("应有一个生命值和两个错误点击 Spine");
+            foreach (var graphic in graphics)
+            {
+                if (editing) Undo.RecordObject(graphic, "Fix Spine straight alpha");
+                graphic.material = material;
+                EditorUtility.SetDirty(graphic);
+            }
+            PrefabUtility.SaveAsPrefabAsset(root, path);
+            Undo.RecordObject(atlasMaterial, "Fix Spine atlas straight alpha");
+            atlasMaterial.SetFloat("_StraightAlphaInput", 1);
+            atlasMaterial.EnableKeyword("_STRAIGHT_ALPHA_INPUT");
+            EditorUtility.SetDirty(atlasMaterial);
+            AssetDatabase.SaveAssetIfDirty(atlasMaterial);
+            Debug.Log("PASS: 生命值和两个错误点击 Spine 使用 Straight Alpha，图集预览材质同步修正");
+        }
+        finally { if (!editing) PrefabUtility.UnloadPrefabContents(root); }
+    }
+
     [MenuItem("Tools/Find Differences/Check Life Animation Only")]
     public static void CheckLifeAnimationOnly()
     {
@@ -699,8 +1165,9 @@ public static class DifferenceUiSmokeCheck
                 if (entry.Animation.Name != "xin2" || entry.Loop || entry.Next?.Animation.Name != "xin")
                     throw new Exception("扣血应播放一次 xin2，随后回到 xin");
             }
-            heart.AnimationState.Update(heart.AnimationState.GetCurrent(0).Animation.Duration + .01f);
-            heart.AnimationState.Update(.01f);
+            heart.Update(0);
+            heart.Update(heart.AnimationState.GetCurrent(0).Animation.Duration + .01f);
+            heart.Update(.01f);
             if (heart.AnimationState.GetCurrent(0).Animation.Name != "xin") throw new Exception("扣血结束未回到 xin");
             method.Invoke(ui, new object[] { true });
             method.Invoke(ui, new object[] { false });
@@ -720,6 +1187,14 @@ public static class DifferenceUiSmokeCheck
         File.WriteAllText(Path.Combine(Folder, "report.txt"), "RUNNING: waiting for Launcher\n");
         EditorWindow.GetWindow(typeof(EditorWindow).Assembly.GetType("UnityEditor.GameView")).Focus();
         if (!EditorApplication.isPlaying) EditorApplication.isPlaying = true;
+    }
+
+    [MenuItem("Tools/Find Differences/Check Spine Progress Play Only")]
+    public static void CheckSpineProgressPlayOnly()
+    {
+        if (running) return;
+        SessionState.SetBool(Pending + ".SpineProgressPlay", true);
+        Start();
     }
 
     [MenuItem("Tools/Find Differences/Check Loading Motion Only")]
@@ -789,6 +1264,187 @@ public static class DifferenceUiSmokeCheck
             running = false;
             File.AppendAllText(report, "Original loading state restored; save and API configuration untouched.\n");
         }
+    }
+
+    [MenuItem("Tools/Find Differences/Check Spine Progress Only")]
+    public static async void CheckSpineProgressOnly()
+    {
+        const string report = "Temp/FindDifferences-spine-progress.txt";
+        if (!EditorApplication.isPlaying)
+        {
+            File.WriteAllText(report, "FAIL: Enter Play mode before checking the isolated Spine progress prefab.");
+            Debug.LogError("Enter Play mode before checking the isolated Spine progress prefab.");
+            return;
+        }
+        File.WriteAllText(report, "RUNNING: isolated Spine progress state, capacity and victory animation checks.");
+        var root = PrefabUtility.LoadPrefabContents("Assets/Bundles/UI/UIDifferences/UIDifferences.prefab");
+        System.Collections.IEnumerator replay = null;
+        try
+        {
+            var ui = root.GetComponent<UIDifferences>();
+            void Check(bool valid, string message) { if (!valid) throw new InvalidOperationException(message); }
+            object Call(string method, params object[] args) => typeof(UIDifferences).GetMethod(method, Private).Invoke(ui, args);
+            void Static(string method, params object[] args) => typeof(UIDifferences).GetMethod(method, BindingFlags.Static | BindingFlags.NonPublic).Invoke(null, args);
+            void Round(int count, int foundMask = 0)
+            {
+                ui.spots = Enumerable.Range(0, count).Select(i => new Hotfix.Manager.DifferenceSpot((i % 6 + 1) / 7f, (i / 6 + 1) / 7f)).ToArray();
+                typeof(UIDifferences).GetProperty("Round").SetValue(ui, new Hotfix.Manager.DifferenceRound(ui.spots, UIDifferences.ImageAspect, foundMask));
+                Call("ResetProgressDots");
+            }
+            void Advance(float dt)
+            {
+                foreach (var dot in ui.progressDots)
+                    if (dot.gameObject.activeSelf) dot.Update(dt);
+            }
+            var previewCanvas = root.GetComponent<Canvas>();
+            if (!previewCanvas) previewCanvas = root.AddComponent<Canvas>();
+            previewCanvas.renderMode = RenderMode.WorldSpace;
+            var rect = (RectTransform)root.transform;
+            rect.anchorMin = rect.anchorMax = rect.pivot = Vector2.one * .5f;
+            rect.sizeDelta = new Vector2(1179, 2556); rect.ForceUpdateRectTransforms();
+            ui.play.SetActive(true);
+            typeof(UIDifferences).GetField("sound", Private).SetValue(ui, false);
+            typeof(UIDifferences).GetField("useSpineFoundRing", Private).SetValue(ui, false);
+            Check(ui.progressDots.Length == 15 && ui.progressDots.All(dot => dot && dot.skeletonDataAsset), "All fifteen authored Spine progress dots must be bound.");
+            var asset = ui.progressDots[0].skeletonDataAsset;
+            Check(AssetDatabase.GetAssetPath(asset).EndsWith("/Dingdan/dingdan_SkeletonData.asset"), "Progress must use the authored dingdan asset.");
+            var data = asset.GetSkeletonData(false);
+            foreach (var name in new[] { "a1", "a2", "a3", "a4" }) Check(data.FindAnimation(name) != null, "Missing progress animation: " + name);
+            Check(data.FindAnimation("a1").Duration == 0 && data.FindAnimation("a3").Duration == 0 &&
+                Mathf.Abs(data.FindAnimation("a2").Duration - .6667f) < .001f && Mathf.Abs(data.FindAnimation("a4").Duration - .6667f) < .001f,
+                "Progress must retain its authored static poses and full transition durations.");
+            Round(3);
+            for (var i = 0; i < ui.progressDots.Length; i++)
+            {
+                var dot = ui.progressDots[i];
+                Check(dot.UnscaledTime && !dot.raycastTarget && dot.layoutScaleMode == Spine.Unity.SkeletonGraphic.LayoutMode.WidthControlsHeight &&
+                    dot.gameObject.activeSelf == (i < 3) && dot.AnimationState.GetCurrent(0).Animation.Name == "a1",
+                    "New-round progress must be a1, unscaled, non-interactive and responsive: " + i);
+            }
+            var first = ui.progressDots[0];
+            Static("SyncProgressDot", first, true);
+            var entry = first.AnimationState.GetCurrent(0);
+            Check(entry.Animation.Name == "a2" && !entry.Loop && entry.MixDuration == 0 && entry.Next != null &&
+                entry.Next.Animation.Name == "a3" && entry.Next.MixDuration == 0 && Mathf.Abs(entry.Next.Delay - entry.Animation.Duration) < .001f,
+                "A found dot must play all of a2 before entering a3 without mixing.");
+            Static("SyncProgressDot", first, true);
+            Check(ReferenceEquals(entry, first.AnimationState.GetCurrent(0)), "Repeated HUD refresh must not restart a2.");
+            Advance(entry.Animation.Duration - .01f);
+            Check(first.AnimationState.GetCurrent(0).Animation.Name == "a2", "a2 must remain visible until its full duration has elapsed.");
+            Advance(.02f);
+            Check(first.AnimationState.GetCurrent(0).Animation.Name == "a2" && first.AnimationState.GetCurrent(0).IsComplete,
+                "Spine retains the completed transition until the next frame applies its queued animation.");
+            Advance(0);
+            Check(first.AnimationState.GetCurrent(0).Animation.Name == "a3", "a2 must settle on a3.");
+            var settled = first.AnimationState.GetCurrent(0); Static("SyncProgressDot", first, true);
+            Check(ReferenceEquals(settled, first.AnimationState.GetCurrent(0)), "Refreshing a found dot must preserve a3.");
+            Round(3, 2);
+            Check(first.AnimationState.GetCurrent(0).Animation.Name == "a3" && ui.progressDots[1].AnimationState.GetCurrent(0).Animation.Name == "a1" &&
+                first.AnimationState.GetCurrent(0).Next == null, "Restored progress must use Count slots and show a3 directly without replaying a2.");
+            Round(3);
+            Check(ui.progressDots.Take(3).All(dot => dot.AnimationState.GetCurrent(0).Animation.Name == "a1"), "A new round must clear restored progress.");
+            foreach (var count in new[] { 25, 30 })
+            {
+                Call("EnsureSpotCapacity", count); Round(count);
+                var row = (RectTransform)ui.progressDots[0].transform.parent;
+                LayoutRebuilder.ForceRebuildLayoutImmediate(row);
+                var horizontal = row.GetComponent<HorizontalLayoutGroup>();
+                Check(ui.progressDots.Length == count && ui.progressDots.All(dot => dot && dot.skeletonDataAsset == asset && dot.transform.parent == row),
+                    "Dynamic progress capacity must clone the Spine asset and preserve row parenting: " + count);
+                Check(ui.progressDots[0].rectTransform.rect.width * count + horizontal.spacing * (count - 1) + horizontal.padding.horizontal <= row.rect.width + .1f,
+                    "Expanded Spine progress must fit its row: " + count);
+                var dot = ui.progressDots[count - 1]; dot.Update(0); dot.UpdateMesh();
+                var pixelsPerUnit = dot.canvas ? dot.canvas.referencePixelsPerUnit : 100;
+                Check(Mathf.Abs(dot.MeshScale - pixelsPerUnit * dot.rectTransform.rect.width / 68) < .01f,
+                    "Spine mesh must shrink with its RectTransform instead of overflowing expanded progress.");
+            }
+            Round(3, 7);
+            var end = (System.Collections.IEnumerator)Call("EndRound", true, 0);
+            try
+            {
+                Check(end.MoveNext() && end.Current is System.Collections.IEnumerator,
+                    "Winning must start the progress sweep before waiting for the found flight.");
+            }
+            finally { (end as IDisposable)?.Dispose(); }
+            ui.spots[0].x = .5f; ui.spots[1].x = .8f; ui.spots[2].x = .2f;
+            var ringOrder = new[] { 2, 0, 1 };
+            foreach (var marker in ui.topRings.Take(3).Concat(ui.bottomRings.Take(3)))
+            {
+                marker.gameObject.SetActive(true);
+                Call("ShowFoundRing", marker, false);
+            }
+            var ringElapsed = typeof(DifferenceFoundRing).GetField("elapsed", Private);
+            var progress = ui.progressDots[0].transform.parent;
+            var progressParticleCount = progress.GetComponentsInChildren<ParticleSystem>(true).Length;
+            void CheckProgressOnly()
+            {
+                Check(!ui.play.transform.Find("CompletionSweep") && progress.GetComponentsInChildren<ParticleSystem>(true).Length == progressParticleCount,
+                    "The upper progress row must not create a CompletionSweep or extra particles.");
+            }
+            var pending = (bool[])Field(ui, "pendingProgress");
+            pending[0] = pending[2] = true;
+            Static("PlayProgressTransition", first, "a2");
+            Static("PlayProgressAnimation", ui.progressDots[2], "a1");
+            replay = (System.Collections.IEnumerator)Call("ReplayCompletedProgress");
+            for (var i = 0; i < 3; i++)
+            {
+                Check(replay.MoveNext() && replay.Current is WaitForSecondsRealtime wait && Mathf.Abs(wait.waitTime - (i + 1) * .065f) < .001f,
+                    "Victory progress must schedule .065-second starts against one clock, avoiding accumulated frame delays.");
+                for (var j = 0; j < 3; j++)
+                {
+                    Check(ui.progressDots[j].AnimationState.GetCurrent(0).Animation.Name == (j <= i ? "a4" : j == 2 ? "a1" : "a3"),
+                        "Victory animation must start left to right while found flights and a2 are still pending: " + j);
+                    var replayed = Array.IndexOf(ringOrder, j) <= i;
+                    foreach (var marker in new[] { ui.topRings[j], ui.bottomRings[j] })
+                    {
+                        var ring = marker.GetComponentInChildren<DifferenceFoundRing>(true);
+                        Check((float)ringElapsed.GetValue(ring) == (replayed ? 0 : ui.foundRingStyle.animationDuration),
+                            "Both image rings must restart in spot order while later rings remain settled: " + j);
+                        if (replayed && ui.foundRingEffectPrefab)
+                        {
+                            var particles = marker.transform.Find("FoundRingParticles");
+                            Check(particles && particles.gameObject.activeSelf && particles.GetComponentsInChildren<ParticleSystem>(true).Length > 0,
+                                "Replayed image rings must retain their own found-ring particles: " + j);
+                        }
+                    }
+                }
+                var sweep = ui.progressDots[i].AnimationState.GetCurrent(0);
+                Call("UpdateHUD");
+                Check(ReferenceEquals(sweep, ui.progressDots[i].AnimationState.GetCurrent(0)),
+                    "HUD refresh must preserve a4 while its found flight is pending: " + i);
+                if (pending[i])
+                {
+                    pending[i] = false;
+                    Call("UpdateHUD");
+                    Check(ReferenceEquals(sweep, ui.progressDots[i].AnimationState.GetCurrent(0)),
+                        "Flight arrival HUD refresh must not interrupt an already started a4: " + i);
+                }
+                CheckProgressOnly();
+                Advance(.065f);
+            }
+            Check(replay.MoveNext(), "Victory replay must wait for the last a4 instead of ending after the final stagger.");
+            var last = ui.progressDots[2].AnimationState.GetCurrent(0);
+            Advance(last.Animation.Duration - last.TrackTime - .01f);
+            Check(replay.MoveNext(), "Victory replay must wait until the last a4 has actually completed.");
+            Advance(.02f);
+            Check(replay.MoveNext(), "Victory must wait for the queued a3 even when the final a4 is already complete.");
+            Advance(0);
+            Check(!replay.MoveNext() && ui.progressDots.Take(3).All(dot => dot.AnimationState.GetCurrent(0).Animation.Name == "a3"),
+                "All victory dots must settle on a3 before replay completes.");
+            (replay as IDisposable)?.Dispose(); replay = null;
+            await Task.Delay(50);
+            CheckProgressOnly();
+            replay = (System.Collections.IEnumerator)Call("ReplayCompletedProgress");
+            Check(replay.MoveNext() && ui.progressDots[0].AnimationState.GetCurrent(0).Animation.Name == "a4", "Cancellation check must start the first progress animation.");
+            CheckProgressOnly();
+            (replay as IDisposable)?.Dispose(); replay = null;
+            await Task.Delay(50);
+            CheckProgressOnly();
+            Check(ui.progressDots.Skip(1).Take(2).All(dot => dot.AnimationState.GetCurrent(0).Animation.Name == "a3"), "Cancelling victory progress must not start the remaining dots.");
+            File.WriteAllText(report, "PASS: fifteen authored Spine bindings; a1/a2/a3 states and full transitions; refresh does not restart; restored/new rounds; 25/30-dot cloning and responsive mesh scale; a4 starts while flights/a2 are pending and survives HUD/arrival refresh; overlapping .065s a4 starts left to right, waits for final completion and returns to a3; no extra upper-progress particles or CompletionSweep; lower image rings replay in spot order with their own particles; cancellation stops remaining progress starts. No settings or network touched.");
+        }
+        catch (Exception error) { File.WriteAllText(report, "FAIL: " + error); Debug.LogException(error); }
+        finally { (replay as IDisposable)?.Dispose(); PrefabUtility.UnloadPrefabContents(root); }
     }
 
     [MenuItem("Tools/Find Differences/Check Progress Row Only")]
@@ -1199,7 +1855,8 @@ public static class DifferenceUiSmokeCheck
             update.Invoke(ui, null);
             if (stage.rect.width <= 0 || stage.rect.height <= 0 || float.IsNaN(stage.localScale.x) || float.IsInfinity(stage.localScale.x))
                 throw new InvalidOperationException("Invalid runtime stage dimensions or scale.");
-            var result = "PASS: generated bindings and UI initialization succeeded; hint effects created; zero-size layout and pre-initialization updates are safe; authored stage restored.";
+            VerifyPrefabLayout(ui);
+            var result = "PASS: generated bindings and UI initialization succeeded; hint effects created; zero-size layout and pre-initialization updates are safe; live Stage scale=1, full-screen with zero offsets; prefab gameplay bindings and full background preserved.";
             File.WriteAllText(report, result); Debug.Log(result);
         }
         catch (Exception error) { File.WriteAllText(report, "FAIL: " + error); Debug.LogException(error); }
@@ -1287,12 +1944,31 @@ public static class DifferenceUiSmokeCheck
     {
         var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Bundles/UI/UIDifferences/UIDifferences.prefab").GetComponent<UIDifferences>();
         if (ui.stage.sizeDelta != prefab.stage.sizeDelta) throw new InvalidOperationException("Stage size overwritten at runtime.");
+        if (ui.stage.localScale != Vector3.one || ui.stage.anchoredPosition != Vector2.zero ||
+            ui.stage.anchorMin != Vector2.zero || ui.stage.anchorMax != Vector2.one ||
+            ui.stage.offsetMin != Vector2.zero || ui.stage.offsetMax != Vector2.zero)
+            throw new InvalidOperationException("Stage must remain full-screen at scale 1 with zero position and offsets.");
         foreach (var path in new[] { "Play", "Play/Background", "Play/Back", "Play/Zoom", "Play/Hint", "Play/Hint/Bulb", "Play/Frame", "Play/Progress", "Play/UpperViewport", "Play/LowerViewport" })
         {
             var actual = (RectTransform)ui.stage.Find(path);
             var expected = (RectTransform)prefab.stage.Find(path);
-            // Layout/AspectRatio fitters legitimately drive runtime RectTransform values.
-            if (!actual.drivenByObject && (actual.anchorMin != expected.anchorMin || actual.anchorMax != expected.anchorMax ||
+            if (path == "Play/Background")
+            {
+                var aspect = expected.GetComponent<AspectRatioFitter>().aspectRatio;
+                if (actual.rect.height <= 0 || !(Mathf.Abs(actual.rect.width / actual.rect.height - aspect) < .001f))
+                    throw new InvalidOperationException("Play background no longer preserves its authored aspect ratio.");
+                var corners = new Vector3[4];
+                ((RectTransform)ui.transform).GetWorldCorners(corners);
+                foreach (var corner in corners)
+                {
+                    var point = actual.InverseTransformPoint(corner);
+                    if (point.x < actual.rect.xMin - .1f || point.x > actual.rect.xMax + .1f ||
+                        point.y < actual.rect.yMin - .1f || point.y > actual.rect.yMax + .1f)
+                        throw new InvalidOperationException("Play background does not cover the full UI root outside its safe area.");
+                }
+            }
+            // Other layout components legitimately drive runtime RectTransform values.
+            else if (!actual.drivenByObject && (actual.anchorMin != expected.anchorMin || actual.anchorMax != expected.anchorMax ||
                 actual.pivot != expected.pivot || actual.anchoredPosition != expected.anchoredPosition ||
                 actual.sizeDelta != expected.sizeDelta || actual.localScale != expected.localScale))
                 throw new InvalidOperationException("Prefab layout overwritten: " + path);
@@ -1314,6 +1990,7 @@ public static class DifferenceUiSmokeCheck
             if (check == "found-ring") { CheckFoundRingOnly(); return; }
             if (check == "failure-close") { SessionState.SetBool(Pending + ".FailureClose", true); Start(); return; }
             if (check == "tutorial") { SessionState.SetBool(Pending + ".Tutorial", true); Start(); return; }
+            if (check == "spine-progress-play") { CheckSpineProgressPlayOnly(); return; }
             if (check == "spine-alpha") { BuildAndroidSpineShaderCheck(); return; }
             if (check == "startup-await") { CheckStartupAwaitOnly(); return; }
             if (check == "settings-connect") { DifferenceGameBuilder.ConnectSettingsActions(); CheckSettingsActionsOnly(); return; }
@@ -1374,6 +2051,63 @@ public static class DifferenceUiSmokeCheck
             settings.RemoveSetting(UIDifferences.Key + "RoundContent");
             settings.SetInt(UIDifferences.Key + "Coins", 300);
             ui.levelApiUrl = ""; ui.OnOpen(null);
+            if (SessionState.GetBool(Pending + ".SpineProgressPlay", false))
+            {
+                SessionState.SetBool(Pending + ".SpineProgressPlay", false);
+                settings.SetBool(UIDifferences.Key + "TutorialComplete", true);
+                settings.SetInt(UIDifferences.Key + "Completed", 2);
+                settings.SetInt(UIDifferences.Key + "RoundLevel", -1);
+                ui.OnOpen(null); ui.SetTesting(false); ui.StartLevel();
+                await Wait(() => ui.Round != null && ui.play.activeInHierarchy && !ui.IsLoadingLevel, "local third level opens for Spine progress play check");
+                Check(ui.SelectedLevel == 2 && ui.Round.Total == 15 && ui.Round.Count == 0 &&
+                    ui.progressDots.Take(ui.Round.Total).All(dot => dot.gameObject.activeInHierarchy && dot.AnimationState.GetCurrent(0).Animation.Name == "a1"),
+                    "all fifteen unfound progress dots start on a1");
+                var first = ui.progressDots[0];
+                ui.ClickImage(ui.spots[0].x, ui.spots[0].y);
+                Check(ui.Round.Count == 1 && ((bool[])Field(ui, "pendingProgress"))[0] && first.AnimationState.GetCurrent(0).Animation.Name == "a1" &&
+                    ui.play.GetComponentInChildren<DifferenceFoundFlight>(), "found dot remains a1 while its real progress flight is pending");
+                await Wait(() => first.AnimationState.GetCurrent(0).Animation.Name == "a2", "flight arrival starts the found-dot a2 transition");
+                var transition = first.AnimationState.GetCurrent(0);
+                Check(!transition.Loop && transition.MixDuration == 0 && transition.Next != null && transition.Next.Animation.Name == "a3" &&
+                    transition.Next.MixDuration == 0 && Mathf.Abs(transition.Next.Delay - transition.Animation.Duration) < .001f &&
+                    Mathf.Abs(transition.Animation.Duration - .6667f) < .001f,
+                    "a2 is non-looping and queues a3 after its entire authored duration without mixing");
+                await Wait(() => first.AnimationState.GetCurrent(0).Animation.Name == "a3", "found progress settles on a3");
+                ui.ShowHome(); ui.StartLevel();
+                await Wait(() => ui.Round != null && ui.play.activeInHierarchy && !ui.IsLoadingLevel, "partially completed third level reopens");
+                Check(ui.SelectedLevel == 2 && ui.Round.Count == 1 && ui.progressDots[0].AnimationState.GetCurrent(0).Animation.Name == "a3" &&
+                    ui.progressDots[0].AnimationState.GetCurrent(0).Next == null &&
+                    ui.progressDots.Skip(1).Take(ui.Round.Total - 1).All(dot => dot.AnimationState.GetCurrent(0).Animation.Name == "a1"),
+                    "restoring a partial round shows a3 directly and keeps unfound dots on a1");
+                for (var i = 1; i < ui.Round.Total; i++) ui.ClickImage(ui.spots[i].x, ui.spots[i].y);
+                Check(ui.Round.Complete, "all fifteen real difference clicks complete the local third level");
+                await Wait(() => ui.progressDots[0].AnimationState.GetCurrent(0).Animation.Name == "a4", "completed progress starts its leftmost a4 sweep");
+                Check(((bool[])Field(ui, "pendingProgress"))[ui.Round.Total - 1] && ui.play.GetComponentInChildren<DifferenceFoundFlight>(),
+                    "leftmost a4 starts before the final found flight reveals its progress dot");
+                Check(!(bool)Field(ui, "figmaResultActive"), "victory popup waits while progress a4 is playing");
+                var sweepStarted = Time.realtimeSinceStartupAsDouble - ui.progressDots[0].AnimationState.GetCurrent(0).TrackTime;
+                await Wait(() => (bool)Field(ui, "figmaResultActive"), "victory popup opens after the last progress animation completes");
+                var sweepElapsed = Time.realtimeSinceStartupAsDouble - sweepStarted;
+                Check((bool)Field(ui, "figmaResultWon") && ui.progressDots.Take(ui.Round.Total).All(dot => dot.AnimationState.GetCurrent(0).Animation.Name == "a3"),
+                    "every active progress dot has returned to a3 before victory is displayed: " +
+                    string.Join(",", ui.progressDots.Take(ui.Round.Total).Select(dot => dot.AnimationState.GetCurrent(0).Animation.Name)));
+                File.AppendAllText(Path.Combine(Folder, "report.txt"),
+                    $"Progress sweep elapsed={sweepElapsed:F3}s; authored expectation={(ui.Round.Total - 1) * .065f + .6667f:F3}s (.065s overlapping starts).\n");
+                Check(sweepElapsed < (ui.Round.Total - 1) * .065f + .6667f + .4f,
+                    "overlapping progress sweep stays near 1.6 seconds without accumulating a frame delay per dot");
+                var completedRound = ui.Round;
+                await Click((Button)Field(ui, "designNextButton"));
+                await Wait(() => ui.home.activeInHierarchy || ui.Round != null && ui.Round != completedRound && !ui.IsLoadingLevel,
+                    "victory Next advances or returns home after the last local level");
+                if (ui.home.activeInHierarchy) ui.StartLevel();
+                await Wait(() => ui.Round != null && ui.Round != completedRound && !ui.Round.Finished && ui.play.activeInHierarchy && !ui.IsLoadingLevel,
+                    "the next new round opens after victory");
+                Check(ui.Round.Count == 0 && ui.progressDots.Take(ui.Round.Total).All(dot => dot.AnimationState.GetCurrent(0).Animation.Name == "a1"),
+                    "a new round resets every active progress dot to a1");
+                Check(errors.Count == 0, "Spine progress play check has no runtime errors: " + string.Join(" | ", errors));
+                File.AppendAllText(Path.Combine(Folder, "report.txt"), "PASS: real flight a1 -> full a2 -> a3, direct a3 restoration, a4 sweep overlaps the final real flight before victory, and new-round a1.\n");
+                return;
+            }
             if (SessionState.GetBool(Pending + ".Tutorial", false))
             {
                 SessionState.SetBool(Pending + ".Tutorial", false);
@@ -1382,10 +2116,14 @@ public static class DifferenceUiSmokeCheck
                 typeof(UIDifferences).GetMethod("InitializeTutorial", Private).Invoke(ui, null);
                 await Wait(() => ui.Round != null && !ui.IsLoadingLevel, "new player opens first level directly");
                 await Task.Delay(500);
-                Check(ui.SelectedLevel == 0 && !Active(ui, "homeDesign") && (bool)Field(ui, "tutorialPending") && !ui.backButton.gameObject.activeSelf,
-                    "tutorial bypasses home and hides back button");
+                Check(ui.SelectedLevel == 0 && !Active(ui, "homeDesign") && (bool)Field(ui, "tutorialPending") && ui.backButton.gameObject.activeSelf,
+                    "tutorial bypasses home and keeps the pause button available");
                 await Wait(() => Field(ui, "tutorialShade") is DifferenceHintSpotlight shade && shade.Ready,
                     "first tutorial automatically zooms and focuses before allowing a click");
+                Check(!ui.hintButton.interactable &&
+                    ((DifferenceHintSpotlight)Field(ui, "tutorialShade")).transform.GetSiblingIndex() < ui.hintButton.transform.GetSiblingIndex() &&
+                    ui.hintButton.transform.GetSiblingIndex() < ((RectTransform)Field(ui, "tutorialVisuals")).GetSiblingIndex(),
+                    "the disabled hint stays above the dark tutorial shade and below the guide graphics");
                 Check(Mathf.Abs(ui.upperImage.transform.localScale.x - 2) < .001f &&
                     ui.lowerImage.transform.localScale == ui.upperImage.transform.localScale,
                     "first tutorial uses the hint spotlight zoom on both images");

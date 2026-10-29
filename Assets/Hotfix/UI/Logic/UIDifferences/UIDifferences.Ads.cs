@@ -11,7 +11,7 @@ namespace Hotfix.UI
     {
         CanvasGroup adInputGroup;
         bool adUiOpen, adInputLocked, adWasInteractable, adWasBlocking, adTransitionPending;
-        bool lastAdPageVisible;
+        bool lastAdPageVisible, lastAdPageJourney;
         int adSession, lastAdPageLevel = -1;
         string roundAdOperation, freeHintLabel;
         DifferenceRound winAdCheckedRound;
@@ -32,7 +32,7 @@ namespace Hotfix.UI
             adUiOpen = false; adSession++; adTransitionPending = false;
             DifferenceAds.FullscreenChanged -= OnAdFullscreenChanged;
             RestoreAdInput();
-            DifferenceAds.SetGamePage(level + 1, false);
+            DifferenceAds.SetGamePage(level + 1, false, JourneyPlaying);
             lastAdPageVisible = false; lastAdPageLevel = -1;
         }
 
@@ -78,13 +78,13 @@ namespace Hotfix.UI
         {
             if (!adUiOpen) return;
             var visible = !testing && !tutorialPending && isActiveAndEnabled && currentPage == play && play.activeInHierarchy &&
-                Round != null && !Round.Finished && !IsLoadingLevel && !figmaResultActive && !AdInputBlocked &&
+                Round != null && !Round.Finished && !IsLoadingLevel && !figmaResultActive && !AdInputBlocked && !PauseInputBlocked &&
                 !modal.activeSelf && !settings.activeSelf && !profile.activeSelf && !musicPanel.activeSelf &&
                 !achievements.activeSelf && !album.activeSelf && !(hintDesign && hintDesign.activeSelf);
             var visibleLevel = level + 1;
-            if (lastAdPageLevel == visibleLevel && lastAdPageVisible == visible) return;
-            lastAdPageLevel = visibleLevel; lastAdPageVisible = visible;
-            DifferenceAds.SetGamePage(visibleLevel, visible);
+            if (lastAdPageLevel == visibleLevel && lastAdPageVisible == visible && lastAdPageJourney == JourneyPlaying) return;
+            lastAdPageLevel = visibleLevel; lastAdPageVisible = visible; lastAdPageJourney = JourneyPlaying;
+            DifferenceAds.SetGamePage(visibleLevel, visible, JourneyPlaying);
         }
 
         void CheckWinInterstitial(DifferenceRound finishedRound, int visibleLevel)
@@ -92,7 +92,7 @@ namespace Hotfix.UI
             if (testing || !adUiOpen || Round != finishedRound || winAdCheckedRound == finishedRound ||
                 !figmaResultActive || !figmaResultWon) return;
             winAdCheckedRound = finishedRound;
-            DifferenceAds.TryInterstitial(visibleLevel, roundAdOperation + ":win", "level_complete", () => { });
+            DifferenceAds.TryInterstitial(visibleLevel, roundAdOperation + ":win", "level_complete", () => { }, JourneyPlaying);
         }
 
         void RetryWithInterstitial()
@@ -108,7 +108,7 @@ namespace Hotfix.UI
                 CloseFigmaResult(); BeginLevel(retryLevel, false, true);
             };
             if (testing) resume();
-            else DifferenceAds.TryInterstitial(retryLevel + 1, Guid.NewGuid().ToString("N") + ":retry", "level_enter", resume);
+            else DifferenceAds.TryInterstitial(retryLevel + 1, Guid.NewGuid().ToString("N") + ":retry", "level_enter", resume, JourneyPlaying);
         }
 
         void RefreshHintRewardLabel()

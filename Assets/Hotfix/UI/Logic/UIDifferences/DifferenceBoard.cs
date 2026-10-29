@@ -10,7 +10,7 @@ namespace Hotfix.UI
         public UIDifferences owner;
         public DifferenceBoard peer;
         readonly Vector3[] corners = new Vector3[4];
-        bool dragging, pinching;
+        bool dragging, pinching, gmTouchBlocked;
         float blockedUntil, pinchDistance;
         Vector2 pinchMidpoint;
         bool resetting;
@@ -30,7 +30,8 @@ namespace Hotfix.UI
 
         public void OnPointerClick(PointerEventData data)
         {
-            if (owner && owner.AdInputBlocked) return;
+            if (BlockGmTouches(Input.touchCount)) return;
+            if (owner && (owner.AdInputBlocked || owner.PauseInputBlocked)) return;
             if (data.button != PointerEventData.InputButton.Left || IsResetting || dragging || pinching ||
                 Time.unscaledTime < blockedUntil || !Inside(data.position, data.pressEventCamera)) return;
             if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(Content, data.position, data.pressEventCamera, out var local)) return;
@@ -75,7 +76,8 @@ namespace Hotfix.UI
 
         public void OnScroll(PointerEventData data)
         {
-            if (owner && owner.AdInputBlocked) return;
+            if (BlockGmTouches(Input.touchCount)) return;
+            if (owner && (owner.AdInputBlocked || owner.PauseInputBlocked)) return;
             if (owner && !owner.TutorialAllowsView) return;
             if (IsResetting || (owner && owner.HintActive)) return;
             if (!Inside(data.position, data.enterEventCamera)) return;
@@ -86,8 +88,9 @@ namespace Hotfix.UI
 
         public void OnBeginDrag(PointerEventData data)
         {
+            if (BlockGmTouches(Input.touchCount)) return;
             if (owner && !owner.TutorialAllowsView) return;
-            if (owner && owner.AdInputBlocked) { dragging = pinching = false; return; }
+            if (owner && (owner.AdInputBlocked || owner.PauseInputBlocked)) { dragging = pinching = false; return; }
             if (IsResetting || (owner && owner.HintActive)) return;
             if (data.button != PointerEventData.InputButton.Left || !Inside(data.pressPosition, data.pressEventCamera)) return;
             dragging = true;
@@ -96,8 +99,9 @@ namespace Hotfix.UI
 
         public void OnDrag(PointerEventData data)
         {
+            if (BlockGmTouches(Input.touchCount)) return;
             if (owner && !owner.TutorialAllowsView) return;
-            if (owner && owner.AdInputBlocked) { dragging = pinching = false; return; }
+            if (owner && (owner.AdInputBlocked || owner.PauseInputBlocked)) { dragging = pinching = false; return; }
             if (IsResetting || (owner && owner.HintActive)) return;
             if (!dragging || pinching || Input.touchCount > 1 || Zoom <= 1) return;
             if (RectTransformUtility.ScreenPointToLocalPointInRectangle(Viewport, data.position, data.pressEventCamera, out var current) &&
@@ -110,15 +114,17 @@ namespace Hotfix.UI
 
         public void OnEndDrag(PointerEventData data)
         {
+            if (BlockGmTouches(Input.touchCount)) return;
             dragging = false;
-            if (owner && owner.AdInputBlocked) { pinching = false; return; }
+            if (owner && (owner.AdInputBlocked || owner.PauseInputBlocked)) { pinching = false; return; }
             BlockClick();
         }
 
         void Update()
         {
+            if (BlockGmTouches(Input.touchCount)) return;
             if (owner && !owner.TutorialAllowsView) { dragging = pinching = false; return; }
-            if (owner && owner.AdInputBlocked) { dragging = pinching = false; return; }
+            if (owner && (owner.AdInputBlocked || owner.PauseInputBlocked)) { dragging = pinching = false; return; }
             if (owner && owner.HintActive) { dragging = pinching = false; return; }
             if (resetting)
             {
@@ -136,6 +142,8 @@ namespace Hotfix.UI
             }
             var first = Input.GetTouch(0).position;
             var second = Input.GetTouch(1).position;
+            if (owner && (owner.GmContainsScreenPoint(first) || owner.GmContainsScreenPoint(second)))
+            { dragging = pinching = false; BlockClick(); return; }
             // Only the board containing the first finger drives the shared view.
             if (!pinching && ((peer && peer.pinching) || !Inside(first, EventCamera))) return;
             var midpoint = (first + second) * .5f;
@@ -160,7 +168,8 @@ namespace Hotfix.UI
 
         public void ResetViewAnimated()
         {
-            if (owner && owner.AdInputBlocked) return;
+            if (BlockGmTouches(Input.touchCount)) return;
+            if (owner && (owner.AdInputBlocked || owner.PauseInputBlocked)) return;
             if (!Viewport || IsResetting || Zoom <= 1 || (owner && owner.HintActive)) return;
             dragging = pinching = false;
             if (peer) peer.dragging = peer.pinching = false;
@@ -174,6 +183,17 @@ namespace Hotfix.UI
         {
             resetting = false;
             if (peer) peer.resetting = false;
+        }
+
+        bool BlockGmTouches(int touches)
+        {
+            if (touches >= 3) gmTouchBlocked = true;
+            if (!gmTouchBlocked) return false;
+            dragging = pinching = false;
+            BlockClick();
+            // Old pointer releases must not click the board after the GM dialog closes.
+            if (touches == 0) gmTouchBlocked = false;
+            return true;
         }
 
         void ZoomAround(float zoom, Vector2 localPoint)

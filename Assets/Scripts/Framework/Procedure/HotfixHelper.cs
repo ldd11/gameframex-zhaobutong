@@ -76,7 +76,7 @@ namespace GameFrameX.Startup.Application
                     }
                 }
 
-                throw new TypeLoadException("未找到热更程序集：" + assemblyName);
+                throw new TypeLoadException("Hotfix assembly not found: " + assemblyName);
             }
 
             Log.Info("开始加载AOT DLL");

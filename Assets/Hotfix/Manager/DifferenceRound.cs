@@ -103,6 +103,12 @@ namespace Hotfix.Manager
             return Ignored;
         }
 
+        public int RevealNext()
+        {
+            var index = Hint();
+            return index >= 0 ? Find(index) : Ignored;
+        }
+
         public bool Revive()
         {
             if (Lives != 0 || Complete) return false;

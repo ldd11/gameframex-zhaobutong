@@ -12,3 +12,6 @@ LocalSdkConfig/
 Builds
 UserSettings/Layouts
 UserSettings/Layouts
+Assets/StreamingAssets
+*.csproj
+Bundles

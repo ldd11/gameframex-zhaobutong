@@ -10,11 +10,16 @@ namespace Hotfix.UI
         [System.Serializable]
         public sealed class Style
         {
-            [Header("大小与描边（UI 单位）")]
+            [Header("大小与描边")]
             [Min(.01f), Tooltip("在差异区域直径基础上调整大小，不缩放线宽。")]
             public float sizeMultiplier = 1;
             public float radiusOffset;
-            [Min(.1f)] public float lineWidth = 16;
+            [Min(1), Tooltip("圆圈最终直径的下限（UI 单位）；出现动画仍保留缩放效果。")]
+            public float minDiameter = 100;
+            [Min(1), Tooltip("圆圈最终直径的上限（UI 单位），不包含外侧光晕。")]
+            public float maxDiameter = 220;
+            [Min(.1f), Tooltip("作者圆圈按源图像素计算描边；其他关卡按 UI 单位。")]
+            public float lineWidth = 16;
             [Range(0, 1)] public float opacity = 1;
             [Range(32, 256)] public int segments = 128;
             [Tooltip("从外缘（左端）到内缘（右端）的颜色与透明度。")]
@@ -57,6 +62,7 @@ namespace Hotfix.UI
         }
 
         public Style style = new Style();
+        [System.NonSerialized] public float sourceImageWidth;
         readonly List<float> bands = new List<float>();
         float elapsed = float.MaxValue;
 
@@ -76,32 +82,72 @@ namespace Hotfix.UI
             SetVerticesDirty();
         }
 
+        float AnimationProgress => style.animationDuration <= 0 ? 1 : Mathf.Clamp01(elapsed / style.animationDuration);
+
+        float LayoutUnit
+        {
+            get
+            {
+                var board = GetComponentInParent<DifferenceBoard>(true);
+                if (!board || !board.owner || !board.owner.play) return 1;
+                // Viewports can use different authored scales; board zoom still scales the whole ring.
+                var scale = board.owner.play.transform.InverseTransformVector(board.transform.parent.TransformVector(Vector3.right)).magnitude;
+                return 1 / Mathf.Max(.001f, scale);
+            }
+        }
+
+        float StrokeUnit => sourceImageWidth > 0
+            ? ((RectTransform)GetComponentInParent<DifferenceBoard>(true).transform).rect.width / sourceImageWidth
+            : LayoutUnit;
+
+        public float Radius
+        {
+            get
+            {
+                var bounds = rectTransform.rect;
+                var unit = LayoutUnit;
+                var radius = Mathf.Min(bounds.width, bounds.height) * .5f * Mathf.Max(.01f, style.sizeMultiplier) + style.radiusOffset * unit;
+                var minimum = Mathf.Max(1, style.minDiameter) * .5f * unit;
+                radius = Mathf.Clamp(radius, minimum, Mathf.Max(minimum, style.maxDiameter * .5f * unit));
+                var t = AnimationProgress - 1;
+                var overshoot = Mathf.Max(0, style.overshoot);
+                var bounce = 1 + (overshoot + 1) * t * t * t + overshoot * t * t;
+                return radius * Mathf.LerpUnclamped(Mathf.Clamp(style.initialSize, .05f, 1), 1, bounce);
+            }
+        }
+
+        public float InnerRadius
+        {
+            get
+            {
+                var radius = Radius;
+                var unit = StrokeUnit;
+                return radius <= .5f * unit ? 0 : Mathf.Max(.5f * unit, radius - Mathf.Max(.1f, style.lineWidth) * unit);
+            }
+        }
+
         protected override void OnPopulateMesh(UnityEngine.UI.VertexHelper mesh)
         {
             mesh.Clear();
             var bounds = rectTransform.rect;
-            var radius = Mathf.Min(bounds.width, bounds.height) * .5f * Mathf.Max(.01f, style.sizeMultiplier) + style.radiusOffset;
-            var duration = Mathf.Max(0, style.animationDuration);
-            var progress = duration <= 0 ? 1 : Mathf.Clamp01(elapsed / duration);
-            var t = progress - 1;
-            var overshoot = Mathf.Max(0, style.overshoot);
-            var bounce = 1 + (overshoot + 1) * t * t * t + overshoot * t * t;
-            radius *= Mathf.LerpUnclamped(Mathf.Clamp(style.initialSize, .05f, 1), 1, bounce);
-            if (radius <= .5f) return;
+            var radius = Radius;
+            var unit = StrokeUnit;
+            var progress = AnimationProgress;
+            if (radius <= .5f * unit) return;
             // Small circles retain a transparent center even if the requested width exceeds the radius.
-            var width = Mathf.Clamp(style.lineWidth, .1f, radius - .5f);
+            var width = Mathf.Clamp(style.lineWidth * unit, .1f * unit, radius - .5f * unit);
             var segments = Mathf.Clamp(style.segments, 32, 256);
             var alpha = progress >= 1 || style.fadeDuration <= 0 ? 1 : Mathf.Clamp01(elapsed / style.fadeDuration);
             alpha *= Mathf.Clamp01(style.opacity);
             var glow = style.glowColor * color;
             glow.a *= Mathf.Clamp01(style.glowIntensity) * alpha;
-            var glowWidth = Mathf.Max(0, style.glowWidth);
+            var glowWidth = Mathf.Max(0, style.glowWidth) * unit;
             if (glow.a > 0 && glowWidth > 0)
             {
                 var clear = glow; clear.a = 0;
                 AddBand(mesh, bounds.center, radius + glowWidth, radius, clear, glow, segments);
                 AddBand(mesh, bounds.center, radius, radius - width, glow, glow, segments);
-                AddBand(mesh, bounds.center, radius - width, Mathf.Max(.5f, radius - width - glowWidth), glow, clear, segments);
+                AddBand(mesh, bounds.center, radius - width, Mathf.Max(.5f * unit, radius - width - glowWidth), glow, clear, segments);
             }
             bands.Clear(); bands.Add(0); bands.Add(1);
             foreach (var key in style.outlineColors.colorKeys) if (!bands.Contains(key.time)) bands.Add(key.time);

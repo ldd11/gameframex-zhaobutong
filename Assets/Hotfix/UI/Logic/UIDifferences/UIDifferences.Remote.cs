@@ -18,8 +18,8 @@ namespace Hotfix.UI
         const float PatchFlashDuration = 2.1f;
         UnityEngine.UI.Image[] originalPatchImages = Array.Empty<UnityEngine.UI.Image>();
         UnityEngine.UI.Image[] changedFlashImages = Array.Empty<UnityEngine.UI.Image>();
-        bool OnlineLevels => !testing && !string.IsNullOrWhiteSpace(levelApiUrl);
-        int LevelLimit => OnlineLevels ? int.MaxValue - 1 : levels.Length;
+        bool OnlineLevels => !testing && (journeyPlaying || !string.IsNullOrWhiteSpace(levelApiUrl));
+        int LevelLimit => journeyPlaying ? JourneyLevelCount : OnlineLevels ? int.MaxValue - 1 : levels.Length;
         bool UsingRemoteLevel => OnlineLevels && remoteLevel != null && loadedApiUrl == LevelUrl(level);
         DifferenceLevel CurrentLevel => UsingRemoteLevel ? remoteLevel.Level : levels[level];
         public bool IsLoadingLevel => loadingLevel != null || localLoading;
@@ -30,7 +30,8 @@ namespace Hotfix.UI
 
         public string LevelUrl(int index)
         {
-            if (index < 0 || index >= int.MaxValue - 1) throw new ArgumentOutOfRangeException(nameof(index));
+            if (index < 0 || index >= int.MaxValue - 1 || journeyPlaying && index >= JourneyLevelCount) throw new ArgumentOutOfRangeException(nameof(index));
+            if (journeyPlaying) return JourneyLevelApi + (index + 1).ToString(CultureInfo.InvariantCulture);
             var prefix = (levelApiUrl ?? "").TrimEnd('/');
             var slash = prefix.LastIndexOf('/');
             if (int.TryParse(prefix.Substring(slash + 1), out _)) prefix = prefix.Substring(0, Mathf.Max(0, slash));
@@ -40,20 +41,26 @@ namespace Hotfix.UI
         IEnumerator LoadRemoteLevel(DifferenceRemoteLevel request, int index, bool resume, bool isRetry = false)
         {
             var url = LevelUrl(index);
-            yield return request.Load(url, index + 1);
+            yield return journeyPlaying ? request.Load(url, index + 1) : request.LoadMainBatch(url, index + 1);
             while (loadingLevel == request && Time.unscaledTime - loadingStarted < .55f) yield return null;
             if (loadingLevel != request) { request.Dispose(); yield break; }
             loadingLevel = null;
             UpdateFigmaDesign(currentPage);
             startButton.interactable = true;
-            if (!OnlineLevels || url != LevelUrl(index)) { request.Dispose(); ShowHome(); yield break; }
+            if (!OnlineLevels || url != LevelUrl(index))
+            {
+                request.Dispose();
+                if (journeyPlaying) ShowJourney();
+                else { StopTutorial(); ShowHomeInternal(); }
+                yield break;
+            }
             if (request.Error != null || request.Level == null)
             {
                 FailAnalyticsLoad(request.Error, request.Level);
                 Debug.LogWarning("后台关卡加载失败：" + request.Error);
                 request.Dispose();
-                if (!testing && completed == 0 && index == 0) { ShowFirstLevelLoadError("第1关暂时无法加载，请检查网络后重试。"); yield break; }
-                ShowHome();
+                if (journeyPlaying) ShowJourney();
+                else { StopTutorial(); ShowHomeInternal(); }
                 Notice("Failed to load level " + (index + 1) + ". Please try again later.", 3f);
                 yield break;
             }
@@ -147,7 +154,7 @@ namespace Hotfix.UI
 
         void ChangeAlbumPage(int step)
         {
-            albumPage = Mathf.Clamp(albumPage + step, 0, completed / levels.Length);
+            albumPage = Mathf.Clamp(albumPage + step, 0, Mathf.Min(ActiveCompleted, LevelLimit - 1) / levels.Length);
             RefreshAlbum();
         }
 
@@ -164,6 +171,17 @@ namespace Hotfix.UI
             image.preserveAspect = false;
             image.sprite = sprite; image.color = Color.white;
             return rect;
+        }
+
+        static void MaskPatchFlash(UnityEngine.UI.Image image, UnityEngine.UI.Image marker)
+        {
+            var root = image.transform.parent.gameObject;
+            var circle = root.GetComponent<DifferenceFoundMask>() ?? root.AddComponent<DifferenceFoundMask>();
+            circle.ring = marker.GetComponentInChildren<DifferenceFoundRing>(true);
+            circle.raycastTarget = false;
+            var mask = root.GetComponent<UnityEngine.UI.Mask>() ?? root.AddComponent<UnityEngine.UI.Mask>();
+            mask.showMaskGraphic = false;
+            image.maskable = true;
         }
 
         static void SetBoardRegion(RectTransform rect, Vector4 region)

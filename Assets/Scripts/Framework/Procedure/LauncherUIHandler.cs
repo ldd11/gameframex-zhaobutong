@@ -3,13 +3,11 @@ using Cysharp.Threading.Tasks;
 using GameFrameX.Asset.Runtime;
 using GameFrameX.Event.Runtime;
 using GameFrameX.GlobalConfig.Runtime;
-using GameFrameX.Localization.Runtime;
 using GameFrameX.Runtime;
 using GameFrameX.Startup.Runtime;
 using GameFrameX.UI.Runtime;
 using Unity.Startup;
 using UnityEngine;
-using FairyGUI;
 
 namespace GameFrameX.Startup.Application
 {
@@ -53,7 +51,7 @@ namespace GameFrameX.Startup.Application
         {
             try
             {
-                _ui = await GameApp.UI.OpenFullScreenAsync<UILauncher>(uiResName, UIGroupConstants.Loading);
+                _ui = await GameApp.UI.OpenFullScreenAsync<UILauncher>(uiResName);
                 if (DifferenceAnalytics.Enabled)
                 {
                     await UniTask.NextFrame();
@@ -157,10 +155,7 @@ namespace GameFrameX.Startup.Application
             }
 
             _ui.m_IsUpgrade.SetSelectedIndex(1);
-            bool isChinese = GameApp.Localization.Language == LocalizationCode.Chinese ||
-                             GameApp.Localization.Language == LocalizationCode.ChineseSimplified;
-
-            _ui.m_upgrade.m_EnterButton.title = isChinese ? "确认" : "Enter";
+            _ui.m_upgrade.m_EnterButton.title = "OK";
             _ui.m_upgrade.m_TextContent.title = gameAppVersion.UpdateAnnouncement;
             _ui.m_upgrade.m_TextContent.onClickLink.Set(context => { ApplicationHelper.OpenURL(context.data.ToString()); });
             _ui.m_upgrade.m_EnterButton.onClick.Set(() =>
@@ -198,10 +193,7 @@ namespace GameFrameX.Startup.Application
             }
 
             _ui.m_IsUpgrade.SetSelectedIndex(1);
-            bool isChinese = GameApp.Localization.Language == LocalizationCode.Chinese ||
-                             GameApp.Localization.Language == LocalizationCode.ChineseSimplified;
-
-            _ui.m_upgrade.m_EnterButton.title = isChinese ? "确认" : "Enter";
+            _ui.m_upgrade.m_EnterButton.title = "OK";
             _ui.m_upgrade.m_TextContent.title = upgradeInfo.UpdateAnnouncement;
             _ui.m_upgrade.m_TextContent.onClickLink.Set(context => { ApplicationHelper.OpenURL(context.data.ToString()); });
             _ui.m_upgrade.m_EnterButton.onClick.Set(() =>

@@ -126,7 +126,7 @@ public sealed class DifferenceAdProvider : MonoBehaviour
         SyncBanner(config);
         if (fullscreen != 0 || DifferenceAds.Busy) return;
         if (!DifferenceAds.NoAds && config.interstitialEnabled &&
-            DifferenceAds.HighestLevel >= config.interstitialFirstLevel && !string.IsNullOrEmpty(interstitialId) &&
+            (DifferenceAds.CurrentJourney ? DifferenceAds.CurrentLevel >= 3 : DifferenceAds.HighestLevel >= config.interstitialFirstLevel) && !string.IsNullOrEmpty(interstitialId) &&
             !interstitialLoading && !interstitialReady && Now >= interstitialRetryAt)
         {
             interstitialLoading = true;

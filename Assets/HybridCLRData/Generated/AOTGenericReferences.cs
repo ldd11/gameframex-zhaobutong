@@ -129,6 +129,7 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// Cysharp.Threading.Tasks.UniTaskCompletionSourceCore<object>
 	// System.Action<Hotfix.Events.PlayerAttributeChangeItem>
 	// System.Action<byte>
+	// System.Action<float>
 	// System.Action<int>
 	// System.Action<long>
 	// System.Action<object,object>
@@ -139,6 +140,7 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// System.Collections.Concurrent.ConcurrentDictionary.Tables<object,object>
 	// System.Collections.Concurrent.ConcurrentDictionary<object,object>
 	// System.Collections.Generic.ArraySortHelper<Hotfix.Events.PlayerAttributeChangeItem>
+	// System.Collections.Generic.ArraySortHelper<float>
 	// System.Collections.Generic.ArraySortHelper<int>
 	// System.Collections.Generic.ArraySortHelper<long>
 	// System.Collections.Generic.ArraySortHelper<object>
@@ -152,6 +154,7 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// System.Collections.Generic.Comparer<System.ValueTuple<byte,System.ValueTuple<byte,object>>>
 	// System.Collections.Generic.Comparer<System.ValueTuple<byte,object>>
 	// System.Collections.Generic.Comparer<byte>
+	// System.Collections.Generic.Comparer<float>
 	// System.Collections.Generic.Comparer<int>
 	// System.Collections.Generic.Comparer<long>
 	// System.Collections.Generic.Comparer<object>
@@ -206,10 +209,12 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<long,long>>
 	// System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<long,object>>
 	// System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<object,object>>
+	// System.Collections.Generic.ICollection<float>
 	// System.Collections.Generic.ICollection<int>
 	// System.Collections.Generic.ICollection<long>
 	// System.Collections.Generic.ICollection<object>
 	// System.Collections.Generic.IComparer<Hotfix.Events.PlayerAttributeChangeItem>
+	// System.Collections.Generic.IComparer<float>
 	// System.Collections.Generic.IComparer<int>
 	// System.Collections.Generic.IComparer<long>
 	// System.Collections.Generic.IComparer<object>
@@ -221,6 +226,7 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<long,long>>
 	// System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<long,object>>
 	// System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<object,object>>
+	// System.Collections.Generic.IEnumerable<float>
 	// System.Collections.Generic.IEnumerable<int>
 	// System.Collections.Generic.IEnumerable<long>
 	// System.Collections.Generic.IEnumerable<object>
@@ -230,6 +236,7 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// System.Collections.Generic.IEnumerator<System.Collections.Generic.KeyValuePair<long,long>>
 	// System.Collections.Generic.IEnumerator<System.Collections.Generic.KeyValuePair<long,object>>
 	// System.Collections.Generic.IEnumerator<System.Collections.Generic.KeyValuePair<object,object>>
+	// System.Collections.Generic.IEnumerator<float>
 	// System.Collections.Generic.IEnumerator<int>
 	// System.Collections.Generic.IEnumerator<long>
 	// System.Collections.Generic.IEnumerator<object>
@@ -237,6 +244,7 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// System.Collections.Generic.IEqualityComparer<long>
 	// System.Collections.Generic.IEqualityComparer<object>
 	// System.Collections.Generic.IList<Hotfix.Events.PlayerAttributeChangeItem>
+	// System.Collections.Generic.IList<float>
 	// System.Collections.Generic.IList<int>
 	// System.Collections.Generic.IList<long>
 	// System.Collections.Generic.IList<object>
@@ -247,10 +255,12 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// System.Collections.Generic.KeyValuePair<long,object>
 	// System.Collections.Generic.KeyValuePair<object,object>
 	// System.Collections.Generic.List.Enumerator<Hotfix.Events.PlayerAttributeChangeItem>
+	// System.Collections.Generic.List.Enumerator<float>
 	// System.Collections.Generic.List.Enumerator<int>
 	// System.Collections.Generic.List.Enumerator<long>
 	// System.Collections.Generic.List.Enumerator<object>
 	// System.Collections.Generic.List<Hotfix.Events.PlayerAttributeChangeItem>
+	// System.Collections.Generic.List<float>
 	// System.Collections.Generic.List<int>
 	// System.Collections.Generic.List<long>
 	// System.Collections.Generic.List<object>
@@ -263,6 +273,7 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// System.Collections.Generic.ObjectComparer<System.ValueTuple<byte,System.ValueTuple<byte,object>>>
 	// System.Collections.Generic.ObjectComparer<System.ValueTuple<byte,object>>
 	// System.Collections.Generic.ObjectComparer<byte>
+	// System.Collections.Generic.ObjectComparer<float>
 	// System.Collections.Generic.ObjectComparer<int>
 	// System.Collections.Generic.ObjectComparer<long>
 	// System.Collections.Generic.ObjectComparer<object>
@@ -280,14 +291,17 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// System.Collections.Generic.Queue.Enumerator<object>
 	// System.Collections.Generic.Queue<object>
 	// System.Collections.ObjectModel.ReadOnlyCollection<Hotfix.Events.PlayerAttributeChangeItem>
+	// System.Collections.ObjectModel.ReadOnlyCollection<float>
 	// System.Collections.ObjectModel.ReadOnlyCollection<int>
 	// System.Collections.ObjectModel.ReadOnlyCollection<long>
 	// System.Collections.ObjectModel.ReadOnlyCollection<object>
 	// System.Comparison<Hotfix.Events.PlayerAttributeChangeItem>
+	// System.Comparison<float>
 	// System.Comparison<int>
 	// System.Comparison<long>
 	// System.Comparison<object>
 	// System.Converter<object,UnityEngine.Vector2>
+	// System.Converter<object,object>
 	// System.EventHandler<object>
 	// System.Func<System.Threading.Tasks.VoidTaskResult>
 	// System.Func<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>>>
@@ -314,6 +328,7 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// System.Nullable<UnityEngine.Vector3>
 	// System.Nullable<long>
 	// System.Predicate<Hotfix.Events.PlayerAttributeChangeItem>
+	// System.Predicate<float>
 	// System.Predicate<int>
 	// System.Predicate<long>
 	// System.Predicate<object>
@@ -334,6 +349,7 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// System.Runtime.CompilerServices.ConfiguredTaskAwaitable.ConfiguredTaskAwaiter<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>
 	// System.Runtime.CompilerServices.ConfiguredTaskAwaitable.ConfiguredTaskAwaiter<System.ValueTuple<byte,System.ValueTuple<byte,object>>>
 	// System.Runtime.CompilerServices.ConfiguredTaskAwaitable.ConfiguredTaskAwaiter<System.ValueTuple<byte,object>>
+	// System.Runtime.CompilerServices.ConfiguredTaskAwaitable.ConfiguredTaskAwaiter<byte>
 	// System.Runtime.CompilerServices.ConfiguredTaskAwaitable.ConfiguredTaskAwaiter<object>
 	// System.Runtime.CompilerServices.ConfiguredTaskAwaitable<System.Threading.Tasks.VoidTaskResult>
 	// System.Runtime.CompilerServices.ConfiguredTaskAwaitable<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>>>
@@ -343,6 +359,7 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// System.Runtime.CompilerServices.ConfiguredTaskAwaitable<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>
 	// System.Runtime.CompilerServices.ConfiguredTaskAwaitable<System.ValueTuple<byte,System.ValueTuple<byte,object>>>
 	// System.Runtime.CompilerServices.ConfiguredTaskAwaitable<System.ValueTuple<byte,object>>
+	// System.Runtime.CompilerServices.ConfiguredTaskAwaitable<byte>
 	// System.Runtime.CompilerServices.ConfiguredTaskAwaitable<object>
 	// System.Runtime.CompilerServices.ConfiguredValueTaskAwaitable.ConfiguredValueTaskAwaiter<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>>>
 	// System.Runtime.CompilerServices.ConfiguredValueTaskAwaitable.ConfiguredValueTaskAwaiter<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>>
@@ -369,6 +386,7 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// System.Runtime.CompilerServices.TaskAwaiter<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>
 	// System.Runtime.CompilerServices.TaskAwaiter<System.ValueTuple<byte,System.ValueTuple<byte,object>>>
 	// System.Runtime.CompilerServices.TaskAwaiter<System.ValueTuple<byte,object>>
+	// System.Runtime.CompilerServices.TaskAwaiter<byte>
 	// System.Runtime.CompilerServices.TaskAwaiter<object>
 	// System.Runtime.CompilerServices.ValueTaskAwaiter<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>>>>
 	// System.Runtime.CompilerServices.ValueTaskAwaiter<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>>>
@@ -387,6 +405,7 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// System.Threading.Tasks.ContinuationTaskFromResultTask<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>
 	// System.Threading.Tasks.ContinuationTaskFromResultTask<System.ValueTuple<byte,System.ValueTuple<byte,object>>>
 	// System.Threading.Tasks.ContinuationTaskFromResultTask<System.ValueTuple<byte,object>>
+	// System.Threading.Tasks.ContinuationTaskFromResultTask<byte>
 	// System.Threading.Tasks.ContinuationTaskFromResultTask<object>
 	// System.Threading.Tasks.Sources.IValueTaskSource<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>>>>
 	// System.Threading.Tasks.Sources.IValueTaskSource<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>>>
@@ -406,6 +425,7 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// System.Threading.Tasks.Task<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>
 	// System.Threading.Tasks.Task<System.ValueTuple<byte,System.ValueTuple<byte,object>>>
 	// System.Threading.Tasks.Task<System.ValueTuple<byte,object>>
+	// System.Threading.Tasks.Task<byte>
 	// System.Threading.Tasks.Task<object>
 	// System.Threading.Tasks.TaskFactory.<>c__DisplayClass35_0<System.Threading.Tasks.VoidTaskResult>
 	// System.Threading.Tasks.TaskFactory.<>c__DisplayClass35_0<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>>
@@ -414,6 +434,7 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// System.Threading.Tasks.TaskFactory.<>c__DisplayClass35_0<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>
 	// System.Threading.Tasks.TaskFactory.<>c__DisplayClass35_0<System.ValueTuple<byte,System.ValueTuple<byte,object>>>
 	// System.Threading.Tasks.TaskFactory.<>c__DisplayClass35_0<System.ValueTuple<byte,object>>
+	// System.Threading.Tasks.TaskFactory.<>c__DisplayClass35_0<byte>
 	// System.Threading.Tasks.TaskFactory.<>c__DisplayClass35_0<object>
 	// System.Threading.Tasks.TaskFactory<System.Threading.Tasks.VoidTaskResult>
 	// System.Threading.Tasks.TaskFactory<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>>>
@@ -423,6 +444,7 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// System.Threading.Tasks.TaskFactory<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>
 	// System.Threading.Tasks.TaskFactory<System.ValueTuple<byte,System.ValueTuple<byte,object>>>
 	// System.Threading.Tasks.TaskFactory<System.ValueTuple<byte,object>>
+	// System.Threading.Tasks.TaskFactory<byte>
 	// System.Threading.Tasks.TaskFactory<object>
 	// System.Threading.Tasks.ValueTask.ValueTaskSourceAsTask.<>c<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>>>
 	// System.Threading.Tasks.ValueTask.ValueTaskSourceAsTask.<>c<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>>
@@ -461,7 +483,9 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>
 	// System.ValueTuple<byte,System.ValueTuple<byte,object>>
 	// System.ValueTuple<byte,object>
+	// UnityEngine.Events.InvokableCall<object>
 	// UnityEngine.Events.UnityAction<object>
+	// UnityEngine.Events.UnityEvent<object>
 	// }}
 
 	public void RefMethods()
@@ -525,21 +549,27 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 		// string LuBan.Runtime.StringUtil.CollectionToString<int>(System.Collections.Generic.IEnumerable<int>)
 		// object System.Activator.CreateInstance<object>()
 		// UnityEngine.Vector2[] System.Array.ConvertAll<object,UnityEngine.Vector2>(object[],System.Converter<object,UnityEngine.Vector2>)
+		// object[] System.Array.ConvertAll<object,object>(object[],System.Converter<object,object>)
 		// object[] System.Array.Empty<object>()
+		// object[] System.Array.FindAll<object>(object[],System.Predicate<object>)
 		// System.Void System.Array.Resize<object>(object[]&,int)
 		// System.Void System.Array.Sort<int>(int[],System.Comparison<int>)
 		// bool System.Linq.Enumerable.All<object>(System.Collections.Generic.IEnumerable<object>,System.Func<object,bool>)
 		// object System.Linq.Enumerable.FirstOrDefault<object>(System.Collections.Generic.IEnumerable<object>,System.Func<object,bool>)
 		// System.Collections.Generic.List<object> System.Linq.Enumerable.ToList<object>(System.Collections.Generic.IEnumerable<object>)
 		// System.Void System.Runtime.CompilerServices.AsyncTaskMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,Hotfix.HotfixLauncher.<LaunchDifferences>d__1>(Cysharp.Threading.Tasks.UniTask.Awaiter&,Hotfix.HotfixLauncher.<LaunchDifferences>d__1&)
+		// System.Void System.Runtime.CompilerServices.AsyncTaskMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,Hotfix.UI.UIDifferences.<PrepareStartupDataAsync>d__559>(Cysharp.Threading.Tasks.UniTask.Awaiter&,Hotfix.UI.UIDifferences.<PrepareStartupDataAsync>d__559&)
 		// System.Void System.Runtime.CompilerServices.AsyncTaskMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter,Hotfix.Config.TablesComponent.<LoadAsync>d__22>(System.Runtime.CompilerServices.TaskAwaiter&,Hotfix.Config.TablesComponent.<LoadAsync>d__22&)
+		// System.Void System.Runtime.CompilerServices.AsyncTaskMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter,Hotfix.HotfixLauncher.<LaunchDifferences>d__1>(System.Runtime.CompilerServices.TaskAwaiter&,Hotfix.HotfixLauncher.<LaunchDifferences>d__1&)
 		// System.Void System.Runtime.CompilerServices.AsyncTaskMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter<object>,Hotfix.Config.Local.TbLocalization.<LoadAsync>d__2>(System.Runtime.CompilerServices.TaskAwaiter<object>&,Hotfix.Config.Local.TbLocalization.<LoadAsync>d__2&)
 		// System.Void System.Runtime.CompilerServices.AsyncTaskMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter<object>,Hotfix.Config.Tables.TbAchievementConfig.<LoadAsync>d__2>(System.Runtime.CompilerServices.TaskAwaiter<object>&,Hotfix.Config.Tables.TbAchievementConfig.<LoadAsync>d__2&)
 		// System.Void System.Runtime.CompilerServices.AsyncTaskMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter<object>,Hotfix.Config.Tables.TbItemConfig.<LoadAsync>d__2>(System.Runtime.CompilerServices.TaskAwaiter<object>&,Hotfix.Config.Tables.TbItemConfig.<LoadAsync>d__2&)
 		// System.Void System.Runtime.CompilerServices.AsyncTaskMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter<object>,Hotfix.Config.Tables.TbSoundsConfig.<LoadAsync>d__2>(System.Runtime.CompilerServices.TaskAwaiter<object>&,Hotfix.Config.Tables.TbSoundsConfig.<LoadAsync>d__2&)
 		// System.Void System.Runtime.CompilerServices.AsyncTaskMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter<object>,Hotfix.HotfixLauncher.<LaunchDifferences>d__1>(System.Runtime.CompilerServices.TaskAwaiter<object>&,Hotfix.HotfixLauncher.<LaunchDifferences>d__1&)
 		// System.Void System.Runtime.CompilerServices.AsyncTaskMethodBuilder<System.Threading.Tasks.VoidTaskResult>.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,Hotfix.HotfixLauncher.<LaunchDifferences>d__1>(Cysharp.Threading.Tasks.UniTask.Awaiter&,Hotfix.HotfixLauncher.<LaunchDifferences>d__1&)
+		// System.Void System.Runtime.CompilerServices.AsyncTaskMethodBuilder<System.Threading.Tasks.VoidTaskResult>.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,Hotfix.UI.UIDifferences.<PrepareStartupDataAsync>d__559>(Cysharp.Threading.Tasks.UniTask.Awaiter&,Hotfix.UI.UIDifferences.<PrepareStartupDataAsync>d__559&)
 		// System.Void System.Runtime.CompilerServices.AsyncTaskMethodBuilder<System.Threading.Tasks.VoidTaskResult>.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter,Hotfix.Config.TablesComponent.<LoadAsync>d__22>(System.Runtime.CompilerServices.TaskAwaiter&,Hotfix.Config.TablesComponent.<LoadAsync>d__22&)
+		// System.Void System.Runtime.CompilerServices.AsyncTaskMethodBuilder<System.Threading.Tasks.VoidTaskResult>.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter,Hotfix.HotfixLauncher.<LaunchDifferences>d__1>(System.Runtime.CompilerServices.TaskAwaiter&,Hotfix.HotfixLauncher.<LaunchDifferences>d__1&)
 		// System.Void System.Runtime.CompilerServices.AsyncTaskMethodBuilder<System.Threading.Tasks.VoidTaskResult>.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter<object>,Hotfix.Config.Local.TbLocalization.<LoadAsync>d__2>(System.Runtime.CompilerServices.TaskAwaiter<object>&,Hotfix.Config.Local.TbLocalization.<LoadAsync>d__2&)
 		// System.Void System.Runtime.CompilerServices.AsyncTaskMethodBuilder<System.Threading.Tasks.VoidTaskResult>.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter<object>,Hotfix.Config.Tables.TbAchievementConfig.<LoadAsync>d__2>(System.Runtime.CompilerServices.TaskAwaiter<object>&,Hotfix.Config.Tables.TbAchievementConfig.<LoadAsync>d__2&)
 		// System.Void System.Runtime.CompilerServices.AsyncTaskMethodBuilder<System.Threading.Tasks.VoidTaskResult>.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter<object>,Hotfix.Config.Tables.TbItemConfig.<LoadAsync>d__2>(System.Runtime.CompilerServices.TaskAwaiter<object>&,Hotfix.Config.Tables.TbItemConfig.<LoadAsync>d__2&)
@@ -552,6 +582,7 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 		// System.Void System.Runtime.CompilerServices.AsyncTaskMethodBuilder.Start<Hotfix.Config.Tables.TbSoundsConfig.<LoadAsync>d__2>(Hotfix.Config.Tables.TbSoundsConfig.<LoadAsync>d__2&)
 		// System.Void System.Runtime.CompilerServices.AsyncTaskMethodBuilder.Start<Hotfix.Config.TablesComponent.<LoadAsync>d__22>(Hotfix.Config.TablesComponent.<LoadAsync>d__22&)
 		// System.Void System.Runtime.CompilerServices.AsyncTaskMethodBuilder.Start<Hotfix.HotfixLauncher.<LaunchDifferences>d__1>(Hotfix.HotfixLauncher.<LaunchDifferences>d__1&)
+		// System.Void System.Runtime.CompilerServices.AsyncTaskMethodBuilder.Start<Hotfix.UI.UIDifferences.<PrepareStartupDataAsync>d__559>(Hotfix.UI.UIDifferences.<PrepareStartupDataAsync>d__559&)
 		// System.Void System.Runtime.CompilerServices.AsyncTaskMethodBuilder<object>.Start<GameFrameX.UI.Runtime.UIComponent.<OpenAsync>d__110<object>>(GameFrameX.UI.Runtime.UIComponent.<OpenAsync>d__110<object>&)
 		// System.Void System.Runtime.CompilerServices.AsyncTaskMethodBuilder<object>.Start<GameFrameX.UI.Runtime.UIComponent.<OpenFullScreenAsync>d__103<object>>(GameFrameX.UI.Runtime.UIComponent.<OpenFullScreenAsync>d__103<object>&)
 		// System.Void System.Runtime.CompilerServices.AsyncTaskMethodBuilder<object>.Start<GameFrameX.UI.Runtime.UIComponent.<OpenFullScreenAsync>d__104<object>>(GameFrameX.UI.Runtime.UIComponent.<OpenFullScreenAsync>d__104<object>&)
@@ -559,7 +590,7 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,Hotfix.UI.UIPlayerList.<Login>d__7>(Cysharp.Threading.Tasks.UniTask.Awaiter&,Hotfix.UI.UIPlayerList.<Login>d__7&)
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,Hotfix.UI.UIRoomListPanel.<OnOpen>d__14>(Cysharp.Threading.Tasks.UniTask.Awaiter&,Hotfix.UI.UIRoomListPanel.<OnOpen>d__14&)
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter,Hotfix.HotfixLauncher.<LoadConfig>d__3>(System.Runtime.CompilerServices.TaskAwaiter&,Hotfix.HotfixLauncher.<LoadConfig>d__3&)
-		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter,Hotfix.UI.UIDifferences.<OpenSettingsLink>d__375>(System.Runtime.CompilerServices.TaskAwaiter&,Hotfix.UI.UIDifferences.<OpenSettingsLink>d__375&)
+		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter,Hotfix.UI.UIDifferences.<OpenSettingsLink>d__389>(System.Runtime.CompilerServices.TaskAwaiter&,Hotfix.UI.UIDifferences.<OpenSettingsLink>d__389&)
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter<object>,Hotfix.HotfixLauncher.<LoadUI>d__2>(System.Runtime.CompilerServices.TaskAwaiter<object>&,Hotfix.HotfixLauncher.<LoadUI>d__2&)
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter<object>,Hotfix.UI.UILogin.<Login>d__3>(System.Runtime.CompilerServices.TaskAwaiter<object>&,Hotfix.UI.UILogin.<Login>d__3&)
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter<object>,Hotfix.UI.UIMain.<OnBagBtnClick>d__2>(System.Runtime.CompilerServices.TaskAwaiter<object>&,Hotfix.UI.UIMain.<OnBagBtnClick>d__2&)
@@ -571,7 +602,7 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter<object>,Hotfix.UI.UIPlayerList.<OnPlayerListItemClick>d__9>(System.Runtime.CompilerServices.TaskAwaiter<object>&,Hotfix.UI.UIPlayerList.<OnPlayerListItemClick>d__9&)
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Start<Hotfix.HotfixLauncher.<LoadConfig>d__3>(Hotfix.HotfixLauncher.<LoadConfig>d__3&)
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Start<Hotfix.HotfixLauncher.<LoadUI>d__2>(Hotfix.HotfixLauncher.<LoadUI>d__2&)
-		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Start<Hotfix.UI.UIDifferences.<OpenSettingsLink>d__375>(Hotfix.UI.UIDifferences.<OpenSettingsLink>d__375&)
+		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Start<Hotfix.UI.UIDifferences.<OpenSettingsLink>d__389>(Hotfix.UI.UIDifferences.<OpenSettingsLink>d__389&)
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Start<Hotfix.UI.UILogin.<Login>d__3>(Hotfix.UI.UILogin.<Login>d__3&)
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Start<Hotfix.UI.UIMain.<OnBagBtnClick>d__2>(Hotfix.UI.UIMain.<OnBagBtnClick>d__2&)
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Start<Hotfix.UI.UIMain.<OnOpen>d__1>(Hotfix.UI.UIMain.<OnOpen>d__1&)
@@ -581,10 +612,13 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Start<Hotfix.UI.UIPlayerList.<OnOpen>d__5>(Hotfix.UI.UIPlayerList.<OnOpen>d__5&)
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Start<Hotfix.UI.UIPlayerList.<OnPlayerListItemClick>d__9>(Hotfix.UI.UIPlayerList.<OnPlayerListItemClick>d__9&)
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Start<Hotfix.UI.UIRoomListPanel.<OnOpen>d__14>(Hotfix.UI.UIRoomListPanel.<OnOpen>d__14&)
+		// System.Threading.Tasks.Task<byte> System.Threading.Tasks.Task.Run<byte>(System.Func<byte>)
+		// System.Threading.Tasks.Task<object> System.Threading.Tasks.Task.Run<object>(System.Func<object>)
 		// object UnityEngine.Component.GetComponent<object>()
 		// object UnityEngine.Component.GetComponentInChildren<object>()
 		// object UnityEngine.Component.GetComponentInChildren<object>(bool)
 		// object UnityEngine.Component.GetComponentInParent<object>()
+		// object UnityEngine.Component.GetComponentInParent<object>(bool)
 		// object[] UnityEngine.Component.GetComponentsInChildren<object>(bool)
 		// object UnityEngine.GameObject.AddComponent<object>()
 		// object UnityEngine.GameObject.GetComponent<object>()

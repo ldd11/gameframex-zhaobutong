@@ -12,7 +12,7 @@ namespace Unity.Startup
     {
         public override void OnAwake()
         {
-            UIGroup = GameApp.UI.GetUIGroup(UIGroupConstants.Normal.Name);
+            UIGroup = GameApp.UI.GetUIGroup(UIGroupConstants.Loading.Name);
             base.OnAwake();
         }
     }

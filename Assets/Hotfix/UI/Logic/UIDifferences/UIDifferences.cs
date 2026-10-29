@@ -19,6 +19,7 @@ namespace Hotfix.UI
         [NonSerialized] public string contentKey;
         [NonSerialized] public Sprite[] croppedPatches;
         [NonSerialized] public DifferenceSpot[] hitSpots;
+        [NonSerialized] public Vector4[] markerRegions;
         [NonSerialized] public bool changedOnTop;
     }
 
@@ -30,12 +31,13 @@ namespace Hotfix.UI
         public UnityEngine.UI.Text modalTitle, modalBody, modalActionLabel;
         public UnityEngine.UI.Button startButton, settingsButton, shopButton, trophyButton, backButton, hintButton, modalAction, modalClose;
         public UnityEngine.UI.Button modalSecondary, modalTertiary;
-        public UnityEngine.UI.Image[] progressDots, topRings, bottomRings, patchImages, avatars;
+        public Spine.Unity.SkeletonGraphic[] progressDots;
+        public UnityEngine.UI.Image[] topRings, bottomRings, patchImages, avatars;
         public GameObject[] differencePatches;
         public DifferenceSpot[] spots;
         public DifferenceLevel[] levels;
         public Sprite[] avatarSprites;
-        public Sprite progressQuestion, progressCheck, hintHandSprite;
+        public Sprite hintHandSprite;
         public Material foundFlightMaterial, hintSpotlightMaterial;
         public GameObject foundFlightPrefab, foundArrivalPrefab;
         public GameObject foundRingEffectPrefab;
@@ -49,17 +51,18 @@ namespace Hotfix.UI
         public UnityEngine.UI.Graphic crossTop, crossBottom;
         public AudioSource audioSource, musicSource;
         public AudioClip foundSound, missSound, winSound;
-        public AudioClip coinCreateSound;
-        public AudioClip buttonSound, failSound, tipsSound, homeMusic, gameMusic;
+        public AudioClip coinCreateSound, progressCompleteSound;
+        public AudioClip buttonSound, failSound, tipsSound, homeMusic, gameMusic, journeyMusic;
         public AudioClip[] musicTracks;
         //public RectTransform[] confetti;
         public DifferenceRound Round { get; private set; }
         public int SelectedLevel => level;
         public int Hints => hints;
-        bool UnlimitedHints => level == 0;
+        bool UnlimitedHints => gmUnlimitedHints || (!JourneyPlaying && level == 0);
         public int Coins => coins;
         public int Completed => completed;
         public const float ImageAspect = 1.5f;
+        public const float BackgroundMusicVolume = .3f;
         public const string Key = "FindDifferences.";
         public static readonly Color[] FrameColors = { new Color(.95f,.37f,.65f), new Color(.15f,.68f,1), new Color(.71f,.31f,.95f), new Color(1,.70f,.14f), new Color(.35f,.9f,.5f), new Color(.95f,.35f,.27f) };
         int level, completed, coins, hints, avatar, frame, music, totalFound, perfect, ownedAvatars, ownedFrames;
@@ -70,6 +73,7 @@ namespace Hotfix.UI
         Action dialogAction, secondaryAction, tertiaryAction;
         Coroutine endRoutine;
         CommonToast toast;
+        const int LevelCoinReward = 10;
         const float TabSlideDuration = .18f;
         RectTransform[] tabPages, tabButtons;
         RectTransform tabHighlight;
@@ -91,6 +95,10 @@ namespace Hotfix.UI
         RectTransform[] widthControls;
         Vector2[] widthControlPositions;
         DifferencePlayLayout playLayout;
+        UnityEngine.UI.Image[] screenBackgrounds;
+        float[] screenBackgroundAspects;
+        RectTransform[] safeStretchPages, safeFixedPages;
+        RectTransform safeToast;
         float hintIdle;
         int pendingHint = -1;
         public bool HintActive => hintSpotlight && hintSpotlight.isActiveAndEnabled;
@@ -106,7 +114,7 @@ namespace Hotfix.UI
             base.OnInit();
             if (interactionsBound) return;
             if (levels == null || levels.Length == 0 || topRings.Length != 15 || bottomRings.Length != 15)
-                throw new InvalidOperationException("请执行 Tools/Find Differences/Build Game Assets");
+                throw new InvalidOperationException("Run Tools/Find Differences/Build Game Assets first.");
             tabPages = new[] { (RectTransform)shop.transform, (RectTransform)home.transform, (RectTransform)ranking.transform };
             tabButtons = new[] { (RectTransform)shopButton.transform, At<RectTransform>("Navigation/HomeTab"), (RectTransform)trophyButton.transform };
             var footer = At<RectTransform>("Navigation/Footer");
@@ -141,6 +149,7 @@ namespace Hotfix.UI
             /*if (!stage.GetComponent<UnityEngine.UI.RectMask2D>()) 
                 stage.gameObject.AddComponent<UnityEngine.UI.RectMask2D>();*/
             DifferenceButtonShine.Create(startButton);
+            InitializeHintButtonLook();
             hintHand = DifferenceHintHand.Create(hintButton, hintHandSprite);
             hintSpotlight = DifferenceHintSpotlight.Create((RectTransform)play.transform, hintSpotlightMaterial);
             foreach (var popup in new[] { modal, profile, musicPanel, achievements, album })
@@ -151,7 +160,7 @@ namespace Hotfix.UI
             settingsButton.onClick.AddListener(ShowSettings);
             shopButton.onClick.AddListener(ShowShop);
             trophyButton.onClick.AddListener(() => { if (!AdInputBlocked) ShowPage(ranking); });
-            backButton.onClick.AddListener(ShowHome);
+            backButton.onClick.AddListener(ShowPause);
             hintButton.onClick.AddListener(UseHint);
             modalAction.onClick.AddListener(() => { if (AdInputBlocked) return; modal.SetActive(false); dialogAction?.Invoke(); UpdateAdsVisibility(); });
             modalSecondary.onClick.AddListener(() => { if (AdInputBlocked) return; modal.SetActive(false); secondaryAction?.Invoke(); UpdateAdsVisibility(); });
@@ -170,7 +179,7 @@ namespace Hotfix.UI
             Bind("Settings/Scroll/Viewport/Content/SelectMusic", () => { musicPanel.SetActive(true); RefreshMusic(); });
             Bind("Settings/Scroll/Viewport/Content/Achievements", ShowAchievements);
             Bind("Settings/Scroll/Viewport/Content/Album", ShowAlbum);
-            Bind("Settings/Scroll/Viewport/Content/SaveInfo", () => ShowDialog("游戏数据", "关卡、金币、提示与个人资料会自动保存。\n退出关卡后可以继续寻找。", "知道了", null));
+            Bind("Settings/Scroll/Viewport/Content/SaveInfo", () => ShowDialog("Game Data", "Your progress, coins, hints and profile are saved automatically.\nYou can leave a level and continue later.", "OK", null));
             Bind("Settings/Scroll/Viewport/Content/NoAds", ShowNoAds);
             Bind("MusicPanel/Close", () => musicPanel.SetActive(false));
             for (var i = 0; i < musicTracks.Length; i++)
@@ -180,12 +189,12 @@ namespace Hotfix.UI
             }
             Bind("Profile/Close", () => profile.SetActive(false));
             Bind("Profile/Card/Save", SaveProfile);
-            Bind("Profile/Card/AvatarTab", () => { frameTab = false; RefreshProfile(); });
-            Bind("Profile/Card/FrameTab", () => { frameTab = true; RefreshProfile(); });
-            for (var i = 0; i < 8; i++)
+            Bind("Profile/Card/AvatarTab", () => { frameTab = false; RefreshProfile(); ResetProfileChoicesScroll(); });
+            Bind("Profile/Card/FrameTab", () => { frameTab = true; RefreshProfile(); ResetProfileChoicesScroll(); });
+            for (var i = 0; i < Mathf.Max(avatarSprites.Length, ProfileFrameCount); i++)
             {
                 var index = i;
-                Bind("Profile/Card/Choices/Choice" + i, () => { if (frameTab) draftFrame = index; else draftAvatar = index; RefreshProfile(); });
+                Bind("Profile/Card/ChoicesScroll/Viewport/Choices/Choice" + i, () => SelectProfileChoice(index));
             }
             Bind("Achievements/Close", () => achievements.SetActive(false));
             Bind("Album/Close", () => album.SetActive(false));
@@ -194,8 +203,8 @@ namespace Hotfix.UI
                 var index = i;
                 Bind("Album/Card/Level" + i, () => SelectLevel((OnlineLevels ? albumPage * levels.Length : 0) + index));
             }
-            albumPrevious = AlbumPageButton("PreviousPage", "上一页", 24, -1);
-            albumNext = AlbumPageButton("NextPage", "下一页", 428, 1);
+            albumPrevious = AlbumPageButton("PreviousPage", "Previous", 24, -1);
+            albumNext = AlbumPageButton("NextPage", "Next", 428, 1);
             resetZoomButton = At<UnityEngine.UI.Button>("Play/Zoom");
             widthControls = new[] { (RectTransform)backButton.transform, At<RectTransform>("Play/LifeBadge"), (RectTransform)resetZoomButton.transform };
             widthControlPositions = Array.ConvertAll(widthControls, rect => rect.anchoredPosition);
@@ -205,6 +214,9 @@ namespace Hotfix.UI
             toast = noticeLabel.transform.parent.GetComponent<CommonToast>();
             if (!toast) toast = noticeLabel.transform.parent.gameObject.AddComponent<CommonToast>();
             BindFigmaDesign();
+            BindJourney();
+            BindProfileDesign();
+            BindPauseDesign();
             var lifeBadge = play.transform.Find("LifeBadge");
             lifeAnimation = lifeBadge ? lifeBadge.GetComponentInChildren<Spine.Unity.SkeletonGraphic>(true) : null;
             if (lifeAnimation)
@@ -212,7 +224,7 @@ namespace Hotfix.UI
                 lifeAnimation.Initialize(false);
                 var data = lifeAnimation.SkeletonDataAsset.GetSkeletonData(false);
                 if (data.FindAnimation("xin") == null || data.FindAnimation("xin2") == null)
-                    throw new InvalidOperationException("生命值 Spine 缺少 xin 或 xin2 动画");
+                    throw new InvalidOperationException("The life Spine asset is missing the xin or xin2 animation.");
                 lifeLossDuration = data.FindAnimation("xin2").Duration;
                 lifeAnimation.UnscaledTime = true;
                 PlayLifeAnimation(false);
@@ -223,30 +235,35 @@ namespace Hotfix.UI
         public override void OnOpen(object userData)
         {
             if (!interactionsBound) return;
+            CancelStartupData();
             CloseAds();
+            ClosePauseOverlays();
             CancelRemoteLoad();
             CancelEndAnimation();
             tabsSliding = tabsDragging = false; currentPage = null;
             base.OnOpen(userData);
+            InitializeJourney();
             completed = Mathf.Clamp(GetInt("Completed", 0), 0, LevelLimit);
             coins = Mathf.Clamp(GetInt("Coins", 10), 0, 1000000);
             hints = Mathf.Clamp(GetInt("Hints", 5), 0, 10000);
             avatar = Mathf.Clamp(GetInt("Avatar", 0), 0, avatarSprites.Length - 1);
-            frame = Mathf.Clamp(GetInt("Frame", 0), 0, FrameColors.Length - 1);
+            frame = Mathf.Clamp(GetInt("Frame", 0), 0, ProfileFrameCount - 1);
             music = Mathf.Clamp(GetInt("MusicTrack", 0), 0, musicTracks.Length - 1);
-            ownedAvatars = (GetInt("OwnedAvatars", 249) | 249) & ((1 << avatarSprites.Length) - 1);
-            ownedFrames = (GetInt("OwnedFrames", 7) & ((1 << FrameColors.Length) - 1)) | 7;
-            if ((ownedAvatars & (1 << avatar)) == 0) avatar = 0;
-            if ((ownedFrames & (1 << frame)) == 0) frame = 0;
+            ownedAvatars = GetInt("OwnedAvatars", 249);
+            ownedFrames = GetInt("OwnedFrames", 15) | 15;
+            if (!ProfileFrameUnlocked(frame)) frame = 0;
             sound = GameApp.Setting.GetBool(Key + "Sound", true);
             musicEnabled = GameApp.Setting.GetBool(Key + "Music", true);
+            gmUnlimitedHints = GameApp.Setting.GetBool(Key + "GmUnlimitedHints", false);
+            gmGesture.Reset(); CloseGmPanel();
             vibration = GameApp.Setting.GetBool(Key + "Vibration", true);
             nickname = GameApp.Setting.GetString(Key + "Nickname", "Player_1001");
             giftDate = GameApp.Setting.GetString(Key + "GiftDate", "");
             totalFound = Mathf.Max(0, GetInt("TotalFound", 0)); perfect = Mathf.Max(0, GetInt("Perfect", 0));
             settled = false; Round = null; pendingHint = -1;
             ShowHomeInternal(); PlayMusic(); OpenAds();
-            InitializeTutorial();
+            if (ReferenceEquals(userData, StartupDataMarker)) StopTutorial();
+            else InitializeTutorial();
         }
 
         void AlignWideScreenControls()
@@ -262,26 +279,112 @@ namespace Hotfix.UI
             }
         }
 
+        void FitSafeArea(Rect area)
+        {
+            stage.anchorMin = Vector2.zero;
+            stage.anchorMax = Vector2.one;
+            stage.pivot = Vector2.one * .5f;
+            stage.localScale = Vector3.one;
+            stage.localRotation = Quaternion.identity;
+            stage.sizeDelta = stage.anchoredPosition = Vector2.zero;
+            if (safeStretchPages == null)
+            {
+                var stretch = new[] { "Home", "Profile", "FigmaHome", "FigmaLoading", "FigmaJourney", "FigmaVictory",
+                    "FigmaSettings", "FigmaFail", "FigmaHint", "FigmaPause", "FigmaLeave" };
+                var fixedPages = new[] { "Shop", "Ranking", "Settings", "Achievements", "Album", "Modal", "MusicPanel" };
+                safeStretchPages = new RectTransform[stretch.Length];
+                safeFixedPages = new RectTransform[fixedPages.Length];
+                for (var i = 0; i < stretch.Length; i++) safeStretchPages[i] = stage.Find(stretch[i]) as RectTransform;
+                for (var i = 0; i < fixedPages.Length; i++) safeFixedPages[i] = stage.Find(fixedPages[i]) as RectTransform;
+                safeToast = stage.Find("Toast") as RectTransform;
+            }
+            foreach (var page in safeStretchPages)
+            {
+                if (!page) continue;
+                page.anchorMin = area.min; page.anchorMax = area.max;
+                page.sizeDelta = Vector2.zero;
+                page.anchoredPosition = new Vector2(page.gameObject == home ? page.anchoredPosition.x : 0, 0);
+            }
+            foreach (var page in safeFixedPages)
+            {
+                if (!page) continue;
+                // Preserve design-space pivots and sizes used by popup animations and legacy controls.
+                page.anchorMin = page.anchorMax = area.center + Vector2.Scale(page.pivot - Vector2.one * .5f,
+                    new Vector2(page.rect.width / stage.rect.width, page.rect.height / stage.rect.height));
+                var sliding = page.gameObject == shop || page.gameObject == ranking;
+                page.anchoredPosition = new Vector2(sliding ? page.anchoredPosition.x : 0, 0);
+            }
+            var nav = (RectTransform)navigation.transform;
+            nav.anchorMin = nav.anchorMax = new Vector2(area.center.x, area.yMin) +
+                new Vector2((nav.pivot.x - .5f) * nav.rect.width / stage.rect.width, nav.pivot.y * nav.rect.height / stage.rect.height);
+            nav.anchoredPosition = Vector2.zero;
+            if (safeToast) safeToast.anchorMin = safeToast.anchorMax = new Vector2(area.center.x, area.yMax);
+        }
+
+        void FitScreenBackgrounds(RectTransform root)
+        {
+            if (screenBackgrounds == null)
+            {
+                var paths = new[]
+                {
+                    "Play/Background", "FigmaHome/Artwork", "FigmaLoading/Background", "FigmaJourney/Background", "Home/Beach",
+                    "Shop/Background", "Ranking/Background", "Settings/Background", "FigmaVictory/Bg",
+                    "Profile/Scrim", "MusicPanel/Scrim", "Achievements/Scrim", "Album/Scrim", "Modal/Scrim",
+                    "FigmaSettings/Scrim", "FigmaFail/Scrim", "FigmaHint/Scrim", "FigmaPause/Scrim", "FigmaLeave/Scrim"
+                };
+                screenBackgrounds = new UnityEngine.UI.Image[paths.Length];
+                screenBackgroundAspects = new float[paths.Length];
+                for (var i = 0; i < paths.Length; i++)
+                {
+                    var image = stage.Find(paths[i])?.GetComponent<UnityEngine.UI.Image>();
+                    screenBackgrounds[i] = image;
+                    if (!image) continue;
+                    var fitter = image.GetComponent<UnityEngine.UI.AspectRatioFitter>();
+                    if (fitter && image.sprite) screenBackgroundAspects[i] = fitter.aspectRatio;
+                    if (fitter) fitter.enabled = false;
+                }
+            }
+            for (var i = 0; i < screenBackgrounds.Length; i++)
+            {
+                var image = screenBackgrounds[i];
+                if (!image) continue;
+                var background = image.rectTransform;
+                var parent = background.parent;
+                var min = parent.InverseTransformPoint(root.TransformPoint(root.rect.min));
+                var max = parent.InverseTransformPoint(root.TransformPoint(root.rect.max));
+                var width = (max.x - min.x) / Mathf.Max(.001f, Mathf.Abs(background.localScale.x));
+                var height = (max.y - min.y) / Mathf.Max(.001f, Mathf.Abs(background.localScale.y));
+                var aspect = screenBackgroundAspects[i];
+                if (aspect > 0) { width = Mathf.Max(width, height * aspect); height = width / aspect; }
+                background.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, width);
+                background.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, height);
+                var center = root.TransformPoint(root.rect.center);
+                // Backgrounds fill the screen while their page content stays inside the safe area.
+                if (parent == home.transform || parent == shop.transform || parent == ranking.transform)
+                    center += stage.TransformVector(new Vector3(((RectTransform)parent).anchoredPosition.x, 0, 0));
+                background.position = center - background.TransformVector(background.rect.center);
+            }
+        }
+
         void LateUpdate()
         {
             if (!interactionsBound) return;
+            PollGmGesture();
+            RefreshGmWindow();
             SampleAnalytics();
             UpdateRewardEntryAnalytics();
             UpdateAdsVisibility();
             if (AdInputBlocked) return;
             resetZoomButton.gameObject.SetActive(upperImage.transform.localScale.x > 1.0001f);
-            resetZoomButton.interactable = !HintActive && !upperImage.GetComponent<DifferenceBoard>().IsResetting;
+            resetZoomButton.interactable = !PauseInputBlocked && !HintActive && !upperImage.GetComponent<DifferenceBoard>().IsResetting;
             var root = (RectTransform)transform;
             var area = Screen.safeArea;
             // Canvas layout can be zero-sized while the form is being attached or resized.
             if (root.rect.width <= 0 || root.rect.height <= 0 || stage.rect.width <= 0 || stage.rect.height <= 0 ||
                 area.width <= 0 || area.height <= 0) return;
-            var scale = Mathf.Min(root.rect.width * area.width / Mathf.Max(1, Screen.width) / stage.rect.width,
-                root.rect.height * area.height / Mathf.Max(1, Screen.height) / stage.rect.height);
-            if (float.IsNaN(scale) || float.IsInfinity(scale)) return;
-            stage.localScale = Vector3.one * scale;
-            stage.anchoredPosition = new Vector2((area.center.x / Mathf.Max(1, Screen.width) - .5f) * root.rect.width,
-                (area.center.y / Mathf.Max(1, Screen.height) - .5f) * root.rect.height);
+            FitSafeArea(new Rect(area.x / Mathf.Max(1, Screen.width), area.y / Mathf.Max(1, Screen.height),
+                area.width / Mathf.Max(1, Screen.width), area.height / Mathf.Max(1, Screen.height)));
+            FitScreenBackgrounds(root);
             if (playLayout && playLayout.enabled)
             {
                 if (playLayout.ApplyLayout())
@@ -299,7 +402,7 @@ namespace Hotfix.UI
             if (!testing) AdvanceHintGuide(Time.unscaledDeltaTime);
             if (Input.GetKeyDown(KeyCode.Escape))
             {
-                if (tutorialPending) return;
+                if (HandlePauseEscape()) return;
                 if (hintDesign && hintDesign.activeSelf) CloseDesignHint();
                 else if (figmaResultActive) CloseResultToHome();
                 else if (modal.activeSelf) { if (modalClose.gameObject.activeSelf) modal.SetActive(false); }
@@ -309,12 +412,16 @@ namespace Hotfix.UI
                 else if (achievements.activeSelf) achievements.SetActive(false);
                 else if (settings.activeSelf) CloseSettings();
                 else if (shop.activeSelf && shopReturnsToPlay) CloseShop();
+                else if (JourneyVisible) ShowHome();
+                else if (play.activeSelf) ShowPause();
                 else ShowHome();
             }
         }
 
         void ShowPage(GameObject page)
         {
+            journeyVisible = false;
+            ClosePauseOverlays();
             PlayMusicForPage(page);
             var wasDragging = tabsDragging;
             tabsDragging = false;
@@ -346,7 +453,7 @@ namespace Hotfix.UI
             LayoutTabs();
         }
 
-        internal bool CanSwipeTabs => !AdInputBlocked && navigation.activeInHierarchy && !play.activeSelf && !tabsSliding &&
+        internal bool CanSwipeTabs => !AdInputBlocked && !JourneyVisible && navigation.activeInHierarchy && !play.activeSelf && !tabsSliding &&
             !modal.activeSelf && !settings.activeSelf && !profile.activeSelf && !album.activeSelf &&
             !achievements.activeSelf && !musicPanel.activeSelf;
 
@@ -465,6 +572,7 @@ namespace Hotfix.UI
 
         void ShowHomeInternal()
         {
+            ExitJourneyMode();
             var returningFromPlay = currentPage == play && !IsLoadingLevel;
             var returnStarted = Time.realtimeSinceStartupAsDouble;
             CancelRemoteLoad();
@@ -475,22 +583,25 @@ namespace Hotfix.UI
             var saved = SavedLevel();
             level = saved >= 0 ? saved : Mathf.Min(completed, LevelLimit - 1);
             ShowPage(home);
-            startLabel.text = saved == level ? "继续 · 第" + (level + 1) + "关" : completed == LevelLimit ? "关卡相册" : "第" + (level + 1) + "关";
-            homeAvatar.sprite = avatarSprites[avatar]; homeFrame.color = FrameColors[frame];
+            startLabel.text = saved == level ? "Continue · Level " + (level + 1) : completed == LevelLimit ? "Level Album" : "Level " + (level + 1);
+            designStartButton.GetComponentInChildren<UnityEngine.UI.Text>(true).text = "Level " + (completed == LevelLimit && saved < 0 ? 1 : level + 1);
+            homeAvatar.sprite = avatarSprites[avatar]; RefreshHomeProfileDesign();
             if (returningFromPlay && AnalyticsEnabled) StartCoroutine(TrackHomeReturn(returnStarted));
         }
 
         public void StartLevel()
         {
             if (AdInputBlocked) return;
-            if (completed == LevelLimit && home.activeSelf && SavedLevel() < 0) { BeginLevel(0, false); return; }
+            if (!journeyPlaying && !testing && completed == 0 && !tutorialPending && !GameApp.Setting.GetBool(Key + "TutorialComplete", false))
+            { InitializeTutorial(); return; }
+            if (ActiveCompleted == LevelLimit && home.activeSelf && SavedLevel() < 0) { BeginLevel(0, false); return; }
             BeginLevel(level, true);
         }
 
         public void SelectLevel(int index)
         {
             if (AdInputBlocked) return;
-            if (index < 0 || index >= LevelLimit || index > completed) return;
+            if (index < 0 || index >= LevelLimit || index > ActiveCompleted) return;
             BeginLevel(index, true);
         }
 
@@ -525,7 +636,7 @@ namespace Hotfix.UI
             roundContent = UsingRemoteLevel ? CurrentLevel.contentKey : "";
             var mask = 0; var lives = 3; roundMistakes = 0; pendingHint = -1;
             var restored = resume && SavedLevel() == level &&
-                GameApp.Setting.GetString(Key + "RoundContent", "") == roundContent;
+                GameApp.Setting.GetString(RoundSettingKey("RoundContent"), "") == roundContent;
             if (restored)
             { mask = GetInt("RoundMask", 0); lives = GetInt("RoundLives", 3); roundMistakes = Mathf.Max(3 - lives, GetInt("RoundMistakes", 0)); pendingHint = GetInt("RoundHint", -1); }
             Round = new DifferenceRound(spots, ImageAspect, mask, lives);
@@ -544,7 +655,8 @@ namespace Hotfix.UI
                 topRings[i].transform.localScale = bottomRings[i].transform.localScale = Vector3.one;
                 if (found) { ShowFoundRing(topRings[i], false); ShowFoundRing(bottomRings[i], false); }
             }
-            levelLabel.text = "第" + (level + 1) + "关";
+            levelLabel.text = "Level " + (level + 1);
+            ResetProgressDots();
             UpdateHUD(); SaveRound();
             OpenTutorial(restored);
             if (Round.Finished) ShowRoundResult(false, 0);
@@ -583,15 +695,15 @@ namespace Hotfix.UI
                 patchElapsed[i] = -1;
                 foreach (var marker in new[] { topRings[i], bottomRings[i] })
                 {
-                    SetBoardRegion(marker.rectTransform, new Vector4(spots[i].x, spots[i].y,
-                        spots[i].radius * 2, spots[i].radius * 2 * ImageAspect));
+                    SetBoardRegion(marker.rectTransform, data.markerRegions != null ? data.markerRegions[i] :
+                        new Vector4(spots[i].x, spots[i].y, spots[i].radius * 2, spots[i].radius * 2 * ImageAspect));
                 }
             }
         }
 
         public void ClickImage(float x, float y, bool fromLower = false)
         {
-            if (AdInputBlocked) return;
+            if (AdInputBlocked || PauseInputBlocked) return;
             if (!TutorialAllowsClick(x, y)) return;
             if (!play.activeSelf || modal.activeSelf || settings.activeSelf || (hintDesign && hintDesign.activeSelf) || IsLoadingLevel || Round == null || settled) return;
             hintIdle = 0; hintHand.Show(false);
@@ -616,16 +728,16 @@ namespace Hotfix.UI
 
         public void UseHint()
         {
-            if (AdInputBlocked) return;
+            if (AdInputBlocked || PauseInputBlocked) return;
             if (TutorialRunning && (tutorialStep != TutorialStep.HintButton || Time.unscaledTime < tutorialShowAt)) return;
             if (!play.activeSelf || modal.activeSelf || settings.activeSelf || (hintDesign && hintDesign.activeSelf) || IsLoadingLevel || Round == null || Round.Finished || settled || HintActive) return;
             if (pendingHint >= 0) { RestoreHint(true); return; }
-            if (!UnlimitedHints && hints == 0) { RefreshHintRewardLabel(); hintDesign.SetActive(true); hintDesign.transform.SetAsLastSibling(); UpdateAdsVisibility(); return; }
+            if (!UnlimitedHints && hints == 0) { RefreshHintRewardLabel(); hintDesign.SetActive(true); hintDesign.transform.SetAsLastSibling(); DifferencePopupMotion.SortAboveGameParticles(hintDesign); UpdateAdsVisibility(); return; }
             var result = Round.Hint();
             if (result < 0) return;
             pendingHint = result;
             CountAnalyticsHint();
-            GameApp.Setting.SetInt(Key + "RoundHint", pendingHint);
+            GameApp.Setting.SetInt(RoundSettingKey("RoundHint"), pendingHint);
             if (!UnlimitedHints) hints--;
             Save();
             RestoreHint(true);
@@ -635,11 +747,13 @@ namespace Hotfix.UI
 
         void RestoreHint(bool playSound = false)
         {
-            if (pendingHint < 0 || !play.activeSelf || Round == null || Round.Finished || HintActive) return;
+            if (PauseInputBlocked || pendingHint < 0 || !play.activeSelf || Round == null || Round.Finished || HintActive) return;
             hintIdle = 0; hintHand.Show(false);
             var spot = spots[pendingHint];
             hintSpotlight.Show(upperImage.GetComponent<DifferenceBoard>(), upperImage.rectTransform, lowerImage.rectTransform,
                 new Vector2(spot.x, spot.y), pendingHint);
+            // Keep pause reachable while the hint scrim blocks the rest of the board.
+            backButton.transform.SetAsLastSibling();
             if (playSound && HintActive) PlayTone(tipsSound);
         }
 
@@ -647,7 +761,7 @@ namespace Hotfix.UI
         {
             if (tutorialPending) { hintHand.Show(false); return; }
             var available = play.activeSelf && Round != null && !Round.Finished && !settled && (UnlimitedHints || hints > 0) &&
-                !HintActive && !modal.activeSelf && !settings.activeSelf && !(hintDesign && hintDesign.activeSelf) && !IsLoadingLevel;
+                !PauseInputBlocked && !HintActive && !modal.activeSelf && !settings.activeSelf && !(hintDesign && hintDesign.activeSelf) && !IsLoadingLevel;
             if (!available) hintIdle = 0;
             else hintIdle += Mathf.Max(0, deltaTime);
             hintHand.Show(available && hintIdle >= 8);
@@ -655,21 +769,26 @@ namespace Hotfix.UI
 
         void ApplyResult(int result, Vector3? worldOrigin = null)
         {
-            if (result == DifferenceRound.Ignored) return;
+            if (settled || result == DifferenceRound.Ignored) return;
             // GM calls this method directly without a real pointer origin.
             if (!worldOrigin.HasValue) analyticsSuppressedRound = true;
             PlayResultVibration(result);
             if (result >= 0)
             {
                 TutorialFound(result);
-                patchElapsed[result] = 0;
-                originalPatchImages[result].color = changedFlashImages[result].color = new Color(1, 1, 1, 0);
-                originalPatchImages[result].transform.parent.gameObject.SetActive(true);
-                changedFlashImages[result].transform.parent.gameObject.SetActive(true);
                 totalFound++;
                 TrackAnalyticsPart(result);
                 topRings[result].gameObject.SetActive(true); bottomRings[result].gameObject.SetActive(true);
                 ShowFoundRing(topRings[result], true); ShowFoundRing(bottomRings[result], true);
+                if (!Round.Complete)
+                {
+                    patchElapsed[result] = 0;
+                    originalPatchImages[result].color = changedFlashImages[result].color = new Color(1, 1, 1, 0);
+                    originalPatchImages[result].transform.parent.gameObject.SetActive(true);
+                    changedFlashImages[result].transform.parent.gameObject.SetActive(true);
+                    MaskPatchFlash(originalPatchImages[result], CurrentLevel.changedOnTop ? topRings[result] : bottomRings[result]);
+                    MaskPatchFlash(changedFlashImages[result], CurrentLevel.changedOnTop ? bottomRings[result] : topRings[result]);
+                }
                 var slot = Round.Count - 1;
                 var foundRound = Round;
                 pendingProgress[slot] = true;
@@ -689,11 +808,11 @@ namespace Hotfix.UI
             settled = true;
             if (Round.Complete)
             {
-                var reward = completed <= level ? 10 : 0;
-                if (reward > 0) { completed = Mathf.Max(completed, level + 1); coins += reward; if (roundMistakes == 0) perfect++; }
+                if (ActiveCompleted <= level) { RecordLevelCompletion(); if (roundMistakes == 0) perfect++; }
+                coins += LevelCoinReward;
                 ClearRound(); Save();
                 TrackAnalyticsResult(true);
-                endRoutine = StartCoroutine(EndRound(true, reward));
+                endRoutine = StartCoroutine(EndRound(true, LevelCoinReward));
             }
             else { TrackAnalyticsResult(false); endRoutine = StartCoroutine(EndRound(false, 0)); }
         }
@@ -715,6 +834,7 @@ namespace Hotfix.UI
             }
             var showSpine = useSpineFoundRing && foundRingSpine;
             outline.style = foundRingStyle;
+            outline.sourceImageWidth = CurrentLevel.markerRegions != null ? upperImage.sprite.rect.width : 0;
             outline.gameObject.SetActive(!showSpine);
             outline.enabled = !showSpine;
             if (!showSpine) outline.Play(animate);
@@ -803,9 +923,9 @@ namespace Hotfix.UI
         {
             var finishedRound = Round;
             var visibleLevel = level + 1;
-            if (!testing) yield return new WaitForSecondsRealtime(won ? Mathf.Max(DifferenceFoundFlight.Duration + .06f, PatchFlashDuration + .05f) : Mathf.Max(.25f, lifeLossDuration));
-            if (!play.activeSelf || Round != finishedRound) { endRoutine = null; yield break; }
+            var resultTime = Time.unscaledTime + (won ? DifferenceFoundFlight.Duration + .06f : Mathf.Max(.25f, lifeLossDuration));
             if (won && !testing) yield return ReplayCompletedProgress();
+            if (!testing) yield return new WaitForSecondsRealtime(Mathf.Max(0, resultTime - Time.unscaledTime));
             if (!play.activeSelf || Round != finishedRound) { endRoutine = null; yield break; }
             ShowRoundResult(won, reward);
             if (won)
@@ -874,7 +994,8 @@ namespace Hotfix.UI
                 var shown = i < Round.Count && !pendingProgress[i];
                 if (shown) shownCount++;
                 progressDots[i].gameObject.SetActive(i < Round.Total);
-                progressDots[i].sprite = shown ? progressCheck : progressQuestion;
+                // The completion sweep owns pending dots while their flights are still arriving.
+                if (shown || !Round.Complete) SyncProgressDot(progressDots[i], shown);
             }
             progressLabel.text = shownCount + " / " + Round.Total;
             RefreshWallet();
@@ -913,8 +1034,9 @@ namespace Hotfix.UI
 
         void PlayMusicForPage(GameObject page)
         {
+            musicSource.volume = BackgroundMusicVolume;
             if (!musicEnabled) { musicSource.Stop(); return; }
-            var clip = page == play ? gameMusic : homeMusic;
+            var clip = page == play ? gameMusic : JourneyVisible ? journeyMusic : homeMusic;
             if (!clip) { musicSource.Stop(); return; }
             if (musicSource.clip != clip) { musicSource.Stop(); musicSource.clip = clip; }
             if (!musicSource.isPlaying) musicSource.Play();
@@ -934,16 +1056,16 @@ namespace Hotfix.UI
             if (AdInputBlocked) return;
             if (!shopReturnsToPlay || Round == null) { ShowHome(); return; }
             ShowPage(play); UpdateHUD();
-            if (Round.Finished) ShowRoundResult(Round.Complete, 0);
+            if (Round.Finished) ShowRoundResult(Round.Complete, Round.Complete ? LevelCoinReward : 0);
             else RestoreHint();
         }
         void RefreshShop()
         {
             var claimed = GiftClaimed(DateTime.UtcNow.ToString("yyyy-MM-dd"));
             var button = At<UnityEngine.UI.Button>("Shop/Scroll/Viewport/Content/Free/Buy");
-            button.interactable = !claimed; button.GetComponentInChildren<UnityEngine.UI.Text>().text = claimed ? "已领取" : "每日免费";
+            button.interactable = !claimed; button.GetComponentInChildren<UnityEngine.UI.Text>().text = claimed ? "Claimed" : "Daily Free Hint";
             At<UnityEngine.UI.Button>("Shop/Scroll/Viewport/Content/HintOffer/Buy").interactable = coins >= 900;
-            SetText("Shop/HintCount", "我的提示  ×" + hints);
+            SetText("Shop/HintCount", "My Hints  ×" + hints);
         }
         public void ClaimDailyHint()
         {
@@ -951,66 +1073,22 @@ namespace Hotfix.UI
             var today = DateTime.UtcNow.ToString("yyyy-MM-dd");
             if (GiftClaimed(today)) { RefreshShop(); return; }
             giftDate = today; hints++; Save(); RefreshShop();
-            ShowDialog("领取成功", "获得 1 次提示", "收下", null);
+            ShowDialog("Reward Claimed", "You received 1 hint.", "Collect", null);
         }
         public void BuyHint()
         {
             if (AdInputBlocked) return;
             if (coins < 900) return;
             coins -= 900; hints++; Save(); RefreshWallet(); RefreshShop();
-            ShowDialog("兑换成功", "获得 1 次提示", "继续", null);
+            ShowDialog("Purchase Complete", "You received 1 hint.", "Continue", null);
         }
         void ShowNoAds()
         {
             var ads = GameFrameX.Startup.Application.DifferenceAds.SdkEnabled;
-            var message = !ads ? "当前版本未启用广告 SDK，不展示广告。" :
-                GameFrameX.Startup.Application.DifferenceAds.NoAds ? "免广告权益已生效，插屏与横幅已关闭。\n提示奖励视频仍由你主动选择观看。" :
-                "当前版本包含横幅与插屏广告。\n免广告购买暂未开放。\n你可以主动观看奖励视频领取提示。";
-            ShowDialog("广告说明", message, "知道了", null);
-        }
-
-        public void ShowProfile()
-        {
-            if (AdInputBlocked) return;
-            draftAvatar = avatar; draftFrame = frame; frameTab = false;
-            nicknameInput.text = nickname; profile.SetActive(true); RefreshProfile(); UpdateAdsVisibility();
-        }
-        void RefreshProfile()
-        {
-            profileAvatar.sprite = avatarSprites[draftAvatar]; profileFrame.color = FrameColors[draftFrame];
-            SetText("Profile/Card/AvatarTab/Label", "头像"); SetText("Profile/Card/FrameTab/Label", "头像框");
-            for (var i = 0; i < 8; i++)
-            {
-                var choice = stage.Find("Profile/Card/Choices/Choice" + i);
-                var valid = i < (frameTab ? FrameColors.Length : avatarSprites.Length);
-                choice.gameObject.SetActive(valid);
-                if (!valid) continue;
-                choice.GetComponent<UnityEngine.UI.Image>().color = FrameColors[frameTab ? i : draftFrame];
-                choice.Find("Avatar").GetComponent<UnityEngine.UI.Image>().sprite = avatarSprites[frameTab ? draftAvatar : i];
-                var owned = ((frameTab ? ownedFrames : ownedAvatars) & (1 << i)) != 0;
-                SetText("Profile/Card/Choices/Choice" + i + "/Price", owned ? "" : frameTab ? "5000" : "3000");
-                choice.Find("Selected").gameObject.SetActive(i == (frameTab ? draftFrame : draftAvatar));
-            }
-            var cost = ProfileCost();
-            SetText("Profile/Card/Save/Label", cost > 0 ? "解锁并保存  " + cost : "保存");
-            At<UnityEngine.UI.Button>("Profile/Card/Save").interactable = coins >= cost;
-        }
-        int ProfileCost() { return ((ownedAvatars & (1 << draftAvatar)) == 0 ? 3000 : 0) + ((ownedFrames & (1 << draftFrame)) == 0 ? 5000 : 0); }
-        public void SaveProfile()
-        {
-            if (AdInputBlocked) return;
-            var value = nicknameInput.text.Trim();
-            if (value.Length == 0) { ShowDialog("请输入昵称", "昵称不能为空。", "继续编辑", null); return; }
-            if (draftAvatar < 0 || draftAvatar >= avatarSprites.Length || draftFrame < 0 || draftFrame >= FrameColors.Length) return;
-            var cost = ProfileCost();
-            if (coins < cost) { ShowDialog("金币不足", "解锁所选头像与头像框需要 " + cost + " 金币。", "继续选择", null); return; }
-            coins -= cost; avatar = draftAvatar; frame = draftFrame;
-            ownedAvatars |= 1 << avatar; ownedFrames |= 1 << frame;
-            var length = Mathf.Min(value.Length, 16);
-            if (length < value.Length && char.IsHighSurrogate(value[length - 1])) length--;
-            nickname = value.Substring(0, length); Save();
-            homeAvatar.sprite = avatarSprites[avatar]; homeFrame.color = FrameColors[frame];
-            profile.SetActive(false); RefreshWallet();
+            var message = !ads ? "Ads are disabled in this version." :
+                GameFrameX.Startup.Application.DifferenceAds.NoAds ? "Your ad-free access is active. Banner and interstitial ads are disabled.\nYou can still choose to watch rewarded videos for hints." :
+                "This version includes banner and interstitial ads.\nAd-free purchases are not available yet.\nYou can choose to watch rewarded videos for hints.";
+            ShowDialog("About Ads", message, "OK", null);
         }
 
         void ShowAchievements()
@@ -1020,11 +1098,11 @@ namespace Hotfix.UI
             UpdateAdsVisibility();
             var values = new[] { completed, totalFound, perfect, completed };
             var goals = new[] { 1, 10, 1, levels.Length };
-            SetText("Achievements/Card/Row3/Detail", OnlineLevels ? "完成 3 个关卡" : "完成全部已开放场景");
+            SetText("Achievements/Card/Row3/Detail", OnlineLevels ? "Complete 3 levels" : "Complete all available scenes");
             for (var i = 0; i < values.Length; i++)
             {
                 SetText("Achievements/Card/Row" + i + "/Progress", Mathf.Min(values[i], goals[i]) + " / " + goals[i]);
-                SetText("Achievements/Card/Row" + i + "/State", values[i] >= goals[i] ? "已达成" : "进行中");
+                SetText("Achievements/Card/Row" + i + "/State", values[i] >= goals[i] ? "Completed" : "In Progress");
             }
         }
         public void ShowAlbum()
@@ -1032,7 +1110,7 @@ namespace Hotfix.UI
             if (AdInputBlocked) return;
             album.SetActive(true);
             UpdateAdsVisibility();
-            albumPage = OnlineLevels ? Mathf.Min(level, completed) / levels.Length : 0;
+            albumPage = OnlineLevels ? Mathf.Min(level, ActiveCompleted) / levels.Length : 0;
             RefreshAlbum();
         }
 
@@ -1040,9 +1118,9 @@ namespace Hotfix.UI
         {
             albumPrevious.gameObject.SetActive(OnlineLevels); albumNext.gameObject.SetActive(OnlineLevels);
             albumPrevious.interactable = albumPage > 0;
-            albumNext.interactable = albumPage < completed / levels.Length;
+            albumNext.interactable = albumPage < ActiveCompleted / levels.Length;
             var more = At<UnityEngine.UI.Text>("Album/Card/More");
-            more.text = OnlineLevels ? (albumPage + 1) + " / " + (completed / levels.Length + 1) : "更多场景，持续更新";
+            more.text = OnlineLevels ? (albumPage + 1) + " / " + (ActiveCompleted / levels.Length + 1) : "More scenes coming soon";
             more.rectTransform.anchoredPosition = new Vector2(OnlineLevels ? 200 : 40, -794);
             more.rectTransform.sizeDelta = new Vector2(OnlineLevels ? 212 : 532, 49);
             for (var i = 0; i < levels.Length; i++)
@@ -1053,17 +1131,18 @@ namespace Hotfix.UI
                 if (entry >= LevelLimit) continue;
                 var index = (int)entry;
                 var data = OnlineLevels ? (index < LevelLimit && loadedApiUrl == LevelUrl(index) ? remoteLevel?.Level : null) : levels[i];
-                row.Find("Title").GetComponent<UnityEngine.UI.Text>().text = ((long)index + 1) + "  " + (OnlineLevels ? "在线关卡" : data.title);
-                row.Find("Count").GetComponent<UnityEngine.UI.Text>().text = data == null ? "点击加载关卡" : data.regions.Length + " 处不同";
+                row.Find("Title").GetComponent<UnityEngine.UI.Text>().text = ((long)index + 1) + "  " + (OnlineLevels ? "Online Level" : data.title);
+                row.Find("Count").GetComponent<UnityEngine.UI.Text>().text = data == null ? "Tap to load level" : data.regions.Length + " differences";
                 row.Find("Preview").GetComponent<UnityEngine.UI.Image>().sprite = data?.original;
-                row.GetComponent<UnityEngine.UI.Button>().interactable = index <= completed && index < LevelLimit;
-                row.Find("Status").GetComponent<UnityEngine.UI.Text>().text = index < completed ? "已完成 · 重玩" : index == completed ? "开始寻找" : "尚未解锁";
+                row.GetComponent<UnityEngine.UI.Button>().interactable = index <= ActiveCompleted && index < LevelLimit;
+                row.Find("Status").GetComponent<UnityEngine.UI.Text>().text = index < ActiveCompleted ? "Completed · Replay" : index == ActiveCompleted ? "Start Finding" : "Locked";
             }
         }
 
         public void ShowDialog(string title, string body, string actionLabel, Action action, string second = null, Action secondAction = null, string third = null, Action thirdAction = null, bool terminal = false)
         {
             if (AdInputBlocked) return;
+            modalAction.interactable = modalSecondary.interactable = modalTertiary.interactable = true;
             modalTitle.text = title; modalBody.text = body; modalActionLabel.text = actionLabel;
             dialogAction = action; secondaryAction = secondAction; tertiaryAction = thirdAction;
             modalSecondary.gameObject.SetActive(second != null); modalTertiary.gameObject.SetActive(third != null);
@@ -1077,14 +1156,16 @@ namespace Hotfix.UI
         void RefreshWallet()
         {
             coinsLabel.text = coins.ToString(); SetText("Shop/Coins", coins.ToString());
+            SetText("Profile/Wallet/Coins", coins.ToString());
             if (designCoins) designCoins.text = coins.ToString();
             SetText("Ranking/PlayerName", nickname ?? "Player_1001");
+            RefreshJourneyEntry();
         }
-        int GetInt(string name, int value) { return GameApp.Setting.GetInt(Key + name, value); }
+        int GetInt(string name, int value) { return GameApp.Setting.GetInt(name.StartsWith("Round", StringComparison.Ordinal) ? RoundSettingKey(name) : Key + name, value); }
         int SavedLevel()
         {
             var saved = GetInt("RoundLevel", -1);
-            if (saved < 0 || saved >= LevelLimit || saved > completed) return -1;
+            if (saved < 0 || saved >= LevelLimit || saved > ActiveCompleted) return -1;
             var count = OnlineLevels
                 ? remoteLevel != null && loadedApiUrl == LevelUrl(saved) ? remoteLevel.Level.regions.Length : DifferenceRound.MaxSpots
                 : levels[saved].regions.Length;
@@ -1095,13 +1176,13 @@ namespace Hotfix.UI
         {
             if (Round == null || Round.Complete) return;
             SaveAnalyticsRound();
-            GameApp.Setting.SetInt(Key + "RoundLevel", level); GameApp.Setting.SetInt(Key + "RoundMask", Round.FoundMask); GameApp.Setting.SetInt(Key + "RoundLives", Round.Lives);
-            GameApp.Setting.SetInt(Key + "RoundMistakes", roundMistakes);
-            GameApp.Setting.SetInt(Key + "RoundHint", pendingHint);
-            GameApp.Setting.SetString(Key + "RoundContent", roundContent);
+            GameApp.Setting.SetInt(RoundSettingKey("RoundLevel"), level); GameApp.Setting.SetInt(RoundSettingKey("RoundMask"), Round.FoundMask); GameApp.Setting.SetInt(RoundSettingKey("RoundLives"), Round.Lives);
+            GameApp.Setting.SetInt(RoundSettingKey("RoundMistakes"), roundMistakes);
+            GameApp.Setting.SetInt(RoundSettingKey("RoundHint"), pendingHint);
+            GameApp.Setting.SetString(RoundSettingKey("RoundContent"), roundContent);
             GameApp.Setting.Save();
         }
-        void ClearRound() { GameApp.Setting.SetInt(Key + "RoundLevel", -1); GameApp.Setting.Save(); }
+        void ClearRound() { GameApp.Setting.SetInt(RoundSettingKey("RoundLevel"), -1); GameApp.Setting.Save(); }
         bool GiftClaimed(string today)
         {
             var stored = GameApp.Setting.GetString(Key + "GiftDate", "");
@@ -1113,6 +1194,7 @@ namespace Hotfix.UI
             var names = new[] { "Completed", "Coins", "Hints", "Avatar", "Frame", "MusicTrack", "OwnedAvatars", "OwnedFrames", "TotalFound", "Perfect" };
             var values = new[] { completed, coins, hints, avatar, frame, music, ownedAvatars, ownedFrames, totalFound, perfect };
             for (var i = 0; i < names.Length; i++) GameApp.Setting.SetInt(Key + names[i], values[i]);
+            GameApp.Setting.SetInt(Key + "JourneyCompleted", journeyCompleted);
             GameApp.Setting.SetBool(Key + "Sound", sound); GameApp.Setting.SetBool(Key + "Music", musicEnabled); GameApp.Setting.SetBool(Key + "Vibration", vibration);
             GiftClaimed(DateTime.UtcNow.ToString("yyyy-MM-dd"));
             GameApp.Setting.SetString(Key + "Nickname", nickname); GameApp.Setting.SetString(Key + "GiftDate", giftDate);
@@ -1120,22 +1202,31 @@ namespace Hotfix.UI
         }
         void OnApplicationPause(bool paused)
         {
+            if (paused) gmGesture.Reset();
             SampleAnalytics(); analyticsPaused = paused; SampleAnalytics();
             if (paused && Round != null) SaveRound();
             if (paused && AnalyticsEnabled) GameFrameX.Startup.Application.DifferenceAnalytics.Flush();
         }
-        void OnApplicationFocus(bool focused) { SampleAnalytics(); analyticsUnfocused = !focused; SampleAnalytics(); }
+        void OnApplicationFocus(bool focused) { if (!focused) gmGesture.Reset(); SampleAnalytics(); analyticsUnfocused = !focused; SampleAnalytics(); }
         public override void OnClose(bool isShutdown, object userData)
-        { CloseAds(); SaveRound(); CancelRemoteLoad(); CancelEndAnimation(); ClearFoundFeedback(); ReleaseRemoteLevel(); FinishTabTransition(); base.OnClose(isShutdown, userData); }
+        { gmGesture.Reset(); CloseGmPanel(); CancelStartupData(); CloseAds(); ClosePauseOverlays(); SaveRound(); CancelRemoteLoad(); CancelEndAnimation(); ClearFoundFeedback(); ReleaseRemoteLevel(); FinishTabTransition(); base.OnClose(isShutdown, userData); }
         void CancelEndAnimation()
         {
             CancelRewardCoins();
             if (endRoutine != null) { StopCoroutine(endRoutine); endRoutine = null; }
-            var sweep = play ? play.transform.Find("CompletionSweep") : null;
-            if (sweep) { sweep.gameObject.SetActive(false); Destroy(sweep.gameObject); }
         }
         public void SetTesting(bool value) { testing = value; if (value) { StopTutorial(); analyticsSuppressedRound = true; FinishTabTransition(); } }
-        void PlayTone(AudioClip clip) { if (sound && clip) audioSource.PlayOneShot(clip, .4f); }
+        float ToneVolume(AudioClip clip)
+        {
+            return 1f;
+            if (clip == buttonSound) return .12f;
+            if (clip == failSound) return .09f;
+            if (clip == coinCreateSound) return .26f;
+            if (clip == winSound) return .28f;
+            if (clip == missSound || clip == tipsSound) return .3f;
+            return .4f;
+        }
+        void PlayTone(AudioClip clip) { if (sound && clip) audioSource.PlayOneShot(clip, ToneVolume(clip)); }
         void ShowCross(float x, float y)
         {
             foreach (var label in new[] { crossTop, crossBottom })
@@ -1170,7 +1261,7 @@ namespace Hotfix.UI
         void Notice(string message, float seconds) { toast.Show(message, seconds); }
         T At<T>(string path) where T : Component
         {
-            var found = stage.Find(path); if (!found) throw new InvalidOperationException("缺少 UI 节点：" + path);
+            var found = stage.Find(path); if (!found) throw new InvalidOperationException("Missing UI node: " + path);
             return found.GetComponent<T>();
         }
         void PlayButtonSound() { if (!AdInputBlocked) PlayTone(buttonSound); }

@@ -126,9 +126,9 @@ public static class DifferenceRemoteLevelCheck
             ui.levelApiUrl = "invalid-remote-check-url";
             ui.SelectLevel(0);
             await WaitForLoad(ui);
-            Check(ui.Round == null && ui.modal.activeSelf && ui.modalTitle.text == "关卡加载失败" && settings.GetInt(key + "RoundMask") == 3, "加载失败保留原关卡进度并提供重试");
+            Check(ui.Round == null && ui.home.activeSelf && !ui.modal.activeSelf && ui.noticeLabel.text.Contains("Failed to load level") && settings.GetInt(key + "RoundMask") == 3, "加载失败返回主页并提示，保留原关卡进度");
             ui.levelApiUrl = Endpoint;
-            ui.modalAction.onClick.Invoke();
+            ui.StartLevel();
             await WaitForLoad(ui);
             Check(ui.play.activeSelf && ui.Round.Count == 2 && RestoredPatch(ui, 0) && RestoredPatch(ui, 1), "重试后恢复进度，两侧图片保持原样");
             ui.ShowHome();
@@ -158,7 +158,7 @@ public static class DifferenceRemoteLevelCheck
                 await WaitForLoad(ui);
                 var current = CurrentLevel(ui);
                 Check(ui.play.activeSelf && ui.Round != null && ui.Round.Count == 0 &&
-                    ui.SelectedLevel == index && ui.levelLabel.text == "第" + (index + 1) + "关" &&
+                    ui.SelectedLevel == index && ui.levelLabel.text == "Level " + (index + 1) &&
                     current.contentKey.StartsWith(url + "|", StringComparison.Ordinal) &&
                     (string)typeof(UIDifferences).GetField("loadedApiUrl", Private).GetValue(ui) == url,
                     "关卡编号、画面和进度一致 " + (index + 1));
@@ -198,10 +198,10 @@ public static class DifferenceRemoteLevelCheck
             ui.ShowHome();
             Invoke(ui, "ReleaseRemoteLevel");
             ui.OnOpen(null);
-            Check(ui.SelectedLevel == 3 && ui.startLabel.text == "继续 · 第4关", "重新打开后继续第 4 关");
+            Check(ui.SelectedLevel == 3 && ui.startLabel.text == "Continue · Level 4", "重新打开后继续第 4 关");
             ui.StartLevel();
             await WaitForLoad(ui);
-            Check(ui.SelectedLevel == 3 && ui.levelLabel.text == "第4关" && ui.Round.Total == 25 && ui.Round.Count == 1 &&
+            Check(ui.SelectedLevel == 3 && ui.levelLabel.text == "Level 4" && ui.Round.Total == 25 && ui.Round.Count == 1 &&
                 ui.Round.IsFound(24) && RestoredPatch(ui, 24) && ui.topRings[24].gameObject.activeSelf &&
                 ui.bottomRings[24].gameObject.activeSelf, "重新下载第 4 关恢复第 25 处进度与双圈，原差异仍保留");
 
@@ -213,12 +213,14 @@ public static class DifferenceRemoteLevelCheck
             var completedAt = Time.unscaledTime;
             Check(ui.Round.Complete && !ui.modal.activeSelf, "实际找到第 3 关全部差异，最后一处动画尚未结束时不弹结算");
             var resultDeadline = DateTime.UtcNow.AddSeconds(5);
-            while (ui && EditorApplication.isPlaying && !ui.modal.activeSelf && DateTime.UtcNow < resultDeadline) await Task.Delay(50);
-            Check(ui && ui.modal.activeSelf && ui.modalTitle.text == "太棒了！" && ui.modalActionLabel.text == "下一关", "第 3 关通关后显示下一关按钮");
+            var victory = ui.stage.Find("FigmaVictory").gameObject;
+            var next = ui.stage.Find("FigmaVictory/Next").GetComponent<UnityEngine.UI.Button>();
+            while (ui && EditorApplication.isPlaying && !victory.activeInHierarchy && DateTime.UtcNow < resultDeadline) await Task.Delay(50);
+            Check(ui && victory.activeInHierarchy && next.GetComponentInChildren<UnityEngine.UI.Text>(true).text == "Level 4", "第 3 关通关后显示下一关按钮");
             Check(Time.unscaledTime - completedAt >= 2.05f && RestoredPatch(ui, ui.Round.Total - 1), "通关弹窗等待最后一处约 2.1 秒互换动画结束");
-            ui.modalAction.onClick.Invoke();
+            next.onClick.Invoke();
             await WaitForLoad(ui);
-            Check(ui.SelectedLevel == 3 && ui.levelLabel.text == "第4关" && ui.Round.Total == 25 && ui.Round.Count == 0 &&
+            Check(ui.SelectedLevel == 3 && ui.levelLabel.text == "Level 4" && ui.Round.Total == 25 && ui.Round.Count == 0 &&
                 CurrentLevel(ui).contentKey.StartsWith(ui.LevelUrl(3) + "|", StringComparison.Ordinal), "第 3 关通关按钮进入全新第 4 关");
             Canvas.ForceUpdateCanvases();
             ScreenCapture.CaptureScreenshot(Path.Combine(Application.dataPath, "Screenshots/differences-greyfun-level4.png"));

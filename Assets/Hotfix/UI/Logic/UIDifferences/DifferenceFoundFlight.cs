@@ -20,10 +20,10 @@ namespace Hotfix.UI
 
         public static void Launch(RectTransform parent, Vector3 worldOrigin, RectTransform target, Action onReveal = null, GameObject effectPrefab = null)
         {
-            if (!effectPrefab) throw new InvalidOperationException("请绑定 UIDifferences 的 Found Flight Prefab。");
+            if (!effectPrefab) throw new InvalidOperationException("Assign the Found Flight Prefab on UIDifferences.");
             var canvas = parent.GetComponentInParent<Canvas>();
             if (!canvas || canvas.rootCanvas.renderMode == RenderMode.ScreenSpaceOverlay)
-                throw new InvalidOperationException("星星粒子需要使用 Screen Space Camera 或 World Space Canvas。");
+                throw new InvalidOperationException("Star particles require a Screen Space Camera or World Space Canvas.");
             var node = new GameObject("FoundFlight", typeof(RectTransform), typeof(CanvasRenderer), typeof(DifferenceFoundFlight));
             node.layer = parent.gameObject.layer;
             var rect = (RectTransform)node.transform;

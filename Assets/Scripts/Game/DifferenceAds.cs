@@ -26,13 +26,14 @@ namespace GameFrameX.Startup.Application
     public static class DifferenceAds
     {
         const string Key = "DifferenceAds.";
+        const double StartupProtectionSeconds = 180;
         enum FullscreenKind { None, Interstitial, Rewarded }
         static readonly HashSet<string> checkedOperations = new HashSet<string>();
         static DifferenceAdConfig config = new DifferenceAdConfig();
         static FullscreenKind pending;
         static bool initialized, noAds, displayed, rewardGranted, previousAudioPause;
         static int highestLevel, currentLevel, pendingLevel;
-        static bool gamePageVisible;
+        static bool gamePageVisible, currentJourney, pendingJourney;
         static double lastInterstitialTime = double.NegativeInfinity;
         static string pendingPlacement, pendingConfigVersion;
         static Action pendingFinished, pendingReward;
@@ -57,6 +58,7 @@ namespace GameFrameX.Startup.Application
         public static bool NoAds { get { EnsureInitialized(); return noAds; } }
         public static int HighestLevel { get { EnsureInitialized(); return highestLevel; } }
         public static int CurrentLevel => currentLevel;
+        public static bool CurrentJourney => currentJourney;
         public static bool GamePageVisible => gamePageVisible;
         public static DifferenceAdConfig Config => config.Copy();
 
@@ -67,6 +69,7 @@ namespace GameFrameX.Startup.Application
             initialized = false;
             pending = FullscreenKind.None;
             currentLevel = 0;
+            currentJourney = pendingJourney = false;
             gamePageVisible = false;
             pendingFinished = pendingReward = null;
             InterstitialReady = RewardedReady = null;
@@ -125,14 +128,17 @@ namespace GameFrameX.Startup.Application
             NotifyRefresh();
         }
 
-        public static void SetGamePage(int level, bool visible)
+        public static void SetGamePage(int level, bool visible) => SetGamePage(level, visible, false);
+
+        public static void SetGamePage(int level, bool visible, bool journey)
         {
             EnsureInitialized();
             visible &= level > 0;
             level = Math.Max(0, level);
-            if (currentLevel == level && gamePageVisible == visible) return;
+            if (currentLevel == level && gamePageVisible == visible && currentJourney == journey) return;
             currentLevel = level;
             gamePageVisible = visible;
+            currentJourney = journey;
             if (visible && level > highestLevel)
             {
                 highestLevel = level;
@@ -142,7 +148,10 @@ namespace GameFrameX.Startup.Application
             NotifyRefresh();
         }
 
-        public static void TryInterstitial(int level, string operationId, string placement, Action continuation)
+        public static void TryInterstitial(int level, string operationId, string placement, Action continuation) =>
+            TryInterstitial(level, operationId, placement, continuation, false);
+
+        public static void TryInterstitial(int level, string operationId, string placement, Action continuation, bool journey)
         {
             EnsureInitialized();
             var rules = config;
@@ -152,12 +161,7 @@ namespace GameFrameX.Startup.Application
                 return; // A repeated UI callback must not advance the same operation a second time.
             }
             string reason = !SdkEnabled ? "sdk-off" : string.IsNullOrWhiteSpace(operationId) ? "invalid-operation" :
-                !rules.interstitialEnabled ? "disabled" : noAds ? "no-ads" : Busy ? "fullscreen-busy" :
-                level < rules.interstitialFirstLevel ? "before-first-level" :
-                level < rules.interstitialDenseLevel && (level - rules.interstitialFirstLevel) % rules.interstitialEarlyStep != 0 ? "not-candidate" :
-                PlayerPrefs.GetInt(Key + "InterstitialShown." + level, 0) == 1 ? "level-already-shown" :
-                Time.realtimeSinceStartupAsDouble - lastInterstitialTime < rules.interstitialCooldownSeconds ? "cooldown" :
-                ShowInterstitial == null || !IsReady(InterstitialReady) ? "not-ready" : null;
+                InterstitialBlockReason(level, journey, Time.realtimeSinceStartupAsDouble);
             if (reason == null || reason == "not-ready")
                 DifferenceAnalytics.Track("interstitial_ad_trigger", "trigger_timing", placement == "level_retry" ? "level_enter" : placement);
             if (reason != null)
@@ -166,9 +170,22 @@ namespace GameFrameX.Startup.Application
                 InvokeSafely(continuation);
                 return;
             }
-            BeginFullscreen(FullscreenKind.Interstitial, level, placement, null, continuation, rules.version);
+            BeginFullscreen(FullscreenKind.Interstitial, level, placement, null, continuation, rules.version, journey);
             try { ShowInterstitial(placement); }
             catch (Exception) { FullscreenClosed(true); }
+        }
+
+        static string InterstitialBlockReason(int level, bool journey, double now)
+        {
+            var rules = config;
+            return
+                !rules.interstitialEnabled ? "disabled" : noAds ? "no-ads" : Busy ? "fullscreen-busy" :
+                now < StartupProtectionSeconds ? "startup-protection" :
+                level < (journey ? 3 : rules.interstitialFirstLevel) ? "before-first-level" :
+                !journey && level < rules.interstitialDenseLevel && (level - rules.interstitialFirstLevel) % rules.interstitialEarlyStep != 0 ? "not-candidate" :
+                !journey && PlayerPrefs.GetInt(Key + "InterstitialShown." + level, 0) == 1 ? "level-already-shown" :
+                !journey && now - lastInterstitialTime < rules.interstitialCooldownSeconds ? "cooldown" :
+                ShowInterstitial == null || !IsReady(InterstitialReady) ? "not-ready" : null;
         }
 
         public static bool TryRewarded(int level, string placement, Action reward, Action finished)
@@ -195,10 +212,11 @@ namespace GameFrameX.Startup.Application
             catch (Exception) { return false; }
         }
 
-        static void BeginFullscreen(FullscreenKind kind, int level, string placement, Action reward, Action finished, string configVersion)
+        static void BeginFullscreen(FullscreenKind kind, int level, string placement, Action reward, Action finished, string configVersion, bool journey = false)
         {
             pending = kind;
             pendingLevel = level;
+            pendingJourney = journey;
             pendingPlacement = placement;
             pendingConfigVersion = configVersion;
             pendingReward = reward;
@@ -216,7 +234,7 @@ namespace GameFrameX.Startup.Application
             if (pending != FullscreenKind.Interstitial || displayed) return;
             displayed = true;
             lastInterstitialTime = Time.realtimeSinceStartupAsDouble;
-            PlayerPrefs.SetInt(Key + "InterstitialShown." + pendingLevel, 1);
+            if (!pendingJourney) PlayerPrefs.SetInt(Key + "InterstitialShown." + pendingLevel, 1);
             PlayerPrefs.SetString(Key + "LastInterstitialUtc",
                 (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() / 1000d).ToString("R", CultureInfo.InvariantCulture));
             PlayerPrefs.Save();
@@ -244,6 +262,7 @@ namespace GameFrameX.Startup.Application
             Log(pending.ToString(), pendingLevel, pendingPlacement, failed ? "failed" : "closed", pendingConfigVersion);
             var finished = pendingFinished;
             pending = FullscreenKind.None;
+            pendingJourney = false;
             pendingFinished = pendingReward = null;
             AudioListener.pause = previousAudioPause;
             NotifyFullscreen(false);

@@ -42,19 +42,19 @@ public static class DifferenceGameBuilder
         icons = SpriteGrid("UIIconsV2",4,3);
         var animals = SpriteGrid("AvatarsV2",4,2);
         var data = new[] {
-            new DifferenceLevel { title="温馨客厅", original=ImportSprite("Art/LivingRoom.png"), changed=ImportSprite("Art/LivingRoomChanged.png"), regions=new[] {
+            new DifferenceLevel { title="Cozy Living Room", original=ImportSprite("Art/LivingRoom.png"), changed=ImportSprite("Art/LivingRoomChanged.png"), regions=new[] {
                 Region(0,.100586f,.116536f,.155273f), Region(.125651f,.068359f,.064453f,.074219f),
                 Region(.405599f,.126953f,.042318f,.066406f), Region(.719401f,.081055f,.072266f,.105469f),
                 Region(.077474f,.370117f,.057943f,.073242f), Region(.268880f,.361328f,.075521f,.088867f),
                 Region(.563802f,.323242f,.126302f,.168945f), Region(.343099f,.584961f,.098958f,.070313f),
                 Region(.039714f,.708008f,.052734f,.081055f), Region(.771484f,.514648f,.102865f,.144531f) } },
-            new DifferenceLevel { title="花园花店", original=ImportSprite("Art/FlowerGarden.png"), changed=ImportSprite("Art/FlowerGardenChanged.png"), regions=new[] {
+            new DifferenceLevel { title="Flower Shop", original=ImportSprite("Art/FlowerGarden.png"), changed=ImportSprite("Art/FlowerGardenChanged.png"), regions=new[] {
                 Region(.057292f,.148438f,.024740f,.045898f), Region(.208333f,.130859f,.037760f,.070313f),
                 Region(.718750f,.129883f,.045573f,.069336f), Region(.166016f,.456055f,.037109f,.048828f),
                 Region(.044922f,.554688f,.161458f,.169922f), Region(.929688f,.238281f,.057943f,.094727f),
                 Region(.820313f,.466797f,.109375f,.151367f), Region(.906901f,.708984f,.046875f,.090820f),
                 Region(.068359f,.791992f,.048828f,.059570f), Region(.588542f,.806641f,.156250f,.135742f) } },
-            new DifferenceLevel { title="海边咖啡馆", original=ImportSprite("Art/Cafe.png"), changed=ImportSprite("Art/CafeChanged.png"), regions=CafeRegions }
+            new DifferenceLevel { title="Seaside Cafe", original=ImportSprite("Art/Cafe.png"), changed=ImportSprite("Art/CafeChanged.png"), regions=CafeRegions }
         };
         var root = new GameObject("UIDifferences",typeof(RectTransform));
         try
@@ -80,7 +80,7 @@ public static class DifferenceGameBuilder
             Image(toast,"Background",0,0,480,52,new Color(.1f,.2f,.37f,.85f),round);
             ui.noticeLabel=Label(toast,"Text",4,0,472,52,"",24,Color.white);toast.gameObject.SetActive(false);
             ui.audioSource=root.AddComponent<AudioSource>();ui.audioSource.playOnAwake=false;
-            ui.musicSource=root.AddComponent<AudioSource>();ui.musicSource.playOnAwake=false;ui.musicSource.loop=true;ui.musicSource.volume=.16f;
+            ui.musicSource=root.AddComponent<AudioSource>();ui.musicSource.playOnAwake=false;ui.musicSource.loop=true;ui.musicSource.volume=UIDifferences.BackgroundMusicVolume;
             BindAudio(ui);
             foreach(var page in new[]{ui.play,ui.shop,ui.ranking,ui.settings,ui.profile,ui.musicPanel,ui.achievements,ui.album,ui.modal})page.SetActive(false);
             ApplyGameplayArt(ui);
@@ -260,6 +260,7 @@ public static class DifferenceGameBuilder
     static void RefreshFigmaBindings(UIDifferences ui)
     {
         BindAudio(ui);
+        BindProgressDots(ui);
         if (!ui.foundFlightPrefab)
             ui.foundFlightPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(Folder + "Effect/SelectEffect/a1a1/xingxingtuowei2.prefab");
         if (!ui.foundArrivalPrefab)
@@ -303,6 +304,23 @@ public static class DifferenceGameBuilder
         }
     }
 
+    static void BindProgressDots(UIDifferences ui)
+    {
+        ui.progressDots = ui.stage.Find("Play/Progress").Cast<Transform>()
+            .Where(node => node.name.StartsWith("Dot", StringComparison.Ordinal))
+            .Select(node => node.GetComponent<Spine.Unity.SkeletonGraphic>()).ToArray();
+        if (ui.progressDots.Length == 0 || ui.progressDots.Any(dot => !dot))
+            throw new InvalidOperationException("Progress 的 Dot 节点必须使用 SkeletonGraphic");
+        foreach (var dot in ui.progressDots)
+        {
+            dot.UnscaledTime = true;
+            dot.raycastTarget = false;
+            dot.freeze = false;
+            dot.timeScale = 1;
+            dot.layoutScaleMode = Spine.Unity.SkeletonGraphic.LayoutMode.WidthControlsHeight;
+        }
+    }
+
     static T UniqueChild<T>(Transform root, string name) where T : Component
     {
         var matches = root.GetComponentsInChildren<T>(true).Where(item => item.name == name).ToArray();
@@ -339,6 +357,26 @@ public static class DifferenceGameBuilder
         serialized.ApplyModifiedPropertiesWithoutUndo();
     }
 
+    public static Material PrepareHintDisabledMaterial()
+    {
+        var shader = AssetDatabase.LoadAssetAtPath<Shader>(Folder + "Art/HintDisabled.shader");
+        if (!shader) throw new InvalidOperationException("Missing hint disabled UI shader.");
+        var path = Folder + "Art/HintDisabled.mat";
+        var material = AssetDatabase.LoadAssetAtPath<Material>(path);
+        if (!material)
+        {
+            material = new Material(shader) { name = "HintDisabled" };
+            AssetDatabase.CreateAsset(material, path);
+        }
+        else if (material.shader != shader)
+        {
+            material.shader = shader;
+            EditorUtility.SetDirty(material);
+        }
+        AssetDatabase.SaveAssetIfDirty(material);
+        return material;
+    }
+
     static void ApplyGameplayArt(UIDifferences ui)
     {
         var glowShader = AssetDatabase.LoadAssetAtPath<Shader>(Folder + "Art/FoundGlow.shader");
@@ -363,21 +401,18 @@ public static class DifferenceGameBuilder
         }
         else ui.hintSpotlightMaterial.shader = hintShader;
         EditorUtility.SetDirty(ui.hintSpotlightMaterial);
+        ui.hintDisabledMaterial = PrepareHintDisabledMaterial();
         ui.hintHandSprite = ImportSprite("Art/Figma/HintHand.png");
         var handImporter = (TextureImporter)AssetImporter.GetAtPath(Folder + "Art/Figma/HintHand.png");
         handImporter.maxTextureSize = 512; handImporter.SaveAndReimport();
-        ui.progressQuestion = ImportSprite("Art/Figma/ProgressQuestion.png");
-        ui.progressCheck = ImportSprite("Art/Figma/ProgressCheck.png");
+        BindProgressDots(ui);
         var layout = ui.stage.Find("Play/Progress").GetComponent<UnityEngine.UI.HorizontalLayoutGroup>();
-        layout.spacing = 4;
+        layout.spacing = 0;
         foreach (var dot in ui.progressDots)
         {
-            dot.sprite = ui.progressQuestion; dot.color = Color.white;
+            dot.color = Color.white;
             dot.rectTransform.sizeDelta = new Vector2(41, 41);
             dot.rectTransform.pivot = new Vector2(.5f, .5f);
-            // Keep the bound text's state for debugging; artwork supplies the visible glyph.
-            var legacyLabel = dot.GetComponentInChildren<UnityEngine.UI.Text>(true);
-            if (legacyLabel) legacyLabel.enabled = false;
         }
         var button = ui.hintButton.GetComponent<UnityEngine.UI.Image>();
         button.sprite = ImportSprite("Art/HintButton.png"); button.type = UnityEngine.UI.Image.Type.Simple;
@@ -415,9 +450,9 @@ public static class DifferenceGameBuilder
         var noAds=Button(p,"NoAds",580,124,110,94,"",24,new Color(1,.72f,.18f));
         Label(noAds.transform,"Ads",7,3,96,58,"ADS",37,new Color(.53f,.23f,.07f));
         var slash=Image(noAds.transform,"Slash",15,26,86,9,new Color(.74f,.23f,.10f));slash.rectTransform.localEulerAngles=new Vector3(0,0,-35);
-        Image(noAds.transform,"Tag",-2,72,114,34,Cream,round);Label(noAds.transform,"TagLabel",0,72,110,34,"无广告",21,Ink);
+        Image(noAds.transform,"Tag",-2,72,114,34,Cream,round);Label(noAds.transform,"TagLabel",0,72,110,34,"No Ads",21,Ink);
         Image(p,"StartRim",167,861,386,132,new Color(1,.94f,.71f),round);
-        ui.startButton=Button(p,"Start",176,870,368,112,"第1关",48,Green);
+        ui.startButton=Button(p,"Start",176,870,368,112,"Level 1",48,Green);
         ui.startLabel=ui.startButton.GetComponentInChildren<UnityEngine.UI.Text>();
     }
 
@@ -425,7 +460,7 @@ public static class DifferenceGameBuilder
     {
         ui.navigation=Rect(ui.stage,"Navigation",0,1108,720,172).gameObject;var p=ui.navigation.transform;
         Image(p,"Footer",0,94,720,78,new Color(.13f,.24f,.51f));
-        var names=new[]{"Shop","HomeTab","Trophies"};var labels=new[]{"商店","主页","排行榜"};var ids=new[]{4,5,3};
+        var names=new[]{"Shop","HomeTab","Trophies"};var labels=new[]{"Shop","Home","Leaderboard"};var ids=new[]{4,5,3};
         for(var i=0;i<3;i++)
         {
             var b=Button(p,names[i],i*240,i==1?-24:0,240,i==1?120:96,"",24,new Color(.21f,.43f,.87f));
@@ -441,20 +476,20 @@ public static class DifferenceGameBuilder
     static void BuildShop(UIDifferences ui)
     {
         ui.shop=Rect(ui.stage,"Shop",0,0,720,1280).gameObject;var p=ui.shop.transform;
-        Image(p,"Background",0,0,720,1280,Navy);Header(p,"商店");
+        Image(p,"Background",0,0,720,1280,Navy);Header(p,"Shop");
         Image(p,"Wallet",18,25,136,44,Cream,round);Icon(p,"Coin",8,18,59,59,1);Label(p,"Coins",66,24,80,46,"10",26,Ink);
         IconButton(p,"Close",644,18,56,56,9);
-        Label(p,"HintCount",250,100,220,42,"我的提示  ×5",23,new Color(.73f,.81f,.94f));
+        Label(p,"HintCount",250,100,220,42,"My Hints  ×5",23,new Color(.73f,.81f,.94f));
         var content=Scroll(p,"Scroll",50,153,620,930,1140);
-        var row=Offer(content,"Free",0,6,"×1",new Color(.33f,.88f,.44f));Button(row,"Buy",388,25,190,72,"每日免费",28,new Color(1,.68f,.17f));
-        row=Offer(content,"HintOffer",130,6,"×1",Cream);Button(row,"Buy",388,25,190,72,"900 金币",27,Green);
+        var row=Offer(content,"Free",0,6,"×1",new Color(.33f,.88f,.44f));Button(row,"Buy",388,25,190,72,"Free Daily",28,new Color(1,.68f,.17f));
+        row=Offer(content,"HintOffer",130,6,"×1",Cream);Button(row,"Buy",388,25,190,72,"900 Coins",27,Green);
         var amounts=new[]{"1 000","5 000","10 000","25 000","50 000","100 000"};
         for(var i=0;i<amounts.Length;i++)
         {
             row=Offer(content,"Coins"+i,260+i*130,1,amounts[i],Cream);
-            var b=Button(row,"Buy",388,25,190,72,"暂未开放",26,new Color(.57f,.66f,.72f));b.interactable=false;
+            var b=Button(row,"Buy",388,25,190,72,"Coming Soon",26,new Color(.57f,.66f,.72f));b.interactable=false;
         }
-        Label(content,"Note",20,1044,580,65,"金币充值尚未开放",23,new Color(.76f,.83f,.96f));
+        Label(content,"Note",20,1044,580,65,"Coin purchases are coming soon",23,new Color(.76f,.83f,.96f));
     }
     static Transform Offer(Transform p,string name,float y,int icon,string amount,Color color)
     {
@@ -464,11 +499,11 @@ public static class DifferenceGameBuilder
     static void BuildRanking(UIDifferences ui)
     {
         ui.ranking=Rect(ui.stage,"Ranking",0,0,720,1280).gameObject;var p=ui.ranking.transform;
-        Image(p,"Background",0,0,720,1280,Navy);Header(p,"排行榜");
+        Image(p,"Background",0,0,720,1280,Navy);Header(p,"Leaderboard");
         // A locked board is visible in the reference at this progression; do not fabricate opponents.
         Image(p,"LockLoop",320,515,80,85,new Color(.65f,.79f,.91f),ring);
         Image(p,"Lock",315,553,90,74,new Color(1,.73f,.12f),round);Label(p,"Keyhole",315,552,90,70,"●",30,new Color(.4f,.23f,.05f));
-        Label(p,"Locked",80,665,560,60,"在第 50 关后解锁。",29,Color.white);
+        Label(p,"Locked",80,665,560,60,"Unlocks after Level 50.",29,Color.white);
         Label(p,"PlayerName",100,747,520,42,"Player_1001",23,new Color(.59f,.69f,.84f));
     }
     static void BuildPlay(UIDifferences ui)
@@ -476,13 +511,29 @@ public static class DifferenceGameBuilder
         ui.play=Rect(ui.stage,"Play",0,0,720,1280).gameObject;var p=ui.play.transform;
         Image(p,"Background",0,0,720,1280,Color.white,ImportSprite("Art/PlayBackdropV2.png"));
         ui.backButton=IconButton(p,"Back",19,20,58,56,8);
-        ui.levelLabel=Label(p,"Level",180,16,360,65,"第1关",32,Color.white);Outline(ui.levelLabel.gameObject,new Color(.12f,.29f,.50f),new Vector2(1,-2));
+        ui.levelLabel=Label(p,"Level",180,16,360,65,"Level 1",32,Color.white);Outline(ui.levelLabel.gameObject,new Color(.12f,.29f,.50f),new Vector2(1,-2));
         Image(p,"LifeBadge",614,22,86,45,new Color(.27f,.47f,.72f),round);Icon(p,"Heart",614,23,43,43,7);
         ui.heartsLabel=Label(p,"Lives",655,24,37,40,"3",28,Color.white);
         var dots=Rect(p,"Progress",18,88,684,48);var layout=dots.gameObject.AddComponent<UnityEngine.UI.HorizontalLayoutGroup>();
-        layout.childAlignment=TextAnchor.MiddleCenter;layout.spacing=7;layout.childControlWidth=layout.childControlHeight=false;layout.childForceExpandWidth=layout.childForceExpandHeight=false;
-        ui.progressDots=new UnityEngine.UI.Image[15];
-        for(var i=0;i<15;i++){ui.progressDots[i]=Image(dots,"Dot"+i,0,0,37,37,new Color(.73f,.87f,1),circle);var t=Label(ui.progressDots[i].transform,"Text",0,0,37,37,"?",27,Color.white);Outline(t.gameObject,new Color(.26f,.43f,.55f),new Vector2(1,-1));}
+        layout.childAlignment=TextAnchor.MiddleCenter;layout.spacing=0;layout.childControlWidth=layout.childControlHeight=false;layout.childForceExpandWidth=layout.childForceExpandHeight=false;
+        var progressData = AssetDatabase.LoadAssetAtPath<Spine.Unity.SkeletonDataAsset>(Folder + "Spine/Dingdan/dingdan_SkeletonData.asset");
+        var progressMaterial = AssetDatabase.LoadAssetAtPath<Material>("Packages/com.esotericsoftware.spine.spine-unity/Runtime/spine-unity/Materials/UI-StraightAlphaTex/SkeletonGraphicDefault-Straight.mat");
+        if (!progressData || !progressMaterial) throw new InvalidOperationException("缺少进度 Spine 素材或材质");
+        ui.progressDots = new Spine.Unity.SkeletonGraphic[15];
+        for (var i = 0; i < ui.progressDots.Length; i++)
+        {
+            var dot = Spine.Unity.SkeletonGraphic.NewSkeletonGraphicGameObject(progressData, dots, progressMaterial);
+            dot.name = "Dot" + i;
+            dot.gameObject.layer = dots.gameObject.layer;
+            dot.startingAnimation = "a1";
+            dot.startingLoop = false;
+            dot.AnimationState.SetAnimation(0, "a1", false);
+            dot.Update(0);
+            dot.LateUpdate();
+            dot.MatchRectTransformWithBounds();
+            dot.rectTransform.sizeDelta = new Vector2(37, 37);
+            ui.progressDots[i] = dot;
+        }
         Image(p,"Frame",57,197,606,810,new Color(.18f,.34f,.53f));
         ui.upperImage=Board(p,"UpperViewport",60,200,ui);ui.lowerImage=Board(p,"LowerViewport",60,604,ui);
         var a=ui.upperImage.GetComponent<DifferenceBoard>();var b=ui.lowerImage.GetComponent<DifferenceBoard>();a.peer=b;b.peer=a;
@@ -501,7 +552,7 @@ public static class DifferenceGameBuilder
         Icon(hint.transform,"Bulb",4,0,95,97,6);Image(hint.transform,"Badge",76,72,40,40,new Color(.94f,.20f,.10f),circle);
         ui.hintLabel=Label(hint.transform,"Count",76,72,40,40,"5",27,Color.white);
         ui.progressLabel=Label(p,"Count",260,1162,200,39,"0 / 10",23,new Color(.87f,.95f,1));
-        var zoom=Button(p,"Zoom",582,1056,67,65,"+",39,new Color(.3f,.51f,.80f));Label(zoom.transform,"Caption",-5,69,77,28,"缩放",19,Color.white);
+        var zoom=Button(p,"Zoom",582,1056,67,65,"+",39,new Color(.3f,.51f,.80f));Label(zoom.transform,"Caption",-5,69,77,28,"Zoom",19,Color.white);
     }
     static UnityEngine.UI.Image Board(Transform p,string name,float x,float y,UIDifferences ui)
     {
@@ -518,15 +569,15 @@ public static class DifferenceGameBuilder
     static void BuildSettings(UIDifferences ui)
     {
         ui.settings=Rect(ui.stage,"Settings",0,0,720,1280).gameObject;var p=ui.settings.transform;
-        Image(p,"Background",0,0,720,1280,Navy).raycastTarget=true;Header(p,"设置");IconButton(p,"Close",639,18,60,60,9);
+        Image(p,"Background",0,0,720,1280,Navy).raycastTarget=true;Header(p,"Settings");IconButton(p,"Close",639,18,60,60,9);
         var c=Scroll(p,"Scroll",0,100,720,1150,1230);
-        var banner=Button(c,"NoAds",18,5,684,130,"",28,new Color(1,.73f,.21f));Label(banner.transform,"Headline",36,8,580,50,"轻松寻找，享受每一关",30,Ink);Label(banner.transform,"Detail",36,65,580,39,"无广告体验",24,Ink);
-        Toggle(c,"Sound",155,"音效");Toggle(c,"Music",265,"音乐");
-        Label(c,"Section1",25,386,670,70,"成就",23,new Color(.50f,.58f,.72f)).alignment=TextAnchor.MiddleLeft;
-        SettingRow(c,"Achievements",465,"成就");SettingRow(c,"Album",575,"关卡相册");
-        Label(c,"Section2",25,686,670,70,"信息",23,new Color(.50f,.58f,.72f)).alignment=TextAnchor.MiddleLeft;
-        SettingRow(c,"SelectMusic",765,"选择音乐");SettingRow(c,"SaveInfo",875,"游戏数据");
-        Label(c,"Version",20,1030,680,80,"FIND DIFFERENCES\n版本 2.0",21,new Color(.5f,.58f,.71f));
+        var banner=Button(c,"NoAds",18,5,684,130,"",28,new Color(1,.73f,.21f));Label(banner.transform,"Headline",36,8,580,50,"Relax and enjoy every level",30,Ink);Label(banner.transform,"Detail",36,65,580,39,"Ad-free experience",24,Ink);
+        Toggle(c,"Sound",155,"Sound");Toggle(c,"Music",265,"Music");
+        Label(c,"Section1",25,386,670,70,"Achievements",23,new Color(.50f,.58f,.72f)).alignment=TextAnchor.MiddleLeft;
+        SettingRow(c,"Achievements",465,"Achievements");SettingRow(c,"Album",575,"Level Album");
+        Label(c,"Section2",25,686,670,70,"Info",23,new Color(.50f,.58f,.72f)).alignment=TextAnchor.MiddleLeft;
+        SettingRow(c,"SelectMusic",765,"Choose Music");SettingRow(c,"SaveInfo",875,"Game Data");
+        Label(c,"Version",20,1030,680,80,"FIND DIFFERENCES\nVersion 2.0",21,new Color(.5f,.58f,.71f));
     }
     static void SettingRow(Transform p,string name,float y,string text)
     {
@@ -543,14 +594,14 @@ public static class DifferenceGameBuilder
     }
     static void BuildProfile(UIDifferences ui)
     {
-        ui.profile=Overlay(ui,"Profile");var p=ui.profile.transform;var c=Panel(p,"编辑个人资料",99,149,522,920);
+        ui.profile=Overlay(ui,"Profile");var p=ui.profile.transform;var c=Panel(p,"Edit Profile",99,149,522,920);
         var user=Image(c,"User",23,132,476,130,Cream,round).transform;
         ui.profileFrame=Image(user,"Frame",18,19,92,92,UIDifferences.FrameColors[0],round);ui.profileAvatar=Image(ui.profileFrame.transform,"Avatar",5,5,82,82,Color.white,ui.avatarSprites[0]);
         var entry=Image(user,"Nickname",122,37,330,59,new Color(.92f,.79f,.64f),round);entry.raycastTarget=true;
         ui.nicknameInput=entry.gameObject.AddComponent<UnityEngine.UI.InputField>();ui.nicknameInput.targetGraphic=entry;ui.nicknameInput.characterLimit=16;
         var text=Label(entry.transform,"Text",10,0,310,59,"Player_1001",28,new Color(.1f,.3f,.60f));text.alignment=TextAnchor.MiddleLeft;ui.nicknameInput.textComponent=text;ui.nicknameInput.text="Player_1001";
         Image(c,"ChoicesCard",23,292,476,420,Cream,round);
-        Button(c,"AvatarTab",45,311,216,60,"头像",25,Blue);Button(c,"FrameTab",261,311,216,60,"头像框",25,Blue);
+        Button(c,"AvatarTab",45,311,216,60,"Avatars",25,Blue);Button(c,"FrameTab",261,311,216,60,"Frames",25,Blue);
         var choices=Rect(c,"Choices",44,393,440,300);
         ui.avatars=new UnityEngine.UI.Image[8];
         for(var i=0;i<8;i++)
@@ -560,28 +611,28 @@ public static class DifferenceGameBuilder
             var selected=Image(b.transform,"Selected",70,68,33,33,Green,circle);Label(selected.transform,"Check",0,0,33,33,"✓",25,Color.white);
             var price=Label(b.transform,"Price",-2,100,102,33,"",21,Ink);price.fontStyle=FontStyle.Bold;
         }
-        Button(c,"Save",80,780,362,93,"保存",36,Green);
+        Button(c,"Save",80,780,362,93,"Save",36,Green);
     }
     static void BuildMusic(UIDifferences ui)
     {
-        ui.musicPanel=Overlay(ui,"MusicPanel");var c=Panel(ui.musicPanel.transform,"选择音乐",84,329,552,620);
-        var names=new[]{"悠闲周末","清晨甘露","微小确幸","露台暖阳"};
+        ui.musicPanel=Overlay(ui,"MusicPanel");var c=Panel(ui.musicPanel.transform,"Choose Music",84,329,552,620);
+        var names=new[]{"Lazy Weekend","Morning Dew","Little Joys","Terrace Sunshine"};
         for(var i=0;i<4;i++)
         {var b=Button(c,"Track"+i,23,132+i*109,506,96,"",26,Cream);Label(b.transform,"Play",16,12,66,70,"▶",33,new Color(.94f,.54f,.08f));Label(b.transform,"Name",93,12,311,70,names[i],28,Ink).alignment=TextAnchor.MiddleLeft;Image(b.transform,"Check",439,24,49,49,Green,round);Label(b.transform,"Selected",439,24,49,49,"",32,Color.white);}
     }
     static void BuildAchievements(UIDifferences ui)
     {
-        ui.achievements=Overlay(ui,"Achievements");var c=Panel(ui.achievements.transform,"成就",60,220,600,850);
-        var names=new[]{"初露锋芒","观察达人","完美发现","旅行收藏家"};var details=new[]{"完成第一个关卡","累计找到 10 处不同","无失误完成一个新关卡","完成全部已开放场景"};
+        ui.achievements=Overlay(ui,"Achievements");var c=Panel(ui.achievements.transform,"Achievements",60,220,600,850);
+        var names=new[]{"First Find","Sharp Eye","Perfect Find","Explorer"};var details=new[]{"Complete your first level","Find 10 differences in total","Finish a new level without mistakes","Complete all available scenes"};
         for(var i=0;i<4;i++)
-        {var row=Image(c,"Row"+i,23,142+i*162,554,146,Cream,round);Icon(row.transform,"Medal",13,22,92,97,11);Label(row.transform,"Name",119,13,285,42,names[i],28,Ink).alignment=TextAnchor.MiddleLeft;Label(row.transform,"Detail",119,56,412,35,details[i],22,Ink).alignment=TextAnchor.MiddleLeft;Label(row.transform,"Progress",115,100,170,33,"0 / 1",22,Ink);Label(row.transform,"State",365,100,161,33,"进行中",22,new Color(.27f,.5f,.18f));}
+        {var row=Image(c,"Row"+i,23,142+i*162,554,146,Cream,round);Icon(row.transform,"Medal",13,22,92,97,11);Label(row.transform,"Name",119,13,285,42,names[i],28,Ink).alignment=TextAnchor.MiddleLeft;Label(row.transform,"Detail",119,56,412,35,details[i],22,Ink).alignment=TextAnchor.MiddleLeft;Label(row.transform,"Progress",115,100,170,33,"0 / 1",22,Ink);Label(row.transform,"State",365,100,161,33,"In Progress",22,new Color(.27f,.5f,.18f));}
     }
     static void BuildAlbum(UIDifferences ui)
     {
-        ui.album=Overlay(ui,"Album");var c=Panel(ui.album.transform,"关卡相册",54,195,612,885);
+        ui.album=Overlay(ui,"Album");var c=Panel(ui.album.transform,"Level Album",54,195,612,885);
         for(var i=0;i<ui.levels.Length;i++)
-        {var b=Button(c,"Level"+i,24,144+i*213,564,194,"",27,Cream);Image(b.transform,"Preview",12,16,243,162,Color.white,ui.levels[i].original);Label(b.transform,"Title",267,25,281,60,(i+1)+"  "+ui.levels[i].title,27,Ink);Label(b.transform,"Count",267,84,281,45,ui.levels[i].regions.Length+" 处不同",23,Ink);Label(b.transform,"Status",267,133,281,40,"尚未解锁",23,new Color(.18f,.46f,.14f));}
-        Label(c,"More",40,794,532,49,"更多场景，持续更新",25,Color.white);
+        {var b=Button(c,"Level"+i,24,144+i*213,564,194,"",27,Cream);Image(b.transform,"Preview",12,16,243,162,Color.white,ui.levels[i].original);Label(b.transform,"Title",267,25,281,60,(i+1)+"  "+ui.levels[i].title,27,Ink);Label(b.transform,"Count",267,84,281,45,ui.levels[i].regions.Length+" differences",23,Ink);Label(b.transform,"Status",267,133,281,40,"Locked",23,new Color(.18f,.46f,.14f));}
+        Label(c,"More",40,794,532,49,"More scenes coming soon",25,Color.white);
     }
     static void BuildDialog(UIDifferences ui)
     {
@@ -590,9 +641,9 @@ public static class DifferenceGameBuilder
         ui.modalClose=ui.modal.transform.Find("Close").GetComponent<UnityEngine.UI.Button>();
         ui.resultIcon=Icon(c,"Medal",226,103,130,121,11);
         ui.modalBody=Label(c,"Body",34,228,514,148,"",29,Color.white);
-        ui.modalAction=Button(c,"Action",57,404,468,91,"继续",34,Green);ui.modalActionLabel=ui.modalAction.GetComponentInChildren<UnityEngine.UI.Text>();
-        ui.modalSecondary=Button(c,"Secondary",87,520,408,78,"返回首页",29,new Color(.17f,.35f,.70f));
-        ui.modalTertiary=Button(c,"Tertiary",122,622,338,65,"返回首页",25,new Color(.23f,.40f,.73f));
+        ui.modalAction=Button(c,"Action",57,404,468,91,"Continue",34,Green);ui.modalActionLabel=ui.modalAction.GetComponentInChildren<UnityEngine.UI.Text>();
+        ui.modalSecondary=Button(c,"Secondary",87,520,408,78,"Home",29,new Color(.17f,.35f,.70f));
+        ui.modalTertiary=Button(c,"Tertiary",122,622,338,65,"Home",25,new Color(.23f,.40f,.73f));
 
         //for(var i=0;i<ui.confetti.Length;i++){var piece=Image(ui.modal.transform,"Confetti"+i,0,0,8+i%3*4,14+i%2*5,Color.HSVToRGB(i/30f,.8f,1));ui.confetti[i]=piece.rectTransform;piece.gameObject.SetActive(false);}
     }
@@ -698,6 +749,7 @@ public static class DifferenceGameBuilder
     }
     static void BindAudio(UIDifferences ui)
     {
+        ui.musicSource.volume = UIDifferences.BackgroundMusicVolume;
         AudioClip Clip(string name)
         {
             var path = Folder + "Audio/" + name;
@@ -711,9 +763,11 @@ public static class DifferenceGameBuilder
         ui.missSound = Clip("Miss.wav");
         ui.winSound = Clip("Win.wav");
         ui.coinCreateSound = Clip("CoinCreate.WAV");
+        ui.progressCompleteSound = Clip("Successtips.wav");
         ui.tipsSound = Clip("Tips.WAV");
         ui.homeMusic = Clip("MusicHome.wav");
         ui.gameMusic = Clip("MusicGame.wav");
+        ui.journeyMusic = Clip("JoureyBgMusic.wav");
         ui.musicTracks = Array.Empty<AudioClip>();
     }
 

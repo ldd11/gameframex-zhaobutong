@@ -48,11 +48,10 @@ public static class DifferenceGamePlayCheck
         ui.noticeLabel.transform.parent.gameObject.SetActive(false);
         var source = ui.lowerImage.rectTransform;
         var dot = ui.progressDots[Mathf.Max(0, ui.Round.Count - 1)];
-        var label = dot.GetComponentInChildren<UnityEngine.UI.Text>();
-        var oldSprite = dot.sprite; var oldText = label.text;
-        dot.sprite = ui.progressQuestion; label.text = "?";
+        var flags = System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic;
+        typeof(UIDifferences).GetMethod("PlayProgressAnimation", flags).Invoke(null, new object[] { dot, "a1" });
         DifferenceFoundFlight.Launch((RectTransform)ui.play.transform, source.TransformPoint(source.rect.center),
-            dot.rectTransform, () => { dot.sprite = oldSprite; label.text = oldText; }, ui.foundFlightPrefab);
+            dot.rectTransform, () => typeof(UIDifferences).GetMethod("PlayProgressTransition", flags).Invoke(null, new object[] { dot, "a2" }), ui.foundFlightPrefab);
     }
 
     [MenuItem("Tools/Find Differences/Run Popup Motion Checks")]
@@ -77,6 +76,12 @@ public static class DifferenceGamePlayCheck
                 var scrimAlpha = scrim.color.a;
                 popup.SetActive(true);
                 var motion = popup.GetComponent<DifferencePopupMotion>();
+                var popupCanvas = popup.GetComponent<Canvas>();
+                var parentCanvas = popup.transform.parent.GetComponentInParent<Canvas>();
+                Check(popupCanvas && popupCanvas.overrideSorting && popupCanvas.sortingLayerID == parentCanvas.sortingLayerID &&
+                    popupCanvas.sortingOrder == parentCanvas.sortingOrder + (popup == ui.modal ? 4 : 3) &&
+                    popup.GetComponent<UnityEngine.UI.GraphicRaycaster>() && popupCanvas.worldCamera == parentCanvas.rootCanvas.worldCamera,
+                    "弹窗位于游戏粒子上层，购买确认再高一层，独立射线使用原UI相机");
                 var fade = card.GetComponent<CanvasGroup>();
                 Check(Vector3.Distance(center, card.TransformPoint(card.rect.center)) < .01f && card.pivot == new Vector2(.5f, .5f), "首帧改变轴心不改变窗口中心 " + popup.name);
                 Check(Near(card.localScale.x, .78f) && fade.alpha == 0 && scrim.color.a == 0 && !fade.blocksRaycasts && scrim.raycastTarget, "小尺寸淡入且遮罩拦截底层点击");
@@ -92,6 +97,11 @@ public static class DifferenceGamePlayCheck
                 Check(Near(card.localScale.x, .78f) && fade.alpha == 0, "快速重新打开从干净状态播放");
                 step.Invoke(motion, new object[] { .4f });
                 Check(card.localScale == Vector3.one && close.localScale == Vector3.one && fade.alpha == 1 && fade.blocksRaycasts && fade.interactable && Near(scrim.color.a, scrimAlpha), "回弹后精确恢复尺寸与交互");
+                popup.SetActive(false);
+                UnityEngine.Object.DestroyImmediate(close.GetComponent<CanvasGroup>());
+                popup.SetActive(true);
+                Check(close.GetComponent<CanvasGroup>() && Near(card.localScale.x, .78f), "重开弹窗恢复被预制体刷新移除的关闭按钮渐显组件");
+                step.Invoke(motion, new object[] { .4f });
                 popup.SetActive(false);
             }
             ui.ShowDialog("无广告", "当前版本没有插屏与横幅广告。\n可以安心找不同。", "开始游戏", null);
@@ -377,7 +387,7 @@ public static class DifferenceGamePlayCheck
         if (!EditorApplication.isPlaying || !ui) throw new InvalidOperationException("请先通过 Launcher 启动找不同");
         const string key = UIDifferences.Key;
         var settings = GameApp.Setting;
-        var intKeys = new[] { "Completed", "Coins", "Hints", "Avatar", "Frame", "MusicTrack", "OwnedAvatars", "OwnedFrames", "TotalFound", "Perfect", "RoundLevel", "RoundMask", "RoundLives", "RoundMistakes", "RoundHint" };
+        var intKeys = new[] { "Completed", "JourneyCompleted", "Coins", "Hints", "Avatar", "Frame", "MusicTrack", "OwnedAvatars", "OwnedFrames", "TotalFound", "Perfect", "RoundLevel", "RoundMask", "RoundLives", "RoundMistakes", "RoundHint" };
         var boolKeys = new[] { "Sound", "Music" };
         var stringKeys = new[] { "Nickname", "GiftDate", "RoundContent" };
         var original = new Dictionary<string, object>();
@@ -456,7 +466,7 @@ public static class DifferenceGamePlayCheck
                 !originalRect.gameObject.activeSelf && !changedRect.gameObject.activeSelf && originalRect.localScale == Vector3.one && changedRect.localScale == Vector3.one &&
                 ui.topRings[0].gameObject.activeSelf && ui.bottomRings[0].gameObject.activeSelf,
                 "本地 2.1 秒三轮互换结束恢复各自原样，保留不同内容及双圈");
-            Check(Text(ui, "Play/Progress/Dot0/Text") == "?" && ui.progressLabel.text == "0 / 10" && settings.GetInt(key + "RoundMask") == 1, "飞行期间保留问号，但命中立即保存");
+            Check(ProgressAnimation(ui, 0) == "a1" && ui.progressLabel.text == "0 / 10" && settings.GetInt(key + "RoundMask") == 1, "飞行期间保留未找到动画，但命中立即保存");
             var firstFlight = ActiveFlights(ui)[0];
             CheckFoundFlight(firstFlight, ui.bottomRings[0].transform.position, ui.progressDots[0].rectTransform);
             ui.lowerImage.GetComponent<DifferenceBoard>().ResetView();
@@ -496,16 +506,22 @@ public static class DifferenceGamePlayCheck
             Find(ui, 1);
             Check(ui.Round.Count == 2 && ui.Hints == 5 && ui.topRings[1].gameObject.activeSelf && !spotlight.Ready, "实际点击提示目标才圈选并退出聚光");
             Check(ActiveFlights(ui).Length == 2, "连续找到的特效独立飞向各自进度圆点");
-            Check(Text(ui, "Play/Progress/Dot0/Text") == "?" && Text(ui, "Play/Progress/Dot1/Text") == "?", "刷新生命与提示时不会提前显示飞行中的勾");
+            Check(ProgressAnimation(ui, 0) == "a1" && ProgressAnimation(ui, 1) == "a1", "刷新生命与提示时不会提前播放飞行中的打勾动画");
             CheckFoundFlight(ActiveFlights(ui)[1], hintedOrigin, ui.progressDots[1].rectTransform);
             hintStep.Invoke(spotlight, new object[] { .3f });
             Check(!ui.HintActive && Near(ui.upperImage.transform.localScale.x, 1) && Near(ui.lowerImage.transform.localScale.x, 1), "命中后聚光消失、双图缩回全图");
             var flightStep = typeof(DifferenceFoundFlight).GetMethod("Advance", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
             flightStep.Invoke(firstFlight, new object[] { .30f });
-            Check(Text(ui, "Play/Progress/Dot0/Text") == "?" && ui.progressDots[0].sprite == ui.progressQuestion, "已抵达但闪光阶段仍不显示勾");
+            Check(ProgressAnimation(ui, 0) == "a1", "已抵达但闪光阶段仍不播放打勾动画");
             flightStep.Invoke(firstFlight, new object[] { .14f });
-            Check(Text(ui, "Play/Progress/Dot0/Text") == "✓" && Text(ui, "Play/Progress/Dot1/Text") == "?" && ui.progressLabel.text == "1 / 10" && ui.progressDots[0].transform.localScale.x > 1, "先闪亮再显示当前圆点的勾，其他飞行不受影响");
-            Check(ui.progressDots[0].sprite == ui.progressCheck && ui.progressDots[1].sprite == ui.progressQuestion, "实际图标与延迟进度同步");
+            Check(ProgressAnimation(ui, 0) == "a2" && ProgressAnimation(ui, 1) == "a1" && ui.progressLabel.text == "1 / 10" && ui.progressDots[0].transform.localScale.x > 1, "先闪亮再播放当前圆点的打勾动画，其他飞行不受影响");
+            var checkedTrack = ui.progressDots[0].AnimationState.GetCurrent(0);
+            Check(checkedTrack.Next != null && checkedTrack.Next.Animation.Name == "a3" && checkedTrack.Next.MixDuration == 0 && Near(checkedTrack.Next.Delay, checkedTrack.Animation.Duration), "打勾动画完整播放后再切静态勾");
+            typeof(UIDifferences).GetMethod("UpdateHUD", patchFlags).Invoke(ui, null);
+            Check(ui.progressDots[0].AnimationState.GetCurrent(0) == checkedTrack, "重复刷新 HUD 不重播打勾动画");
+            ui.progressDots[0].Update(checkedTrack.Animation.Duration + .01f);
+            ui.progressDots[0].Update(0);
+            Check(ProgressAnimation(ui, 0) == "a3" && ProgressAnimation(ui, 1) == "a1", "打勾结束后保持静态勾，其他进度不变");
             Check(firstFlight.GetComponentsInChildren<ParticleSystem>().Length > 0, "抵达后保留预制体拖尾粒子");
             flightStep.Invoke(firstFlight, new object[] { .17f });
             Check(firstFlight.isActiveAndEnabled && ui.progressDots[0].transform.localScale == Vector3.one, "短拖尾结束前勾已落稳");
@@ -516,12 +532,12 @@ public static class DifferenceGamePlayCheck
             Check(ui.Round.Lives == 0 && ui.modal.activeSelf && !ui.modalClose.gameObject.activeSelf, "失败弹窗");
             Check(settings.GetInt(key + "RoundLives") == 0 && settings.GetInt(key + "RoundMask") == failedMask, "失败存档记录零心");
             Click(ui.modalTertiary);
-            Check(ui.home.activeSelf && ui.Round == null && ui.SelectedLevel == 0 && ui.startLabel.text.Contains("继续"), "失败后首页续局");
+            Check(ui.home.activeSelf && ui.Round == null && ui.SelectedLevel == 0 && ui.startLabel.text.Contains("Continue"), "失败后首页续局");
             Check(ActiveFlights(ui).Length == 0, "返回首页清除所有飞行特效");
             ui.OnOpen(null);
             Click(ui.startButton);
             Check(ui.Round.Lives == 0 && ui.Round.FoundMask == failedMask && ui.modal.activeSelf && ui.Coins == 100, "重载失败局不会免费复活");
-            Check(Text(ui, "Play/Progress/Dot1/Text") == "✓" && ui.progressLabel.text == "2 / 10", "中途离开后重载恢复真实进度，不残留等待标记");
+            Check(ProgressAnimation(ui, 1) == "a3" && ui.progressLabel.text == "2 / 10", "中途离开后重载恢复静态勾，不残留等待标记");
             Click(ui.modalAction);
             Check(ui.Round.Lives == 3 && ui.Round.FoundMask == failedMask && ui.Round.Count == 2 && ui.Coins == 70, "三十金币续命保留位置");
             ui.Revive();
@@ -555,7 +571,14 @@ public static class DifferenceGamePlayCheck
             Check(Near(upper.transform.localScale.x, 2) && Near(lower.transform.localScale.x, 2) && Vector2.Distance(previousPosition, ui.upperImage.rectTransform.anchoredPosition) < .01f, "商店往返保留缩放和位置");
             upper.ResetView();
             Check(Near(upper.transform.localScale.x, 1) && Near(lower.transform.localScale.x, 1) && ui.upperImage.rectTransform.anchoredPosition.sqrMagnitude < .001f && ui.lowerImage.rectTransform.anchoredPosition.sqrMagnitude < .001f, "重置双图位置");
+            var pauseCheckFlags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+            typeof(UIDifferences).GetMethod("CheckPauseFlow", pauseCheckFlags).Invoke(ui, null);
             Click(ui.backButton);
+            Check(ui.PauseInputBlocked && ui.play.activeSelf, "游戏返回按钮打开暂停而非离开关卡");
+            Click((UnityEngine.UI.Button)typeof(UIDifferences).GetField("pauseHomeButton", pauseCheckFlags).GetValue(ui));
+            Check(ui.PauseInputBlocked && ui.play.activeSelf, "暂停首页按钮先确认离开");
+            Click((UnityEngine.UI.Button)typeof(UIDifferences).GetField("leaveConfirmButton", pauseCheckFlags).GetValue(ui));
+            Check(ui.home.activeSelf && !ui.PauseInputBlocked, "确认离开后返回首页并清除暂停");
             Click(ui.startButton);
             Check(ui.Round.Count == 1 && ui.Round.Lives == 3, "正常局退出后恢复");
 
@@ -566,9 +589,10 @@ public static class DifferenceGamePlayCheck
             previousRound = ui.Round;
             ui.ShowShop();
             Click(ui, "Shop/Close");
-            Check(ReferenceEquals(previousRound, ui.Round) && ui.modal.activeSelf && ui.modalActionLabel.text == "下一关", "离开结算页后仍能进入下一关");
+            Check(ReferenceEquals(previousRound, ui.Round) && ui.stage.Find("FigmaVictory").gameObject.activeInHierarchy &&
+                ui.stage.Find("FigmaVictory/Next").GetComponentInChildren<UnityEngine.UI.Text>(true).text == "Level 2", "离开结算页后仍能进入下一关");
             Click(ui.modalSecondary);
-            Check(ui.home.activeSelf && ui.SelectedLevel == 1 && !ui.startLabel.text.Contains("继续"), "通关后首页指向第二关");
+            Check(ui.home.activeSelf && ui.SelectedLevel == 1 && !ui.startLabel.text.Contains("Continue"), "通关后首页指向第二关");
             Click(ui.startButton);
             Check(ui.SelectedLevel == 1 && ui.Round.Total == 10 && ui.upperImage.sprite == ui.levels[1].original &&
                 ui.hintLabel.text == ui.Hints.ToString(), "第二组图片且恢复显示真实提示库存");
@@ -585,7 +609,7 @@ public static class DifferenceGamePlayCheck
             Check(ui.album.activeSelf, "首页相册入口");
             Click(ui, "Album/Card/Level0");
             Complete(ui);
-            Check(ui.Coins == 100 && ui.Completed == 3 && settings.GetInt(key + "Perfect") == 3, "重玩不重复奖励或累计首次完美成就");
+            Check(ui.Coins == 110 && ui.Completed == 3 && settings.GetInt(key + "Perfect") == 3, "重玩再次奖励十金币，不重复累计首次通关和完美成就");
             Click(ui.modalSecondary);
 
             Click(ui.settingsButton);
@@ -603,7 +627,7 @@ public static class DifferenceGamePlayCheck
             Click(ui, "Settings/Scroll/Viewport/Content/Music");
             Check(settings.GetBool(key + "Sound") && settings.GetBool(key + "Music") && ui.musicSource.clip == ui.homeMusic, "重载后开关与主页音乐一致");
             Click(ui, "Settings/Scroll/Viewport/Content/Achievements");
-            Check(ui.achievements.activeSelf && Text(ui, "Achievements/Card/Row3/State") == "已达成", "成就页面进度");
+            Check(ui.achievements.activeSelf && Text(ui, "Achievements/Card/Row3/State") == "Completed", "成就页面进度");
             Click(ui, "Achievements/Close");
             Click(ui, "Settings/Scroll/Viewport/Content/Album");
             Check(Button(ui, "Album/Card/Level2").interactable, "相册已通关解锁");
@@ -613,41 +637,94 @@ public static class DifferenceGamePlayCheck
             Check(ui.ranking.activeSelf && Text(ui, "Ranking/Locked").Contains("50"), "排行榜当前锁定状态");
             Click(ui, "Navigation/HomeTab");
 
-            Click(ui, "Home/Avatar");
-            Click(ui, "Profile/Card/Choices/Choice1");
-            Click(ui, "Profile/Card/FrameTab");
-            Click(ui, "Profile/Card/Choices/Choice3");
+            ui.ShowProfile();
+            Click(ui, "Profile/Card/ChoicesScroll/Viewport/Choices/Choice3");
+            Check(ui.profile.activeSelf && ui.Coins == 110 && ui.homeAvatar.sprite == ui.avatarSprites[3], "免费头像点击即保存并保持资料页");
+            Click(ui, "Profile/Card/ChoicesScroll/Viewport/Choices/Choice1");
+            Check(!ui.modal.activeSelf && ui.Coins == 110 && ui.homeAvatar.sprite == ui.avatarSprites[1], "旧所有权未包含的头像仍免费直接选中");
+            Click(ui, "Profile/Card/ChoicesScroll/Viewport/Choices/Choice37");
+            Check(ui.Coins == 110 && ui.homeAvatar.sprite == ui.avatarSprites[37], "第38张头像免费且不受32位旧所有权限制");
             ui.nicknameInput.text = "未保存";
-            Check(!Button(ui, "Profile/Card/Save").interactable, "不足金币无法购买头像和框");
             Click(ui, "Profile/Close");
-            Check(ui.Coins == 100 && ui.homeAvatar.sprite == ui.avatarSprites[0] && ui.homeFrame.color == UIDifferences.FrameColors[0], "取消资料编辑不扣费");
-            Click(ui, "Home/Avatar");
-            Check(ui.nicknameInput.text == "原始玩家" && ui.profileAvatar.sprite == ui.avatarSprites[0], "取消后恢复已保存资料");
-            ui.nicknameInput.text = " ";
-            Click(ui, "Profile/Card/Save");
-            Check(ui.modal.activeSelf && ui.profile.activeSelf && ui.Coins == 100, "空昵称有可见反馈");
-            Click(ui.modalAction);
-            ui.nicknameInput.text = "金币不足测试";
-            Click(ui, "Profile/Card/Choices/Choice1");
-            ui.SaveProfile();
-            Check(ui.modal.activeSelf && ui.Coins == 100 && (settings.GetInt(key + "OwnedAvatars", 1) & 2) == 0, "购买入口再次校验金币");
-            Click(ui.modalAction);
-            Click(ui, "Profile/Close");
-            settings.SetInt(key + "Coins", 10000);
-            ui.OnOpen(null);
-            Click(ui, "Home/Avatar");
-            Click(ui, "Profile/Card/Choices/Choice1");
+            Check(ui.Coins == 110 && ui.homeAvatar.sprite == ui.avatarSprites[37], "关闭资料不扣费且保留免费头像选择");
+            ui.ShowProfile();
+            Check(ui.nicknameInput.text == "原始玩家" && ui.profileAvatar.sprite == ui.avatarSprites[37], "取消昵称编辑后恢复已保存资料");
+            async Task EditNickname(string value)
+            {
+                var savedName = settings.GetString(key + "Nickname");
+                Click(ui, "Profile/Card/User/ConfirmName");
+                var deadline = DateTime.UtcNow.AddSeconds(3);
+                while (ui.profile.activeSelf && !ui.nicknameInput.isFocused && DateTime.UtcNow < deadline) await Task.Delay(20);
+                Check(ui.profile.activeSelf && ui.nicknameInput.isFocused && settings.GetString(key + "Nickname") == savedName,
+                    "铅笔只聚焦昵称输入框，不保存昵称或关闭资料");
+                ui.nicknameInput.text = value;
+                ui.nicknameInput.onEndEdit.Invoke(ui.nicknameInput.text);
+            }
+            await EditNickname(" ");
+            Check(!ui.modal.activeSelf && ui.profile.activeSelf && ui.Coins == 110 && ui.noticeLabel.text.Contains("nickname") &&
+                ui.nicknameInput.text == "原始玩家" && settings.GetString(key + "Nickname") == "原始玩家", "空昵称使用toast反馈并恢复原昵称，不新开弹窗");
             Click(ui, "Profile/Card/FrameTab");
-            Click(ui, "Profile/Card/Choices/Choice3");
-            ui.nicknameInput.text = "找不同测试员";
-            Click(ui, "Profile/Card/Save");
-            Check(ui.Coins == 2000 && !ui.profile.activeSelf && ui.homeAvatar.sprite == ui.avatarSprites[1] && ui.homeFrame.color == UIDifferences.FrameColors[3], "头像三千加框五千解锁并保存");
-            Check((settings.GetInt(key + "OwnedAvatars") & 2) != 0 && (settings.GetInt(key + "OwnedFrames") & 8) != 0 && settings.GetString(key + "Nickname") == "找不同测试员", "资料所有权及昵称存档");
+            Click(ui, "Profile/Card/ChoicesScroll/Viewport/Choices/Choice4");
+            Check(!ui.modal.activeSelf && ui.Coins == 110 && ui.homeFrame.sprite == ui.profileFrameSprites[0] && ui.noticeLabel.text.Contains("288"), "金币不足使用toast且保留头像框与余额");
+            Click(ui, "Profile/Close");
+            settings.SetInt(key + "Coins", 7352);
             ui.OnOpen(null);
-            Click(ui, "Home/Avatar");
-            Check(ui.nicknameInput.text == "找不同测试员" && ui.profileAvatar.sprite == ui.avatarSprites[1], "资料重载");
-            Click(ui, "Profile/Card/Save");
-            Check(ui.Coins == 2000, "已拥有的头像与框重复保存不收费");
+            ui.ShowProfile();
+            Check(ui.profileAvatar.sprite == ui.avatarSprites[37], "第38张免费头像重载后不被旧掩码重置");
+            Click(ui, "Profile/Card/ChoicesScroll/Viewport/Choices/Choice1");
+            Check(ui.Coins == 7352 && !ui.modal.activeSelf && ui.homeAvatar.sprite == ui.avatarSprites[1], "切换头像没有金币或确认弹窗");
+            Click(ui, "Profile/Card/FrameTab");
+            var frameCosts = new[] { 288, 888, 1588, 2588 };
+            var frameBalance = 7352;
+            for (var frameIndex = 4; frameIndex <= 7; frameIndex++)
+            {
+                Click(ui, "Profile/Card/ChoicesScroll/Viewport/Choices/Choice" + frameIndex);
+                frameBalance -= frameCosts[frameIndex - 4];
+                Check(!ui.modal.activeSelf && ui.Coins == frameBalance && ui.homeFrame.sprite == ui.profileFrameSprites[frameIndex], "金币头像框按288/888/1588/2588直接解锁 " + frameIndex);
+                Click(ui, "Profile/Card/ChoicesScroll/Viewport/Choices/Choice" + frameIndex);
+                Check(ui.Coins == frameBalance, "已拥有的金币头像框重复选择不扣费 " + frameIndex);
+            }
+            var completedField = typeof(UIDifferences).GetField("completed", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            var journeyCompletedField = typeof(UIDifferences).GetField("journeyCompleted", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            var profileCompleted = ui.Completed;
+            var profileJourneyCompleted = (int)journeyCompletedField.GetValue(ui);
+            var frameLevels = new[] { 30, 20, 50, 100 };
+            for (var frameIndex = 8; frameIndex < 12; frameIndex++)
+            {
+                var required = frameLevels[frameIndex - 8];
+                var requiresJourney = frameIndex == 9 || frameIndex == 10;
+                var progressField = requiresJourney ? journeyCompletedField : completedField;
+                var otherProgressField = requiresJourney ? completedField : journeyCompletedField;
+                progressField.SetValue(ui, 0); otherProgressField.SetValue(ui, 200);
+                var previousFrame = ui.homeFrame.sprite;
+                Click(ui, "Profile/Card/ChoicesScroll/Viewport/Choices/Choice" + frameIndex);
+                Check(!ui.modal.activeSelf && ui.Coins == 2000 && ui.homeFrame.sprite == previousFrame, "主线与旅程进度不能交叉解锁头像框 " + frameIndex);
+                progressField.SetValue(ui, required - 1);
+                Click(ui, "Profile/Card/ChoicesScroll/Viewport/Choices/Choice" + frameIndex);
+                Check(!ui.modal.activeSelf && ui.Coins == 2000 && ui.homeFrame.sprite == previousFrame && ui.noticeLabel.text.Contains(required.ToString()), "指定模式通关条件未达标使用toast且不能花金币绕过 " + frameIndex);
+                otherProgressField.SetValue(ui, 0); progressField.SetValue(ui, required);
+                Click(ui, "Profile/Card/ChoicesScroll/Viewport/Choices/Choice" + frameIndex);
+                Check(ui.Coins == 2000 && ui.homeFrame.sprite == ui.profileFrameSprites[frameIndex], "指定模式通关条件达标免费选中头像框 " + frameIndex);
+            }
+            completedField.SetValue(ui, profileCompleted);
+            journeyCompletedField.SetValue(ui, profileJourneyCompleted);
+            var ownedFramesBeforeName = settings.GetInt(key + "OwnedFrames");
+            await EditNickname("找不同测试员");
+            Check(ui.Coins == 2000 && ui.profile.activeSelf && ui.homeAvatar.sprite == ui.avatarSprites[1] && ui.homeFrame.sprite == ui.profileFrameSprites[11] &&
+                settings.GetInt(key + "OwnedFrames") == ownedFramesBeforeName, "昵称结束编辑后保存且保持资料页，不改变头像、头像框、权益和余额");
+            Check((settings.GetInt(key + "OwnedFrames") & (1 << 11)) != 0 && settings.GetString(key + "Nickname") == "找不同测试员", "头像框历史权益及昵称存档");
+            Click(ui, "Profile/Close");
+            ui.OnOpen(null);
+            ui.ShowProfile();
+            Check(ui.nicknameInput.text == "找不同测试员" && ui.profileAvatar.sprite == ui.avatarSprites[1] && ui.profileFrame.sprite == ui.profileFrameSprites[11], "历史解锁头像框重载后保留权益");
+            Click(ui, "Profile/Card/ChoicesScroll/Viewport/Choices/Choice1");
+            Click(ui, "Profile/Card/FrameTab");
+            Click(ui, "Profile/Card/ChoicesScroll/Viewport/Choices/Choice11");
+            await EditNickname("找不同测试员");
+            Check(ui.Coins == 2000 && ui.profile.activeSelf, "重复保存昵称不收费且保持资料页");
+            ui.SaveProfile();
+            Check(!ui.profile.activeSelf && ui.Coins == 2000 && settings.GetString(key + "Nickname") == "找不同测试员",
+                "显式 SaveProfile 保留保存并关闭的兼容行为，不重复收费");
 
             Click(ui.shopButton);
             var initialHints = ui.Hints;
@@ -678,7 +755,8 @@ public static class DifferenceGamePlayCheck
             settings.SetInt(key + "Coins", 29); settings.SetInt(key + "Completed", 0); settings.SetInt(key + "Perfect", 0);
             settings.SetInt(key + "RoundLevel", 0); settings.SetInt(key + "RoundMask", 1); settings.SetInt(key + "RoundLives", 0); settings.SetInt(key + "RoundMistakes", 3);
             ui.OnOpen(null); Click(ui.startButton); Click(ui.modalAction);
-            Check(ui.Round.Lives == 0 && ui.Round.Count == 1 && ui.Coins == 29 && ui.modalTitle.text == "金币不足", "续命不足金币不会免费恢复");
+            Check(ui.Round.Lives == 0 && ui.Round.Count == 1 && ui.Coins == 29 &&
+                ui.noticeLabel.text == "You need 30 coins to continue, or retry for free.", "续命不足金币不会免费恢复");
             Click(ui.modalAction);
             Check(ui.Round.Lives == 3 && ui.Round.Count == 0 && ui.Coins == 29, "不足金币仍可清空重试");
             settings.SetInt(key + "Coins", 100); settings.SetInt(key + "RoundMask", 1); settings.SetInt(key + "RoundLives", 0); settings.SetInt(key + "RoundMistakes", 3);
@@ -694,6 +772,12 @@ public static class DifferenceGamePlayCheck
             var pendingHint = spotlight.TargetIndex;
             ui.OnPause(); ui.OnResume();
             Check(spotlight.Ready && spotlight.TargetIndex == pendingHint, "框架暂停恢复不会丢失聚光目标");
+            Check(ui.backButton.transform.GetSiblingIndex() > spotlight.transform.GetSiblingIndex(), "提示遮罩期间暂停按钮仍在上层");
+            Click(ui.backButton);
+            Check(ui.PauseInputBlocked && !ui.HintActive && ui.Hints == hintBalance - 1, "提示期间暂停暂时隐藏聚光且不重复扣道具");
+            Click((UnityEngine.UI.Button)typeof(UIDifferences).GetField("pauseContinueButton", pauseCheckFlags).GetValue(ui));
+            Check(!ui.PauseInputBlocked && ui.HintActive && spotlight.TargetIndex == pendingHint && ui.Hints == hintBalance - 1, "继续恢复同一个已付费提示");
+            hintStep.Invoke(spotlight, new object[] { .4f });
             ui.ShowSettings(); Click(ui, "Settings/Close");
             Check(ui.HintActive && ui.Hints == hintBalance - 1, "关闭设置后恢复已付费提示，不重复消耗");
             ui.ShowHome();
@@ -889,9 +973,14 @@ public static class DifferenceGamePlayCheck
 
     static void CheckGameplayArt(UIDifferences ui)
     {
-        Check(ui.progressQuestion && ui.progressCheck && ui.progressQuestion != ui.progressCheck, "独立问号与勾素材引用");
         foreach (var dot in ui.progressDots)
-            Check(dot.sprite == ui.progressQuestion && dot.color == Color.white && !dot.GetComponentInChildren<UnityEngine.UI.Text>(true).enabled, "顶部使用原色图标，没有字体字符重叠");
+        {
+            var data = dot.SkeletonDataAsset.GetSkeletonData(false);
+            Check(Array.TrueForAll(new[] { "a1", "a2", "a3", "a4" }, name => data.FindAnimation(name) != null), "进度 Spine 包含完整四个动画");
+            Check(dot.AnimationState.GetCurrent(0).Animation.Name == "a1" && dot.color == Color.white && dot.UnscaledTime && !dot.raycastTarget && !dot.freeze &&
+                dot.layoutScaleMode == Spine.Unity.SkeletonGraphic.LayoutMode.WidthControlsHeight && !dot.GetComponent<UnityEngine.UI.Image>() && !dot.GetComponentInChildren<UnityEngine.UI.Text>(true),
+                "进度使用 Spine 未找到静态动画，随布局缩放、不挡点击且没有旧图标重叠");
+        }
         var hint = ui.hintButton.GetComponent<UnityEngine.UI.Image>();
         Check(hint.sprite.name == "HintButton" && hint.type == UnityEngine.UI.Image.Type.Simple && hint.raycastTarget && ui.hintButton.targetGraphic == hint, "圆形提示按钮仍能接收点击");
         Check(ui.hintButton.transform.Find("Bulb").GetComponent<UnityEngine.UI.Image>().sprite.name == "HintBulb", "提示灯泡已替换");
@@ -962,11 +1051,24 @@ public static class DifferenceGamePlayCheck
         button.onClick.Invoke();
     }
     static string Text(UIDifferences ui, string path) { return ui.stage.Find(path).GetComponent<UnityEngine.UI.Text>().text; }
+    static string ProgressAnimation(UIDifferences ui, int index) { return ui.progressDots[index].AnimationState.GetCurrent(0)?.Animation.Name; }
     static void Find(UIDifferences ui, int index) { ui.ClickImage(ui.spots[index].x, ui.spots[index].y); }
     static void Miss(UIDifferences ui) { ui.ClickImage(.99f, .02f); }
     static void Complete(UIDifferences ui)
     {
-        for (var i = 0; i < ui.Round.Total; i++) Find(ui, i);
+        var last = -1;
+        for (var i = 0; i < ui.Round.Total; i++)
+        {
+            if (!ui.Round.IsFound(i)) last = i;
+            Find(ui, i);
+        }
+        var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+        var elapsed = (float[])typeof(UIDifferences).GetField("patchElapsed", flags).GetValue(ui);
+        var original = (UnityEngine.UI.Image[])typeof(UIDifferences).GetField("originalPatchImages", flags).GetValue(ui);
+        var changed = (UnityEngine.UI.Image[])typeof(UIDifferences).GetField("changedFlashImages", flags).GetValue(ui);
+        Check(last >= 0 && elapsed[last] < 0 && !original[last].transform.parent.gameObject.activeSelf &&
+            !changed[last].transform.parent.gameObject.activeSelf && ui.topRings[last].gameObject.activeSelf &&
+            ui.bottomRings[last].gameObject.activeSelf, "最后一处不同保留双圈，跳过双图闪动");
         Check(ui.Round.Complete && ui.modal.activeSelf && !ui.modalClose.gameObject.activeSelf, "完成关卡并显示结算");
     }
     static bool Near(float a, float b) { return Mathf.Abs(a - b) < .001f; }
