@@ -127,7 +127,7 @@
   },
   {
     "key": "ui_nav_touch",
-    "ChineseSimplified": "触摸设置",
+    "ChineseSimplified": "触控设置",
     "ChineseTraditional": "觸摸設置",
     "English": "Touch Settings",
     "Japanese": "タッチ設定",
@@ -169,7 +169,7 @@
   },
   {
     "key": "ui_nav_title",
-    "ChineseSimplified": "返回标题",
+    "ChineseSimplified": "返回标题画面",
     "ChineseTraditional": "返回標題",
     "English": "Return to Title",
     "Japanese": "タイトルに戻る",
@@ -190,9 +190,9 @@
   },
   {
     "key": "ui_nav_exit",
-    "ChineseSimplified": "离开游戏",
-    "ChineseTraditional": "離開遊戲",
-    "English": "Quit Game",
+    "ChineseSimplified": "退出游戏",
+    "ChineseTraditional": "退出遊戲",
+    "English": "Exit Game",
     "Japanese": "ゲームを終了",
     "Korean": "게임 종료",
     "Thai": "ออกจากเกม",
@@ -295,7 +295,7 @@
   },
   {
     "key": "ui_nav_newold",
-    "ChineseSimplified": "由新到旧",
+    "ChineseSimplified": "从新到旧",
     "ChineseTraditional": "由新到舊",
     "English": "Newest First",
     "Japanese": "新しい順",
@@ -316,7 +316,7 @@
   },
   {
     "key": "ui_nav_oldnew",
-    "ChineseSimplified": "由旧到新",
+    "ChineseSimplified": "从旧到新",
     "ChineseTraditional": "由舊到新",
     "English": "Oldest First",
     "Japanese": "古い順",
@@ -400,7 +400,7 @@
   },
   {
     "key": "ui_nav_window",
-    "ChineseSimplified": "窗口",
+    "ChineseSimplified": "窗口模式",
     "ChineseTraditional": "窗口",
     "English": "Windowed",
     "Japanese": "ウィンドウ",
@@ -484,7 +484,7 @@
   },
   {
     "key": "ui_nav_confirmsave",
-    "ChineseSimplified": "保存游戏时确认",
+    "ChineseSimplified": "存档时确认",
     "ChineseTraditional": "保存遊戲時確認",
     "English": "Confirm when saving",
     "Japanese": "セーブ時に確認",
@@ -505,7 +505,7 @@
   },
   {
     "key": "ui_nav_confirmload",
-    "ChineseSimplified": "读取游戏时确认",
+    "ChineseSimplified": "读档时确认",
     "ChineseTraditional": "讀取遊戲時確認",
     "English": "Confirm when loading",
     "Japanese": "ロード時に確認",
@@ -568,7 +568,7 @@
   },
   {
     "key": "ui_nav_confirmreturn",
-    "ChineseSimplified": "返回标题时确认",
+    "ChineseSimplified": "返回标题画面时确认",
     "ChineseTraditional": "返回標題時確認",
     "English": "Confirm return to title",
     "Japanese": "タイトルに戻る時に確認",
@@ -591,7 +591,7 @@
     "key": "ui_nav_confirmexit",
     "ChineseSimplified": "退出游戏时确认",
     "ChineseTraditional": "退出遊戲時確認",
-    "English": "Confirm Before Quitting",
+    "English": "Confirm game exit",
     "Japanese": "終了時に確認",
     "Korean": "종료 시 확인",
     "Thai": "ยืนยันเมื่อออกเกม",
@@ -610,7 +610,7 @@
   },
   {
     "key": "ui_nav_defaultbtn",
-    "ChineseSimplified": "恢复默认",
+    "ChineseSimplified": "恢复默认设置",
     "ChineseTraditional": "恢復默認",
     "English": "Restore Defaults",
     "Japanese": "初期設定に戻す",
@@ -799,7 +799,7 @@
   },
   {
     "key": "ui_nav_lowbgm",
-    "ChineseSimplified": "语音播放时降低BGM",
+    "ChineseSimplified": "播放语音时降低 BGM",
     "ChineseTraditional": "語音播放時降低BGM",
     "English": "Lower BGM during Voice",
     "Japanese": "ボイス再生時BGMを下げる",
@@ -883,7 +883,7 @@
   },
   {
     "key": "ui_nav_textfast",
-    "ChineseSimplified": "文本快进",
+    "ChineseSimplified": "快进文本",
     "ChineseTraditional": "文本快進",
     "English": "Text Skip",
     "Japanese": "テキストスキップ",
@@ -946,7 +946,7 @@
   },
   {
     "key": "ui_nav_autocancel",
-    "ChineseSimplified": "选项后取消自动播放",
+    "ChineseSimplified": "选择后关闭自动模式",
     "ChineseTraditional": "選項後取消自動播放",
     "English": "Disable Auto After Choice",
     "Japanese": "選択後オート解除",
@@ -967,7 +967,7 @@
   },
   {
     "key": "ui_nav_fastcancel",
-    "ChineseSimplified": "选项后取消快速模式",
+    "ChineseSimplified": "选择后关闭快速模式",
     "ChineseTraditional": "選項後取消快速模式",
     "English": "Disable Skip After Choice",
     "Japanese": "選択後スキップ解除",
@@ -988,7 +988,7 @@
   },
   {
     "key": "ui_nav_noshowtext",
-    "ChineseSimplified": "不显示进行语音播放的文本",
+    "ChineseSimplified": "播放语音时隐藏文本",
     "ChineseTraditional": "不顯示進行語音播放的文本",
     "English": "Hide Text During Voice",
     "Japanese": "音声再生中テキスト非表示",
@@ -1009,7 +1009,7 @@
   },
   {
     "key": "ui_nav_noeffect",
-    "ChineseSimplified": "无效",
+    "ChineseSimplified": "已禁用",
     "ChineseTraditional": "無效",
     "English": "Disabled",
     "Japanese": "無効",
@@ -1072,7 +1072,7 @@
   },
   {
     "key": "ui_nav_gray",
-    "ChineseSimplified": "灰暗",
+    "ChineseSimplified": "暗色",
     "ChineseTraditional": "灰暗",
     "English": "Dark",
     "Japanese": "暗い",
@@ -1093,7 +1093,7 @@
   },
   {
     "key": "ui_nav_alltext",
-    "ChineseSimplified": "全文",
+    "ChineseSimplified": "全部文本",
     "ChineseTraditional": "全文",
     "English": "All Text",
     "Japanese": "全文",
@@ -1114,7 +1114,7 @@
   },
   {
     "key": "ui_nav_hasread",
-    "ChineseSimplified": "仅已读",
+    "ChineseSimplified": "仅已读文本",
     "ChineseTraditional": "僅已讀",
     "English": "Read Only",
     "Japanese": "既読のみ",
@@ -1156,7 +1156,7 @@
   },
   {
     "key": "ui_nav_longclick",
-    "ChineseSimplified": "长按鼠标左键可以快进文本",
+    "ChineseSimplified": "按住鼠标左键快进文本",
     "ChineseTraditional": "長按滑鼠左鍵可以快進文本",
     "English": "Hold left click to skip",
     "Japanese": "左クリック長押しでスキップ",
@@ -1177,7 +1177,7 @@
   },
   {
     "key": "ui_nav_leftclick",
-    "ChineseSimplified": "文字显示途中鼠标左击跳过",
+    "ChineseSimplified": "文本显示时单击即可跳过",
     "ChineseTraditional": "文字顯示途中滑鼠左鍵跳過",
     "English": "Click to skip text",
     "Japanese": "表示中にクリックでスキップ",
@@ -1324,7 +1324,7 @@
   },
   {
     "key": "ui_nav_demo",
-    "ChineseSimplified": "这里是示例，展示自动模式下文字生成速度",
+    "ChineseSimplified": "此示例用于展示自动模式下的文本显示速度",
     "ChineseTraditional": "這裡是示例，展示自動模式下文字生成速度",
     "English": "Sample text speed in auto mode",
     "Japanese": "オートモードでの表示速度例",
@@ -1366,9 +1366,9 @@
   },
   {
     "key": "ui_nav_switchlang",
-    "ChineseSimplified": "是否要切换语言，并关闭游戏？（请先做好数据存档哦）",
+    "ChineseSimplified": "是否切换语言并退出游戏？（请先保存进度。）",
     "ChineseTraditional": "是否要切換語言，並關閉遊戲？（請先做好數據存檔哦）",
-    "English": "Change the language and quit the game? (Save your progress first!)",
+    "English": "Change language and exit? (Save your data first!)",
     "Japanese": "言語変更して終了しますか？(セーブを忘れずに！)",
     "Korean": "언어 변경 후 종료하시겠습니까? (저장 먼저!)",
     "Thai": "เปลี่ยนภาษาและออกเกม? (อย่าลืมเซฟก่อน!)",
@@ -1387,7 +1387,7 @@
   },
   {
     "key": "ui_nav_deldoc",
-    "ChineseSimplified": "是否删除存档?",
+    "ChineseSimplified": "是否删除此存档？",
     "ChineseTraditional": "是否刪除存檔？",
     "English": "Delete this save data?",
     "Japanese": "セーブデータを削除しますか？",
@@ -1408,7 +1408,7 @@
   },
   {
     "key": "ui_nav_returntitle",
-    "ChineseSimplified": "是否返回标题页?",
+    "ChineseSimplified": "是否返回标题画面？",
     "ChineseTraditional": "是否返回標題頁？",
     "English": "Return to the title screen?",
     "Japanese": "タイトル画面に戻りますか？",
@@ -1429,7 +1429,7 @@
   },
   {
     "key": "ui_nav_confirmnew",
-    "ChineseSimplified": "是否新建存档?",
+    "ChineseSimplified": "是否新建存档？",
     "ChineseTraditional": "是否建立新存檔？",
     "English": "Create a new save?",
     "Japanese": "新しいセーブデータを作成しますか？",
@@ -1450,7 +1450,7 @@
   },
   {
     "key": "ui_nav_loaddoc",
-    "ChineseSimplified": "是否加载存档",
+    "ChineseSimplified": "是否读取此存档？",
     "ChineseTraditional": "是否讀取存檔？",
     "English": "Load this save data?",
     "Japanese": "セーブデータをロードしますか？",
@@ -1555,7 +1555,7 @@
   },
   {
     "key": "ui_nav_pre",
-    "ChineseSimplified": "上一个选择",
+    "ChineseSimplified": "上一个选项",
     "ChineseTraditional": "上一個選項",
     "English": "Previous Choice",
     "Japanese": "前の選択肢",
@@ -1597,7 +1597,7 @@
   },
   {
     "key": "ui_nav_fastread",
-    "ChineseSimplified": "快进已读",
+    "ChineseSimplified": "快进已读文本",
     "ChineseTraditional": "快進已讀內容",
     "English": "Fast-Forward Read Text",
     "Japanese": "既読スキップ",
@@ -1618,7 +1618,7 @@
   },
   {
     "key": "ui_nav_next",
-    "ChineseSimplified": "下一个选择",
+    "ChineseSimplified": "下一个选项",
     "ChineseTraditional": "下一個選項",
     "English": "Next Choice",
     "Japanese": "次の選択肢",
@@ -1723,7 +1723,7 @@
   },
   {
     "key": "ui_nav_settings",
-    "ChineseSimplified": "设定界面",
+    "ChineseSimplified": "设置",
     "ChineseTraditional": "設定畫面",
     "English": "Settings",
     "Japanese": "設定画面",
@@ -1744,7 +1744,7 @@
   },
   {
     "key": "ui_nav_returntotitle",
-    "ChineseSimplified": "返回标题页",
+    "ChineseSimplified": "返回标题画面",
     "ChineseTraditional": "返回標題頁",
     "English": "Return to Title",
     "Japanese": "タイトル画面に戻る",
@@ -1786,7 +1786,7 @@
   },
   {
     "key": "ui_nav_advdance",
-    "ChineseSimplified": "紧急回避模式",
+    "ChineseSimplified": "紧急跳过模式",
     "ChineseTraditional": "緊急迴避模式",
     "English": "Emergency Skip Mode",
     "Japanese": "緊急回避モード",
@@ -1807,7 +1807,7 @@
   },
   {
     "key": "ui_nav_pause",
-    "ChineseSimplified": "中断游戏",
+    "ChineseSimplified": "暂停游戏",
     "ChineseTraditional": "暫停遊戲",
     "English": "Pause Game",
     "Japanese": "ゲームを中断",
@@ -1828,7 +1828,7 @@
   },
   {
     "key": "ui_nav_stop",
-    "ChineseSimplified": "结束游戏",
+    "ChineseSimplified": "退出游戏",
     "ChineseTraditional": "結束遊戲",
     "English": "Quit Game",
     "Japanese": "ゲームを終了",
@@ -1849,7 +1849,7 @@
   },
   {
     "key": "ui_nav_switch",
-    "ChineseSimplified": "切换画面模式",
+    "ChineseSimplified": "切换显示模式",
     "ChineseTraditional": "切換顯示模式",
     "English": "Switch Display Mode",
     "Japanese": "画面モードを切り替える",
@@ -1891,7 +1891,7 @@
   },
   {
     "key": "ui_nav_clickleft",
-    "ChineseSimplified": "鼠标左击",
+    "ChineseSimplified": "单击鼠标左键",
     "ChineseTraditional": "滑鼠左鍵",
     "English": "Left Click",
     "Japanese": "左クリック",
@@ -1912,7 +1912,7 @@
   },
   {
     "key": "ui_nav_wheel",
-    "ChineseSimplified": "点击滚轮",
+    "ChineseSimplified": "单击鼠标滚轮",
     "ChineseTraditional": "按下滾輪",
     "English": "Click Mouse Wheel",
     "Japanese": "マウスホイールをクリック",
@@ -1933,7 +1933,7 @@
   },
   {
     "key": "ui_nav_clickright",
-    "ChineseSimplified": "鼠标右击",
+    "ChineseSimplified": "单击鼠标右键",
     "ChineseTraditional": "滑鼠右鍵",
     "English": "Right Click",
     "Japanese": "右クリック",
@@ -1954,7 +1954,7 @@
   },
   {
     "key": "ui_nav_capture",
-    "ChineseSimplified": "截图保存",
+    "ChineseSimplified": "保存截图",
     "ChineseTraditional": "儲存截圖",
     "English": "Save Screenshot",
     "Japanese": "スクリーンショットを保存",
@@ -1996,7 +1996,7 @@
   },
   {
     "key": "ui_nav_disable",
-    "ChineseSimplified": "清除按键",
+    "ChineseSimplified": "清除按键绑定",
     "ChineseTraditional": "清除按鍵設定",
     "English": "Clear Key Binding",
     "Japanese": "キー設定を解除",
@@ -2038,7 +2038,7 @@
   },
   {
     "key": "text_achievement_name_01",
-    "ChineseSimplified": "独自享受的日常",
+    "ChineseSimplified": "独享的宁静日常",
     "ChineseTraditional": "獨自享受的日常",
     "English": "A Quiet Day to Myself",
     "Japanese": "ひとりで楽しむ日常",
@@ -2059,7 +2059,7 @@
   },
   {
     "key": "text_achievement_name_02",
-    "ChineseSimplified": "神社的守护者",
+    "ChineseSimplified": "神社守护者",
     "ChineseTraditional": "神社的守護者",
     "English": "Guardian of the Shrine",
     "Japanese": "神社の守り人",
@@ -2080,7 +2080,7 @@
   },
   {
     "key": "text_achievement_content_1",
-    "ChineseSimplified": "您已解锁“独自享受的日常”路线！恭喜您！这是只属于您一人的物语！",
+    "ChineseSimplified": "已解锁“独享的宁静日常”路线！恭喜！这是只属于你的故事！",
     "ChineseTraditional": "您已解鎖「獨自享受的日常」路線！恭喜！這是只屬於您一人的故事！",
     "English": "You unlocked the “A Quiet Day to Myself” route! Congratulations—this story is yours alone!",
     "Japanese": "「ひとりで楽しむ日常」ルートを解放しました！おめでとうございます！あなただけの物語です！",
@@ -2101,7 +2101,7 @@
   },
   {
     "key": "text_achievement_content_2",
-    "ChineseSimplified": "您已赢得巫女玲奈的芳心，并肩负起守护神社的责任！（大概吧）",
+    "ChineseSimplified": "你赢得了巫女玲奈的芳心，也肩负起守护神社的责任！（大概吧。）",
     "ChineseTraditional": "您已贏得巫女玲奈的芳心，並肩負起守護神社的責任！（大概吧）",
     "English": "You won the heart of Rena, the shrine maiden, and took on the duty of protecting the shrine! (Probably.)",
     "Japanese": "巫女の玲奈の心を射止め、神社を守る役目を担うことになりました！（たぶん）",
@@ -2143,7 +2143,7 @@
   },
   {
     "key": "level_tip_01",
-    "ChineseSimplified": "从一个角落开始，一点点看遍整张图。",
+    "ChineseSimplified": "从一个角落开始，逐步查看整张图片。",
     "ChineseTraditional": "從一個角落開始，一點點看遍整張圖。",
     "English": "Start with one corner and work your way across.",
     "Japanese": "1 つの角から始めて、全体に向かって作業を進めてください。",
@@ -2206,7 +2206,7 @@
   },
   {
     "key": "level_tip_04",
-    "ChineseSimplified": "数一数小物件，是不是少了什么？",
+    "ChineseSimplified": "数数小物件，看看是否少了什么。",
     "ChineseTraditional": "數一數小物件，是不是少了什麼？",
     "English": "Count the little things. Is something missing?",
     "Japanese": "小さなことを数えてみましょう。何かが足りないのでしょうか？",
@@ -2227,7 +2227,7 @@
   },
   {
     "key": "level_tip_05",
-    "ChineseSimplified": "看看图片边缘，也许会有惊喜。",
+    "ChineseSimplified": "检查图片边缘，也许会有惊喜。",
     "ChineseTraditional": "看看圖片邊緣，也許會有驚喜。",
     "English": "Check the edges—you might find a surprise.",
     "Japanese": "端をチェックしてください。意外な発見があるかもしれません。",
@@ -2248,7 +2248,7 @@
   },
   {
     "key": "level_tip_06",
-    "ChineseSimplified": "在大物件之间寻找细小的线索。",
+    "ChineseSimplified": "在大物件之间寻找细小线索。",
     "ChineseTraditional": "在大物件之間尋找細小的線索。",
     "English": "Look between the big things for tiny clues.",
     "Japanese": "大きなものの間から小さな手がかりを探してください。",
@@ -2269,7 +2269,7 @@
   },
   {
     "key": "level_tip_07",
-    "ChineseSimplified": "花朵、纽扣、条纹……小细节最容易藏起来。",
+    "ChineseSimplified": "花朵、纽扣、条纹……小细节最会藏起来。",
     "ChineseTraditional": "花朵、鈕扣、條紋……小細節最容易藏起來。",
     "English": "Flowers, buttons, stripes… little details can be sneaky.",
     "Japanese": "花、ボタン、ストライプなど、細かいディテールは卑劣なものになる可能性があります。",
@@ -2290,7 +2290,7 @@
   },
   {
     "key": "level_tip_08",
-    "ChineseSimplified": "有没有什么东西变长、变短或有点不一样？",
+    "ChineseSimplified": "有没有东西变长、变短或稍有不同？",
     "ChineseTraditional": "有沒有什麼東西變長、變短或有點不一樣？",
     "English": "Does anything look longer, shorter, or slightly different?",
     "Japanese": "何か長く見えたり、短く見えたり、あるいは少し違ったりすることはありますか?",
@@ -2311,7 +2311,7 @@
   },
   {
     "key": "level_tip_09",
-    "ChineseSimplified": "找不到了？换个地方看看。",
+    "ChineseSimplified": "找不到？换个地方看看。",
     "ChineseTraditional": "找不到了？換個地方看看。",
     "English": "Stuck? Try looking at a different part of the picture.",
     "Japanese": "立ち往生？写真の別の部分を見てみてください。",
@@ -2332,7 +2332,7 @@
   },
   {
     "key": "level_tip_10",
-    "ChineseSimplified": "稍作休息，再用全新的眼光仔细看看。",
+    "ChineseSimplified": "休息一下，再用全新的眼光仔细看看。",
     "ChineseTraditional": "稍作休息，再用全新的眼光仔細看看。",
     "English": "Take a little break, then look again with fresh eyes.",
     "Japanese": "少し休憩してから、もう一度新鮮な目で見てください。",
@@ -2395,7 +2395,7 @@
   },
   {
     "key": "level_tip_13",
-    "ChineseSimplified": "需要帮忙？点击提示按钮。",
+    "ChineseSimplified": "需要帮助？点击提示按钮。",
     "ChineseTraditional": "需要幫忙？點擊提示按鈕。",
     "English": "Need a little help? Tap the hint button.",
     "Japanese": "少し助けが必要ですか?ヒントボタンをタップします。",
@@ -2458,7 +2458,7 @@
   },
   {
     "key": "startup_tip_03",
-    "ChineseSimplified": "下一个恍然大悟的瞬间即将到来……",
+    "ChineseSimplified": "下一个恍然大悟的时刻即将到来……",
     "ChineseTraditional": "下一個恍然大悟的瞬間即將到來……",
     "English": "Your next “Aha!” moment is loading...",
     "Japanese": "次の「ああ！」ロード中です...",
@@ -2479,7 +2479,7 @@
   },
   {
     "key": "startup_tip_04",
-    "ChineseSimplified": "用心找一找，收获满满的快乐。",
+    "ChineseSimplified": "用心寻找，尽情享受乐趣！",
     "ChineseTraditional": "用心找一找，收穫滿滿的快樂。",
     "English": "A little looking, a lot of joy.",
     "Japanese": "少し見て、たくさんの喜び。",
@@ -2500,7 +2500,7 @@
   },
   {
     "key": "level_title",
-    "ChineseSimplified": "级别 {0}",
+    "ChineseSimplified": "关卡 {0}",
     "ChineseTraditional": "關卡 {0}",
     "English": "Level {0}",
     "Japanese": "レベル{0}",
@@ -2521,7 +2521,7 @@
   },
   {
     "key": "level_continue",
-    "ChineseSimplified": "继续 · 等级 {0}",
+    "ChineseSimplified": "继续 · 关卡 {0}",
     "ChineseTraditional": "繼續 · 關卡 {0}",
     "English": "Continue · Level {0}",
     "Japanese": "続行 · {0} レベル",
@@ -2542,7 +2542,7 @@
   },
   {
     "key": "level_album",
-    "ChineseSimplified": "关卡专辑",
+    "ChineseSimplified": "关卡相册",
     "ChineseTraditional": "關卡相簿",
     "English": "Level Album",
     "Japanese": "レベルアルバム",
@@ -2563,7 +2563,7 @@
   },
   {
     "key": "level_restored",
-    "ChineseSimplified": "等级进度已恢复。",
+    "ChineseSimplified": "关卡进度已恢复。",
     "ChineseTraditional": "關卡進度已恢復。",
     "English": "Level progress restored.",
     "Japanese": "レベルの進行状況が回復しました。",
@@ -2584,7 +2584,7 @@
   },
   {
     "key": "level_find",
-    "ChineseSimplified": "找出 {0} 的差异。",
+    "ChineseSimplified": "找出 {0} 处不同。",
     "ChineseTraditional": "找出 {0} 處不同。",
     "English": "Find {0} differences.",
     "Japanese": "{0} の相違点を見つけます。",
@@ -2605,7 +2605,7 @@
   },
   {
     "key": "level_play",
-    "ChineseSimplified": "游玩等级 {0}",
+    "ChineseSimplified": "游玩第 {0} 关",
     "ChineseTraditional": "遊玩關卡 {0}",
     "English": "Play Level {0}",
     "Japanese": "プレイレベル {0}",
@@ -2626,7 +2626,7 @@
   },
   {
     "key": "level_failed",
-    "ChineseSimplified": "无法加载关卡 {0}。请稍后重试。",
+    "ChineseSimplified": "无法加载第 {0} 关。请稍后重试。",
     "ChineseTraditional": "無法載入關卡 {0}。請稍後再試。",
     "English": "Failed to load level {0}. Please try again later.",
     "Japanese": "レベル {0} のロードに失敗しました。後でもう一度試してください。",
@@ -2647,7 +2647,7 @@
   },
   {
     "key": "startup_failed",
-    "ChineseSimplified": "无法加载关卡。请检查您的连接并重试。",
+    "ChineseSimplified": "无法加载关卡。请检查网络连接后重试。",
     "ChineseTraditional": "無法載入關卡。請檢查網路連線後再試。",
     "English": "Unable to load levels. Please check your connection and try again.",
     "Japanese": "レベルをロードできません。接続を確認して、もう一度試してください。",
@@ -2668,7 +2668,7 @@
   },
   {
     "key": "level_completed_percent",
-    "ChineseSimplified": "您已完成 {0}%。",
+    "ChineseSimplified": "已完成 {0}%。",
     "ChineseTraditional": "您已完成 {0}%。",
     "English": "You completed {0}%.",
     "Japanese": "{0}% を完了しました。",
@@ -2689,7 +2689,7 @@
   },
   {
     "key": "home",
-    "ChineseSimplified": "首页",
+    "ChineseSimplified": "主页",
     "ChineseTraditional": "首頁",
     "English": "Home",
     "Japanese": "ホーム",
@@ -2731,7 +2731,7 @@
   },
   {
     "key": "hint_claimed_today",
-    "ChineseSimplified": "您已经领取了今天的免费提示。",
+    "ChineseSimplified": "今日的免费提示已领取。",
     "ChineseTraditional": "您已經領取了今天的免費提示。",
     "English": "You already claimed today's free hint.",
     "Japanese": "今日の無料ヒントは受け取り済みです。",
@@ -2752,7 +2752,7 @@
   },
   {
     "key": "not_enough_coins_100",
-    "ChineseSimplified": "金币不够。你需要100个金币。",
+    "ChineseSimplified": "金币不足。你需要 100 枚金币。",
     "ChineseTraditional": "金幣不夠。你需要100個金幣。",
     "English": "Not enough coins. You need 100 coins.",
     "Japanese": "コインが足りません。 100コインが必要です。",
@@ -2773,7 +2773,7 @@
   },
   {
     "key": "reward_revive_cost",
-    "ChineseSimplified": "您需要 30 个硬币才能继续，或者免费重试。",
+    "ChineseSimplified": "继续游戏需要 30 枚金币，或者免费重试。",
     "ChineseTraditional": "您需要 30 個硬幣才能繼續，或免費重試。",
     "English": "You need 30 coins to continue, or retry for free.",
     "Japanese": "続行するには 30 コインが必要で、無料で再試行できます。",
@@ -2794,24 +2794,24 @@
   },
   {
     "key": "hint_claimed",
-    "ChineseSimplified": "声称",
-    "ChineseTraditional": "領取",
-    "English": "Claim",
-    "Japanese": "受け取る",
-    "Korean": "받기",
-    "Thai": "รับ",
-    "Indonesian": "Klaim",
-    "French": "Récupérer",
-    "German": "Abholen",
-    "Russian": "Получить",
-    "Italian": "Riscatta",
-    "PortuguesePortugal": "Resgatar",
-    "Spanish": "Reclamar",
-    "Vietnamese": "Nhận",
-    "PortugueseBrazil": "Resgatar",
-    "SpanishLatinAmerica": "Reclamar",
-    "SpanishSpain": "Reclamar",
-    "Hindi": "प्राप्त करें"
+    "ChineseSimplified": "已领取",
+    "ChineseTraditional": "已領取",
+    "English": "Claimed",
+    "Japanese": "受け取り済み",
+    "Korean": "수령 완료",
+    "Thai": "รับแล้ว",
+    "Indonesian": "Sudah Diklaim",
+    "French": "Récupéré",
+    "German": "Abgeholt",
+    "Russian": "Получено",
+    "Italian": "Riscattato",
+    "PortuguesePortugal": "Resgatado",
+    "Spanish": "Reclamado",
+    "Vietnamese": "Đã nhận",
+    "PortugueseBrazil": "Resgatado",
+    "SpanishLatinAmerica": "Reclamado",
+    "SpanishSpain": "Reclamado",
+    "Hindi": "प्राप्त"
   },
   {
     "key": "daily_free_hint",
@@ -2836,7 +2836,7 @@
   },
   {
     "key": "my_hints",
-    "ChineseSimplified": "我的提示×{0}",
+    "ChineseSimplified": "我的提示 ×{0}",
     "ChineseTraditional": "我的提示×{0}",
     "English": "My Hints  ×{0}",
     "Japanese": "私のヒント ×{0}",
@@ -2857,7 +2857,7 @@
   },
   {
     "key": "reward_claimed",
-    "ChineseSimplified": "已领取奖励",
+    "ChineseSimplified": "奖励已领取",
     "ChineseTraditional": "已領取獎勵",
     "English": "Reward Claimed",
     "Japanese": "報酬を受け取りました",
@@ -2878,7 +2878,7 @@
   },
   {
     "key": "hint_received",
-    "ChineseSimplified": "您收到 1 条提示。",
+    "ChineseSimplified": "获得 1 个提示。",
     "ChineseTraditional": "您收到 1 個提示。",
     "English": "You received 1 hint.",
     "Japanese": "ヒントを 1 件受け取りました。",
@@ -2899,7 +2899,7 @@
   },
   {
     "key": "collect",
-    "ChineseSimplified": "收集",
+    "ChineseSimplified": "领取",
     "ChineseTraditional": "收集",
     "English": "Collect",
     "Japanese": "集める",
@@ -2983,7 +2983,7 @@
   },
   {
     "key": "ads_disabled",
-    "ChineseSimplified": "此版本禁用广告。",
+    "ChineseSimplified": "此版本已禁用广告。",
     "ChineseTraditional": "此版本禁用廣告。",
     "English": "Ads are disabled in this version.",
     "Japanese": "このバージョンでは広告が無効になっています。",
@@ -3004,7 +3004,7 @@
   },
   {
     "key": "achievement_3",
-    "ChineseSimplified": "完成 3 个级别",
+    "ChineseSimplified": "完成 3 个关卡",
     "ChineseTraditional": "完成 3 個級別",
     "English": "Complete 3 levels",
     "Japanese": "3 つのレベルを完了する",
@@ -3109,28 +3109,28 @@
   },
   {
     "key": "online_level",
-    "ChineseSimplified": "在线水平",
+    "ChineseSimplified": "在线关卡",
     "ChineseTraditional": "線上關卡",
-    "English": "Online Levels",
+    "English": "Online Level",
     "Japanese": "オンラインレベル",
     "Korean": "온라인 레벨",
     "Thai": "ด่านออนไลน์",
     "Indonesian": "Level Online",
-    "French": "Niveaux en ligne",
+    "French": "Niveau en ligne",
     "German": "Online-Level",
-    "Russian": "Онлайн-уровни",
-    "Italian": "Livelli online",
-    "PortuguesePortugal": "Níveis online",
-    "Spanish": "Niveles en línea",
+    "Russian": "Онлайн-уровень",
+    "Italian": "Livello online",
+    "PortuguesePortugal": "Nível online",
+    "Spanish": "Nivel en línea",
     "Vietnamese": "Cấp độ trực tuyến",
-    "PortugueseBrazil": "Fases online",
-    "SpanishLatinAmerica": "Niveles en línea",
-    "SpanishSpain": "Niveles en línea",
+    "PortugueseBrazil": "Fase online",
+    "SpanishLatinAmerica": "Nivel en línea",
+    "SpanishSpain": "Nivel en línea",
     "Hindi": "ऑनलाइन स्तर"
   },
   {
     "key": "tap_load_level",
-    "ChineseSimplified": "点击加载级别",
+    "ChineseSimplified": "点击加载关卡",
     "ChineseTraditional": "點一下以載入關卡",
     "English": "Tap to load level",
     "Japanese": "タップしてレベルをロードします",
@@ -3151,9 +3151,9 @@
   },
   {
     "key": "difference_count",
-    "ChineseSimplified": "{0}差异",
+    "ChineseSimplified": "{0} 处不同",
     "ChineseTraditional": "{0} 處不同",
-    "English": "{0} Differences",
+    "English": "{0} differences",
     "Japanese": "{0}個の違い",
     "Korean": "차이점 {0}개",
     "Thai": "ความแตกต่าง {0} จุด",
@@ -3172,7 +3172,7 @@
   },
   {
     "key": "completed_replay",
-    "ChineseSimplified": "已完成 · 重播",
+    "ChineseSimplified": "已完成 · 重玩",
     "ChineseTraditional": "已完成 · 重播",
     "English": "Completed · Replay",
     "Japanese": "完了・リプレイ",
@@ -3195,7 +3195,7 @@
     "key": "start_finding",
     "ChineseSimplified": "开始寻找",
     "ChineseTraditional": "開始尋找",
-    "English": "Start Searching",
+    "English": "Start Finding",
     "Japanese": "探し始める",
     "Korean": "찾기 시작",
     "Thai": "เริ่มค้นหา",
@@ -3214,7 +3214,7 @@
   },
   {
     "key": "locked",
-    "ChineseSimplified": "锁定",
+    "ChineseSimplified": "已锁定",
     "ChineseTraditional": "鎖定",
     "English": "Locked",
     "Japanese": "ロックされています",
@@ -3256,7 +3256,7 @@
   },
   {
     "key": "ok",
-    "ChineseSimplified": "好的",
+    "ChineseSimplified": "确定",
     "ChineseTraditional": "好的",
     "English": "OK",
     "Japanese": "OK",
@@ -3298,7 +3298,7 @@
   },
   {
     "key": "tutorial_complete",
-    "ChineseSimplified": "教程完成！不断寻找差异。 1级有无限的提示。",
+    "ChineseSimplified": "教程完成！继续寻找不同之处。第 1 关可无限使用提示。",
     "ChineseTraditional": "教學完成！繼續尋找不同之處。第 1 關可無限使用提示。",
     "English": "Tutorial complete! Keep finding differences. Level 1 has unlimited hints.",
     "Japanese": "チュートリアルが完了しました！違いを見つけ続けてください。レベル 1 には無制限のヒントがあります。",
@@ -3340,7 +3340,7 @@
   },
   {
     "key": "nickname_empty",
-    "ChineseSimplified": "您的昵称不能为空。",
+    "ChineseSimplified": "昵称不能为空。",
     "ChineseTraditional": "您的暱稱不能為空。",
     "English": "Your nickname cannot be empty.",
     "Japanese": "ニックネームを空にすることはできません。",
@@ -3445,7 +3445,7 @@
   },
   {
     "key": "avatar",
-    "ChineseSimplified": "阿凡达",
+    "ChineseSimplified": "头像",
     "ChineseTraditional": "虛擬角色",
     "English": "Avatar",
     "Japanese": "アバター",
@@ -3487,7 +3487,7 @@
   },
   {
     "key": "frame_unlock_level",
-    "ChineseSimplified": "完成 {0} 以解锁该框架。",
+    "ChineseSimplified": "完成第 {0} 关以解锁此头像框。",
     "ChineseTraditional": "完成 {0} 以解鎖該框架。",
     "English": "Complete {0} to unlock this frame.",
     "Japanese": "このフレームのロックを解除するには、{0} を完了してください。",
@@ -3508,7 +3508,7 @@
   },
   {
     "key": "frame_unlock_coins",
-    "ChineseSimplified": "您需要 {0} 硬币来解锁此框架。",
+    "ChineseSimplified": "解锁此头像框需要 {0} 枚金币。",
     "ChineseTraditional": "您需要 {0} 硬幣來解鎖此框架。",
     "English": "You need {0} coins to unlock this frame.",
     "Japanese": "このフレームのロックを解除するには、{0} コインが必要です。",
@@ -3529,7 +3529,7 @@
   },
   {
     "key": "download_size",
-    "ChineseSimplified": "正在下载{0}",
+    "ChineseSimplified": "正在下载 {0}",
     "ChineseTraditional": "正在下載{0}",
     "English": "Downloading {0}",
     "Japanese": "{0}をダウンロード中",
@@ -3550,7 +3550,7 @@
   },
   {
     "key": "ad_free_active",
-    "ChineseSimplified": "您的无广告访问权限已激活。横幅广告和插页式广告已被禁用。 \n 您仍然可以选择观看奖励视频以获取提示。",
+    "ChineseSimplified": "无广告权限已启用。横幅广告和插页式广告已关闭。\n你仍可观看激励视频来获取提示。",
     "ChineseTraditional": "您的無廣告存取權限已啟用。橫幅廣告和插頁式廣告已被停用。 \n 您仍然可以選擇觀看獎勵影片以獲取提示。",
     "English": "Your ad-free access is active. Banner and interstitial ads are disabled.\nYou can still choose to watch rewarded videos for hints.",
     "Japanese": "広告なしのアクセスが有効です。バナー広告とインタースティシャル広告は無効になっています。 \n ヒントを得るために特典動画を視聴することもできます。",
@@ -3571,7 +3571,7 @@
   },
   {
     "key": "ads_included",
-    "ChineseSimplified": "此版本包括横幅广告和插页式广告。 \n 尚不支持无广告购买。 \n 您可以选择观看奖励视频以获得提示。",
+    "ChineseSimplified": "此版本包含横幅广告和插页式广告。\n暂不支持购买无广告服务。\n你可以观看激励视频来获取提示。",
     "ChineseTraditional": "此版本包括橫幅廣告和插頁式廣告。 \n 尚不支援無廣告購買。 \n 您可以選擇觀看獎勵影片以獲得提示。",
     "English": "This version includes banner and interstitial ads.\nAd-free purchases are not available yet.\nYou can choose to watch rewarded videos for hints.",
     "Japanese": "このバージョンには、バナー広告とインタースティシャル広告が含まれています。 \n 広告なしでの購入はまだ利用できません。 \n ヒントを得るためにリワードビデオを視聴することを選択できます。",
@@ -3592,7 +3592,7 @@
   },
   {
     "key": "game_data_help",
-    "ChineseSimplified": "您的进度、硬币、提示和个人资料都会自动保存。 \n 您可以离开某个关卡并稍后继续。",
+    "ChineseSimplified": "游戏进度、金币、提示和个人资料会自动保存。\n你可以离开关卡，稍后继续。",
     "ChineseTraditional": "您的進度、硬幣、提示和個人資料都會自動儲存。 \n 您可以離開某個關卡並稍後繼續。",
     "English": "Your progress, coins, hints and profile are saved automatically.\nYou can leave a level and continue later.",
     "Japanese": "進行状況、コイン、ヒント、プロフィールは自動的に保存されます。 \n レベルを離れて、後で続行することができます。",
@@ -3613,7 +3613,7 @@
   },
   {
     "key": "tutorial_zoom_pc",
-    "ChineseSimplified": "双指张开即可放大。\n在计算机上，滚动可缩放。",
+    "ChineseSimplified": "双指张开即可放大。\n在电脑上，可滚动鼠标滚轮缩放。",
     "ChineseTraditional": "雙指張開即可放大。 \n在電腦上，滾動可縮放。",
     "English": "Pinch out to zoom in.\nOn a computer, scroll to zoom.",
     "Japanese": "ピンチアウトして拡大します。\n コンピュータでは、スクロールして拡大します。",
@@ -3634,7 +3634,7 @@
   },
   {
     "key": "tutorial_hint",
-    "ChineseSimplified": "点击提示来找出差异。 \n 此关卡无限提示。",
+    "ChineseSimplified": "点击提示以找出一处不同。\n本关可无限使用提示。",
     "ChineseTraditional": "點一下提示以找出不同之處。\n此關卡可無限使用提示。",
     "English": "Tap Hint to find a difference.\nUnlimited hints in this level.",
     "Japanese": "「ヒント」をタップして違いを見つけます。 \n このレベルではヒントは無制限です。",
@@ -3655,7 +3655,7 @@
   },
   {
     "key": "tutorial_highlight_difference",
-    "ChineseSimplified": "点击突出显示的点 \n 即可找到此差异。",
+    "ChineseSimplified": "点击高亮位置\n即可找出这处不同。",
     "ChineseTraditional": "點一下醒目標示的位置\n即可找出這處不同。",
     "English": "Tap the highlighted spot\nto find this difference.",
     "Japanese": "ハイライト表示されたスポット \n をタップして、この違いを見つけます。",
@@ -3676,7 +3676,7 @@
   },
   {
     "key": "tutorial_highlight_picture",
-    "ChineseSimplified": "点击任一图片中突出显示的点 \n。",
+    "ChineseSimplified": "点击任一图片中的高亮位置。",
     "ChineseTraditional": "點一下任一圖片中醒目標示的位置。",
     "English": "Tap the highlighted spot\nin either picture.",
     "Japanese": "どちらかの画像でハイライト表示されている箇所「\n」をタップします。",
@@ -3697,7 +3697,7 @@
   },
   {
     "key": "journey_number",
-    "ChineseSimplified": "旅程{0}",
+    "ChineseSimplified": "旅程 {0}",
     "ChineseTraditional": "旅程{0}",
     "English": "Journey {0}",
     "Japanese": "ジャーニー {0}",
@@ -3718,7 +3718,7 @@
   },
   {
     "key": "prefab_53744e13",
-    "ChineseSimplified": "露台阳光",
+    "ChineseSimplified": "阳光露台",
     "ChineseTraditional": "露台陽光",
     "English": "Terrace Sunshine",
     "Japanese": "テラスサンシャイン",
@@ -3739,7 +3739,7 @@
   },
   {
     "key": "prefab_7265a216",
-    "ChineseSimplified": "50级后解锁。",
+    "ChineseSimplified": "通过第 50 关后解锁。",
     "ChineseTraditional": "通過第 50 關後解鎖。",
     "English": "Unlocks after Level 50.",
     "Japanese": "レベル50以降にロックが解除されます。",
@@ -3928,7 +3928,7 @@
   },
   {
     "key": "prefab_02ebbfc8",
-    "ChineseSimplified": "✦ 寻找差异 ✦",
+    "ChineseSimplified": "✦ 寻找不同 ✦",
     "ChineseTraditional": "✦ 尋找差異 ✦",
     "English": "✦  FIND DIFFERENCES  ✦",
     "Japanese": "✦ 違いを見つける ✦",
@@ -3949,7 +3949,7 @@
   },
   {
     "key": "prefab_f06f2750",
-    "ChineseSimplified": "无错误地完成新关卡",
+    "ChineseSimplified": "零失误完成一个新关卡",
     "ChineseTraditional": "零失誤完成一個新關卡",
     "English": "Finish a new level without mistakes",
     "Japanese": "新しいレベルをミスなくクリアする",
@@ -4033,7 +4033,7 @@
   },
   {
     "key": "prefab_37a4967e",
-    "ChineseSimplified": "继续玩",
+    "ChineseSimplified": "继续游戏",
     "ChineseTraditional": "繼續玩",
     "English": "Keep Playing",
     "Japanese": "プレイを続ける",
@@ -4054,7 +4054,7 @@
   },
   {
     "key": "prefab_4727788e",
-    "ChineseSimplified": "完成你的第一级",
+    "ChineseSimplified": "完成你的第一个关卡",
     "ChineseTraditional": "完成你的第一個關卡",
     "English": "Complete your first level",
     "Japanese": "最初のレベルを完了する",
@@ -4075,7 +4075,7 @@
   },
   {
     "key": "prefab_95bd75af",
-    "ChineseSimplified": "硬币购买即将推出",
+    "ChineseSimplified": "金币购买即将推出",
     "ChineseTraditional": "硬幣購買即將推出",
     "English": "Coin purchases are coming soon",
     "Japanese": "コインの購入はもうすぐ始まります",
@@ -4138,7 +4138,7 @@
   },
   {
     "key": "prefab_b4f9837d",
-    "ChineseSimplified": "锐利的眼睛",
+    "ChineseSimplified": "眼疾手快",
     "ChineseTraditional": "銳利的眼睛",
     "English": "Sharp Eye",
     "Japanese": "鋭い目",
@@ -4201,7 +4201,7 @@
   },
   {
     "key": "prefab_b0018a91",
-    "ChineseSimplified": "完美的发现",
+    "ChineseSimplified": "完美发现",
     "ChineseTraditional": "完美發現",
     "English": "Perfect Find",
     "Japanese": "パーフェクト発見",
@@ -4243,7 +4243,7 @@
   },
   {
     "key": "prefab_e56cc0e3",
-    "ChineseSimplified": "900 个金币",
+    "ChineseSimplified": "900 枚金币",
     "ChineseTraditional": "900 个金币",
     "English": "900 Coins",
     "Japanese": "900コイン",
@@ -4369,7 +4369,7 @@
   },
   {
     "key": "prefab_2c41701d",
-    "ChineseSimplified": "小欢乐",
+    "ChineseSimplified": "小小乐趣",
     "ChineseTraditional": "小小樂趣",
     "English": "Little Joys",
     "Japanese": "リトル・ジョイズ",
@@ -4390,7 +4390,7 @@
   },
   {
     "key": "prefab_7ed443e3",
-    "ChineseSimplified": "离开等级？",
+    "ChineseSimplified": "离开关卡？",
     "ChineseTraditional": "離開關卡？",
     "English": "Leave Level?",
     "Japanese": "このレベルを終了しますか？",
@@ -4432,7 +4432,7 @@
   },
   {
     "key": "prefab_4f213afc",
-    "ChineseSimplified": "ADS",
+    "ChineseSimplified": "广告",
     "ChineseTraditional": "ADS",
     "English": "ADS",
     "Japanese": "ADS",
@@ -4495,7 +4495,7 @@
   },
   {
     "key": "prefab_48fb861b",
-    "ChineseSimplified": "使用提示来找出差异。",
+    "ChineseSimplified": "使用提示找出不同之处。",
     "ChineseTraditional": "使用提示找出不同之處。",
     "English": "Use hints to find differences.",
     "Japanese": "ヒントを使って違いを見つけよう。",
@@ -4516,7 +4516,7 @@
   },
   {
     "key": "prefab_36b6ce6d",
-    "ChineseSimplified": "下一级别",
+    "ChineseSimplified": "下一关",
     "ChineseTraditional": "下一關",
     "English": "Next Level",
     "Japanese": "次のレベル",
@@ -4537,7 +4537,7 @@
   },
   {
     "key": "prefab_16dc920e",
-    "ChineseSimplified": "第一次发现",
+    "ChineseSimplified": "初次发现",
     "ChineseTraditional": "第一次發現",
     "English": "First Find",
     "Japanese": "最初の発見",
@@ -4558,7 +4558,7 @@
   },
   {
     "key": "prefab_84309913",
-    "ChineseSimplified": "关卡失败",
+    "ChineseSimplified": "闯关失败",
     "ChineseTraditional": "闖關失敗",
     "English": "Level Failed",
     "Japanese": "レベル失敗",
@@ -4600,7 +4600,7 @@
   },
   {
     "key": "prefab_fae6d3eb",
-    "ChineseSimplified": "假期乐趣开始了——快来玩吧！",
+    "ChineseSimplified": "假日欢乐开始啦——快来玩吧！",
     "ChineseTraditional": "假期乐趣开始了——快来玩吧！",
     "English": "The holiday fun begins—jump in and play!",
     "Japanese": "ホリデーの楽しみが始まります - 飛び込んで遊びましょう!",
@@ -4621,7 +4621,7 @@
   },
   {
     "key": "prefab_d76846ad",
-    "ChineseSimplified": "总共找出 10 个差异",
+    "ChineseSimplified": "总共找出 10 处不同",
     "ChineseTraditional": "總共找出 10 處不同",
     "English": "Find 10 differences in total",
     "Japanese": "合計10個の間違いを見つけてください",
@@ -4642,7 +4642,7 @@
   },
   {
     "key": "prefab_9cb8e67a",
-    "ChineseSimplified": "放松并享受每个级别",
+    "ChineseSimplified": "放松享受每一个关卡",
     "ChineseTraditional": "放鬆享受每一關",
     "English": "Relax and enjoy every level",
     "Japanese": "リラックスして各レベルを楽しんでください",
@@ -4684,9 +4684,9 @@
   },
   {
     "key": "prefab_a05cde34",
-    "ChineseSimplified": "您确定要离开吗？",
+    "ChineseSimplified": "确定要离开此关卡吗？",
     "ChineseTraditional": "確定要離開此關卡嗎？",
-    "English": "Are you sure you want to leave this level?",
+    "English": "Are you sure you want to leave?",
     "Japanese": "このレベルを終了しますか？",
     "Korean": "이 레벨에서 나가시겠습니까?",
     "Thai": "ยืนยันว่าจะออกจากด่านนี้หรือไม่?",
@@ -4705,7 +4705,7 @@
   },
   {
     "key": "prefab_b04ba49f",
-    "ChineseSimplified": "正在加载...",
+    "ChineseSimplified": "正在加载……",
     "ChineseTraditional": "正在加載...",
     "English": "Loading...",
     "Japanese": "読み込み中...",
@@ -4726,7 +4726,7 @@
   },
   {
     "key": "scene_cozy_living_room",
-    "ChineseSimplified": "舒适的客厅",
+    "ChineseSimplified": "舒适客厅",
     "ChineseTraditional": "舒適的客廳",
     "English": "Cozy Living Room",
     "Japanese": "居心地の良いリビングルーム",
@@ -4841,7 +4841,7 @@
     "French": "FIND DIFFERENCES\nVersion {0}",
     "German": "FIND DIFFERENCES\nVersion {0}",
     "Russian": "FIND DIFFERENCES\nВерсия {0}",
-    "Italian": "TROVA LE DIFFERENZE\nVersione {0}",
+    "Italian": "FIND DIFFERENCES\nVersione {0}",
     "PortuguesePortugal": "FIND DIFFERENCES\nVersão {0}",
     "Spanish": "FIND DIFFERENCES\nVersión {0}",
     "Vietnamese": "FIND DIFFERENCES\nPhiên bản {0}",
@@ -4873,7 +4873,7 @@
   },
   {
     "key": "load_game",
-    "ChineseSimplified": "读取游戏",
+    "ChineseSimplified": "载入游戏",
     "ChineseTraditional": "讀取遊戲",
     "English": "Load Game",
     "Japanese": "ゲームをロード",
@@ -4915,7 +4915,7 @@
   },
   {
     "key": "gallerty",
-    "ChineseSimplified": "画廊设置",
+    "ChineseSimplified": "画廊",
     "ChineseTraditional": "畫廊設置",
     "English": "Gallery",
     "Japanese": "ギャラリー",
@@ -4936,7 +4936,7 @@
   },
   {
     "key": "about",
-    "ChineseSimplified": "关于更多",
+    "ChineseSimplified": "关于",
     "ChineseTraditional": "關於更多",
     "English": "About",
     "Japanese": "詳細情報",
@@ -4957,28 +4957,28 @@
   },
   {
     "key": "exit_game",
-    "ChineseSimplified": "退出游戏",
-    "ChineseTraditional": "退出遊戲",
-    "English": "Quit Game",
-    "Japanese": "ゲームを終了",
-    "Korean": "게임 종료",
-    "Thai": "ออกจากเกม",
-    "Indonesian": "Keluar dari Game",
-    "French": "Quitter le jeu",
-    "German": "Spiel beenden",
-    "Russian": "Выйти из игры",
-    "Italian": "Esci dal gioco",
-    "PortuguesePortugal": "Sair do jogo",
-    "Spanish": "Salir del juego",
-    "Vietnamese": "Thoát trò chơi",
-    "PortugueseBrazil": "Sair do jogo",
-    "SpanishLatinAmerica": "Salir del juego",
-    "SpanishSpain": "Salir del juego",
+    "ChineseSimplified": "退出",
+    "ChineseTraditional": "退出",
+    "English": "Quit",
+    "Japanese": "終了",
+    "Korean": "종료",
+    "Thai": "ออกเกม",
+    "Indonesian": "Keluar",
+    "French": "Quitter",
+    "German": "Beenden",
+    "Russian": "Выход",
+    "Italian": "Esci",
+    "PortuguesePortugal": "Sair",
+    "Spanish": "Salir",
+    "Vietnamese": "Thoát",
+    "PortugueseBrazil": "Sair",
+    "SpanishLatinAmerica": "Salir",
+    "SpanishSpain": "Salir",
     "Hindi": "गेम बंद करें"
   },
   {
     "key": "pop_start_game",
-    "ChineseSimplified": "开始游戏",
+    "ChineseSimplified": "新游戏",
     "ChineseTraditional": "開始遊戲",
     "English": "New Game",
     "Japanese": "新しいゲーム",
@@ -4999,7 +4999,7 @@
   },
   {
     "key": "continue_game",
-    "ChineseSimplified": "继续上一次游戏",
+    "ChineseSimplified": "继续游戏",
     "ChineseTraditional": "繼續上一次遊戲",
     "English": "Continue",
     "Japanese": "続きから",
@@ -5064,7 +5064,7 @@
     "key": "exit_title",
     "ChineseSimplified": "是否退出游戏？",
     "ChineseTraditional": "是否退出遊戲？",
-    "English": "Quit the game?",
+    "English": "Exit game?",
     "Japanese": "ゲームを終了しますか？",
     "Korean": "게임을 종료하시겠습니까?",
     "Thai": "ต้องการออกจากเกมหรือไม่?",
@@ -5083,7 +5083,7 @@
   },
   {
     "key": "exit_label",
-    "ChineseSimplified": "始终需要确认",
+    "ChineseSimplified": "始终确认",
     "ChineseTraditional": "始終需要確認",
     "English": "Always confirm",
     "Japanese": "常に確認する",
