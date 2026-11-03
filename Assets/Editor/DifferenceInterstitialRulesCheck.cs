@@ -30,6 +30,8 @@ static class DifferenceInterstitialRulesCheck
                 OperationsAndNoCatchUp();
                 JourneyUpdatesGlobalCooldownOnly();
                 MainHistoryAndRewarded();
+                RewardedInterstitialSeparation();
+                SharedIntervalAndPause();
             }
             else SdkFreeEntryPoints();
             Console.WriteLine("PASS: " + assertions + " assertions; SDK=" + DifferenceAds.SdkEnabled +
@@ -72,13 +74,12 @@ static class DifferenceInterstitialRulesCheck
             interstitialFirstLevel = 50, interstitialDenseLevel = 70,
             interstitialEarlyStep = 9, interstitialCooldownSeconds = 999999, version = "strict-main-rules"
         }), "Strict main rules are valid.");
-        Set("lastInterstitialTime", 999d);
         foreach (var level in new[] { -1, 0, 1, 2 })
             Allows(false, level, true, 1000, "Journey levels below 3 never show an interstitial.");
         foreach (var level in new[] { 3, 4, 5, 6, 8, 15, 50, 100 })
         {
             UnityEngine.PlayerPrefs.SetInt(Prefs + "InterstitialShown." + level, 1);
-            Allows(true, level, true, 1000, "Every Journey win from level 3 ignores main spacing, cooldown and shown history.");
+            Allows(true, level, true, 1000, "Journey ignores main level spacing and shown history when the shared interval has expired.");
         }
     }
 
@@ -94,9 +95,10 @@ static class DifferenceInterstitialRulesCheck
         Allows(true, 6, true, 1000, "The same record does not block a Journey win.");
         UnityEngine.PlayerPrefs.DeleteKey(Prefs + "InterstitialShown.6");
         Set("lastInterstitialTime", 600d);
-        Allows(false, 6, false, 659.999, "Main cooldown remains active below 60 seconds.");
-        Allows(true, 6, false, 660, "Main cooldown expires exactly at 60 seconds.");
-        Allows(true, 6, true, 600, "Journey wins have no main cooldown.");
+        Allows(false, 6, false, 719.999, "Main cooldown remains active below 120 seconds.");
+        Allows(true, 6, false, 720, "Main cooldown expires exactly at 120 seconds.");
+        Allows(false, 6, true, 600, "Journey shares the main cooldown.");
+        Allows(true, 6, true, 720, "Journey is eligible after the shared cooldown.");
     }
 
     static void CommonRules()
@@ -181,10 +183,13 @@ static class DifferenceInterstitialRulesCheck
         Attempt(3, "journey-second-retry", true, "level_enter");
         Attempt(3, "journey-replay-win", true);
         Attempt(4, "journey-next-retry", true, "level_enter");
-        Check(shows == 5 && continuations == 9 && !DifferenceAds.Busy,
-            "Each independent Journey win or failure retry from level 3 can show, including repeated retries at the same level without a cooldown.");
+        Check(shows == 1 && continuations == 9 && !DifferenceAds.Busy,
+            "Journey retries also obey the shared cooldown and continue immediately.");
         Attempt(4, "journey-next-retry", true, "level_enter");
-        Check(shows == 5 && continuations == 9, "The same Journey retry callback still executes only once.");
+        Check(shows == 1 && continuations == 9, "The same Journey retry callback still executes only once.");
+        UnityEngine.Time.realtimeSinceStartupAsDouble += 120;
+        Attempt(4, "journey-after-cooldown", true);
+        Check(shows == 2 && continuations == 10, "A new Journey operation can show after 120 seconds.");
     }
 
     static void LegacyMainSignatures()
@@ -214,8 +219,8 @@ static class DifferenceInterstitialRulesCheck
         Check(UnityEngine.PlayerPrefs.GetInt(Prefs + "InterstitialShown.6", 0) == 1,
             "The legacy overload persists a main-level shown record.");
         DifferenceAds.TryInterstitial(8, "legacy-cooldown", "level_enter", () => continuations++);
-        Check(shows == 1 && continuations == 4, "Legacy main retries preserve the 60-second cooldown.");
-        UnityEngine.Time.realtimeSinceStartupAsDouble += 60;
+        Check(shows == 1 && continuations == 4, "Legacy main retries preserve the 120-second cooldown.");
+        UnityEngine.Time.realtimeSinceStartupAsDouble += 120;
         DifferenceAds.TryInterstitial(8, "legacy-main-retry", "level_enter", () => continuations++);
         Check(shows == 2 && continuations == 5 && UnityEngine.PlayerPrefs.GetInt(Prefs + "InterstitialShown.8", 0) == 1,
             "The legacy retry entry works after cooldown and remains main mode.");
@@ -224,16 +229,13 @@ static class DifferenceInterstitialRulesCheck
     static void JourneyUpdatesGlobalCooldownOnly()
     {
         Reset();
-        Set("lastInterstitialTime", 180d);
-        UnityEngine.PlayerPrefs.SetString(Prefs + "LastInterstitialUtc", "100");
         Attempt(6, "journey-same-number-as-main", true);
-        Check(shows == 1 && continuations == 1, "A Journey win can show during the main cooldown.");
-        Check(!UnityEngine.PlayerPrefs.HasKey(Prefs + "InterstitialShown.6") &&
-            UnityEngine.PlayerPrefs.GetString(Prefs + "LastInterstitialUtc", "") != "100" &&
-            (double)Get("lastInterstitialTime") == UnityEngine.Time.realtimeSinceStartupAsDouble,
-            "Journey display updates the global cooldown without writing the main level's shown record.");
-        Allows(false, 6, false, 259.999, "Returning to main mode respects the cooldown after the Journey ad.");
-        Allows(true, 6, false, 260, "The Journey level number did not permanently block the same main level.");
+        Check(shows == 1 && continuations == 1, "The Journey ad is shown.");
+        Check(!UnityEngine.PlayerPrefs.HasKey(Prefs + "InterstitialShown.6"), "Journey must not write the main shown record.");
+        Allows(false, 6, false, 319.999, "A Journey ad starts the shared cooldown for main mode.");
+        Allows(true, 6, false, 320, "Main mode may show after 120 seconds.");
+        Allows(false, 6, true, 319.999, "Journey also respects the shared cooldown.");
+        Allows(true, 6, true, 320, "Journey may show after 120 seconds.");
     }
 
     static void MainHistoryAndRewarded()
@@ -241,11 +243,11 @@ static class DifferenceInterstitialRulesCheck
         Reset();
         Attempt(6, "main-first", false);
         Check(shows == 1 && UnityEngine.PlayerPrefs.GetInt(Prefs + "InterstitialShown.6", 0) == 1 &&
-            UnityEngine.PlayerPrefs.HasKey(Prefs + "LastInterstitialUtc"), "A displayed main ad still persists its shown record and cooldown.");
+            !UnityEngine.PlayerPrefs.HasKey(Prefs + "LastInterstitialUtc"), "Only the main-level shown record is persisted.");
         Attempt(6, "main-replay", false);
         Attempt(8, "main-too-soon", false);
         Check(shows == 1 && continuations == 3, "Main replay history and cooldown continue without duplicate ads.");
-        UnityEngine.Time.realtimeSinceStartupAsDouble += 60;
+        UnityEngine.Time.realtimeSinceStartupAsDouble += 120;
         Attempt(8, "main-after-cooldown", false, "level_enter");
         Check(shows == 2 && continuations == 4, "Main failure retry remains eligible after its normal cooldown.");
 
@@ -275,6 +277,121 @@ static class DifferenceInterstitialRulesCheck
         DifferenceAds.RewardedReady = () => true;
         DifferenceAds.ShowRewarded = _ => throw new Exception("SDK-free rewarded provider must not be invoked.");
         Check(!DifferenceAds.TryRewarded(1, "hint_reward", () => { }, () => { }), "SDK-free builds do not request rewarded ads.");
+        Check(double.IsNegativeInfinity((double)Get("lastInterstitialTime")), "SDK-free attempts do not start the interval.");
+    }
+
+    static void RewardedInterstitialSeparation()
+    {
+        foreach (var journey in new[] { false, true })
+        {
+            Reset();
+            var level = journey ? 3 : 6;
+            var rewards = 0; var finishes = 0;
+            DifferenceAds.RewardedReady = () => true;
+            DifferenceAds.ShowRewarded = _ =>
+            {
+                DifferenceAds.RewardedDisplayed();
+                UnityEngine.Time.realtimeSinceStartupAsDouble = 250;
+                DifferenceAds.RewardedEarned();
+                DifferenceAds.FullscreenClosed(false);
+            };
+            Check(DifferenceAds.TryRewarded(level, "hint_reward", () => rewards++, () =>
+            {
+                finishes++;
+                Attempt(level, "after-reward", journey);
+            }), "Rewarded ad was accepted.");
+            Check(rewards == 1 && finishes == 1 && shows == 0 && continuations == 1 && !DifferenceAds.Busy,
+                "Reward and continuation complete without an immediate interstitial in either mode.");
+            Check(Reason(level, journey, 369.999) == "cooldown", "Cooldown starts when the displayed rewarded ad closes.");
+            Allows(true, level, journey, 370, "A new eligible interstitial may show after 120 seconds.");
+            UnityEngine.Time.realtimeSinceStartupAsDouble = 370;
+            Attempt(level, "after-reward-expired", journey);
+            Check(shows == 1 && continuations == 2, "The next eligible operation can display after the cooldown.");
+        }
+
+        Reset();
+        DifferenceAds.RewardedReady = () => true;
+        DifferenceAds.ShowRewarded = _ => DifferenceAds.FullscreenClosed(true);
+        Check(DifferenceAds.TryRewarded(6, "hint_reward", null, null), "A failed request still completes its callbacks.");
+        Allows(true, 6, false, 200, "A rewarded ad that never displayed must not start a cooldown.");
+
+        Reset();
+        DifferenceAds.RewardedReady = () => true;
+        DifferenceAds.ShowRewarded = _ =>
+        {
+            DifferenceAds.RewardedDisplayed();
+            DifferenceAds.RewardedEarned();
+            UnityEngine.Time.realtimeSinceStartupAsDouble = 240;
+            DifferenceAds.FullscreenClosed(true);
+        };
+        Check(DifferenceAds.TryRewarded(6, "hint_reward", null, null), "A rewarded display may fail after earlier SDK callbacks.");
+        Check(double.IsNegativeInfinity((double)Get("lastInterstitialTime")), "A failed callback never starts a reward interval, even after display or reward.");
+        Allows(true, 6, false, 240, "A failed rewarded callback leaves the existing interval unchanged.");
+
+        Reset();
+        DifferenceAds.RewardedReady = () => true;
+        DifferenceAds.ShowRewarded = _ => DifferenceAds.FullscreenClosed(false);
+        Check(DifferenceAds.TryRewarded(6, "hint_reward", null, null), "A hidden callback may arrive without a displayed callback.");
+        Check(Reason(6, false, 319.999) == "cooldown", "Rewarded hidden starts cooldown even when earlier SDK callbacks are missing.");
+        Allows(true, 6, false, 320, "The hidden callback cooldown expires after 120 seconds.");
+
+        Reset();
+        var config = DifferenceAds.Config;
+        config.interstitialCooldownSeconds = 0;
+        Check(DifferenceAds.ApplyConfig(config) && DifferenceAds.Config.interstitialCooldownSeconds == 120,
+            "A remote interval cannot override the fixed 120-second policy.");
+        DifferenceAds.RewardedReady = () => true;
+        DifferenceAds.ShowRewarded = _ => { DifferenceAds.RewardedDisplayed(); DifferenceAds.FullscreenClosed(false); };
+        DifferenceAds.TryRewarded(3, "hint_reward", null, null);
+        Check(Reason(3, true, 319.999) == "cooldown", "The reward starts the fixed 120-second interval.");
+        Allows(true, 3, true, 320, "The shared cooldown expires after 120 seconds.");
+    }
+
+    static void SharedIntervalAndPause()
+    {
+        Reset();
+        DifferenceAds.ShowInterstitial = _ =>
+        {
+            shows++;
+            DifferenceAds.InterstitialDisplayed();
+            UnityEngine.Time.realtimeSinceStartupAsDouble = 240;
+            DifferenceAds.FullscreenClosed(false);
+        };
+        Attempt(6, "long-interstitial", false);
+        Check(shows == 1 && continuations == 1, "A displayed interstitial closes and continues.");
+        Check(Reason(3, true, 359.999) == "cooldown", "An interstitial's interval restarts when it closes, not only when requested.");
+        Allows(true, 3, true, 360, "An interstitial permits the next candidate 120 game seconds after close.");
+
+        Reset();
+        DifferenceAds.ShowInterstitial = _ =>
+        {
+            shows++;
+            DifferenceAds.InterstitialDisplayed();
+            UnityEngine.Time.realtimeSinceStartupAsDouble = 240;
+            DifferenceAds.FullscreenClosed(true);
+        };
+        Attempt(6, "failed-after-display", false);
+        Check((double)Get("lastInterstitialTime") == 200, "A failed interstitial retains the timer started by its eligible attempt.");
+        Allows(true, 3, true, 320, "A failed interstitial does not restart the timer at the failure callback.");
+
+        Reset();
+        DifferenceAds.InterstitialReady = () => false;
+        Attempt(6, "not-ready", false);
+        Check(shows == 0 && continuations == 1, "An unready interstitial continues gameplay.");
+        Check((double)Get("lastInterstitialTime") == 200, "An eligible but unready attempt resets the shared interval.");
+        DifferenceAds.InterstitialReady = () => true;
+        Attempt(3, "after-unready", true);
+        Check(shows == 0 && continuations == 2, "The attempt prevents an immediate Journey interstitial.");
+        UnityEngine.Time.realtimeSinceStartupAsDouble = 5000;
+        UnityEngine.Time.timeAsDouble = 200;
+        Check((string)Gate.Invoke(null, new object[] { 3, true, 5000d }) == "cooldown", "Wall time while paused does not advance the gameplay interval.");
+        UnityEngine.Time.timeAsDouble = 320;
+        Check((string)Gate.Invoke(null, new object[] { 3, true, 5000d }) == null, "120 seconds of game time expire the interval.");
+        typeof(DifferenceAds).GetMethod("ResetRuntime", Private).Invoke(null, null);
+        Set("initialized", true);
+        DifferenceAds.InterstitialReady = () => true;
+        DifferenceAds.ShowInterstitial = _ => { };
+        Check((string)Gate.Invoke(null, new object[] { 3, true, 5000d }) == null, "A restart does not restore a prior cooldown.");
     }
 
     static void Reset()
@@ -304,8 +421,11 @@ static class DifferenceInterstitialRulesCheck
         var reason = Reason(level, journey, now);
         Check((reason == null) == expected, message + " [level=" + level + ", journey=" + journey + ", now=" + now.ToString(CultureInfo.InvariantCulture) + ", reason=" + (reason ?? "allowed") + "]");
     }
-    static string Reason(int level, bool journey, double now) =>
-        (string)Gate.Invoke(null, new object[] { level, journey, now });
+    static string Reason(int level, bool journey, double now)
+    {
+        UnityEngine.Time.timeAsDouble = now;
+        return (string)Gate.Invoke(null, new object[] { level, journey, now });
+    }
     static object Get(string name) => typeof(DifferenceAds).GetField(name, Private).GetValue(null);
     static void Set(string name, object value) => typeof(DifferenceAds).GetField(name, Private).SetValue(null, value);
     static void Check(bool valid, string message)
@@ -321,7 +441,8 @@ namespace UnityEngine
     [AttributeUsage(AttributeTargets.Method)]
     public sealed class RuntimeInitializeOnLoadMethodAttribute : Attribute
     { public RuntimeInitializeOnLoadMethodAttribute(RuntimeInitializeLoadType value) { } }
-    public static class Time { public static double realtimeSinceStartupAsDouble; }
+    public static class Time { public static double timeAsDouble; static double real;
+        public static double realtimeSinceStartupAsDouble { get => real; set { real = value; timeAsDouble = value; } } }
     public static class AudioListener { public static bool pause; }
     public static class Debug { public static void Log(object message) { } public static void LogWarning(object message) { } }
     public static class PlayerPrefs

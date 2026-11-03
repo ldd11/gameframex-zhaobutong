@@ -83,9 +83,12 @@ public static class DifferenceBatchCacheCheck
         {
             using (var server = new FixtureServer(Png(Color.red), Png(Color.green), Png(Color.blue, 3, 2)))
             {
+                server.DelayMilliseconds = 1600;
                 using (var cache = new DifferenceBatchCache(folder, server.Endpoint))
                 {
+                    var slowWatch = Stopwatch.StartNew();
                     await Drive(cache.Ensure(1));
+                    Check(slowWatch.Elapsed.TotalSeconds > 12, "慢速整批准备应超过旧的 12 秒限制");
                     Check(cache.Error == null, "首次整批缓存成功：" + cache.Error);
                     Check(server.Count("/batch/1") == 1 && server.Count("/batch/2") == 0, "第 1 关只请求一次批次 1");
                     Check(server.AssetRequests == 30, "差异 JSON 与双图各 10 份完整下载");
@@ -94,6 +97,7 @@ public static class DifferenceBatchCacheCheck
                     await Drive(cache.Ensure(10));
                     Check(cache.Error == null && server.Requests.Length == requests, "同批第 10 关不重复请求");
                 }
+                server.DelayMilliseconds = 0;
 
                 var firstManifest = Manifests(folder).Single();
                 var firstManifestText = File.ReadAllText(firstManifest);

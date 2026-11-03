@@ -217,6 +217,18 @@ namespace Hotfix.UI
             BindJourney();
             BindProfileDesign();
             BindPauseDesign();
+            LocalizeStaticText();
+            GameFrameX.Startup.Application.DifferenceLocalizedFonts.Apply(gameObject);
+            var language = GameFrameX.Startup.Application.DifferenceLocalization.LanguageCode;
+            if (language == "th" || language == "hi")
+            {
+                var symbolFont = Resources.Load<Font>("Localization/Fonts/NotoSansCJKsc-Medium");
+                if (symbolFont)
+                {
+                    hintLabel.font = symbolFont;
+                    for (var i = 0; i < musicTracks.Length; i++) At<UnityEngine.UI.Text>("MusicPanel/Card/Track" + i + "/Selected").font = symbolFont;
+                }
+            }
             var lifeBadge = play.transform.Find("LifeBadge");
             lifeAnimation = lifeBadge ? lifeBadge.GetComponentInChildren<Spine.Unity.SkeletonGraphic>(true) : null;
             if (lifeAnimation)
@@ -583,8 +595,8 @@ namespace Hotfix.UI
             var saved = SavedLevel();
             level = saved >= 0 ? saved : Mathf.Min(completed, LevelLimit - 1);
             ShowPage(home);
-            startLabel.text = saved == level ? "Continue · Level " + (level + 1) : completed == LevelLimit ? "Level Album" : "Level " + (level + 1);
-            designStartButton.GetComponentInChildren<UnityEngine.UI.Text>(true).text = "Level " + (completed == LevelLimit && saved < 0 ? 1 : level + 1);
+            startLabel.text = saved == level ? Localize("level_continue", "Continue · Level {0}", level + 1) : completed == LevelLimit ? Localize("level_album", "Level Album") : Localize("level_title", "Level {0}", level + 1);
+            designStartButton.GetComponentInChildren<UnityEngine.UI.Text>(true).text = Localize("level_title", "Level {0}", completed == LevelLimit && saved < 0 ? 1 : level + 1);
             homeAvatar.sprite = avatarSprites[avatar]; RefreshHomeProfileDesign();
             if (returningFromPlay && AnalyticsEnabled) StartCoroutine(TrackHomeReturn(returnStarted));
         }
@@ -611,6 +623,7 @@ namespace Hotfix.UI
             BeginAnalyticsLoad();
             CloseFigmaResult();
             loadingStarted = Time.unscaledTime;
+            loadingTipIndex = (loadingTipIndex + 1) % LevelLoadingTips.Length;
             if (OnlineLevels && (remoteLevel == null || loadedApiUrl != LevelUrl(index)))
             {
                 SaveRound(); ClearFoundFeedback(); CancelEndAnimation(); Round = null;
@@ -655,12 +668,12 @@ namespace Hotfix.UI
                 topRings[i].transform.localScale = bottomRings[i].transform.localScale = Vector3.one;
                 if (found) { ShowFoundRing(topRings[i], false); ShowFoundRing(bottomRings[i], false); }
             }
-            levelLabel.text = "Level " + (level + 1);
+            levelLabel.text = Localize("level_title", "Level {0}", level + 1);
             ResetProgressDots();
             UpdateHUD(); SaveRound();
             OpenTutorial(restored);
             if (Round.Finished) ShowRoundResult(false, 0);
-            else Notice(Round.Count > 0 ? "Level progress restored." : "Find " + Round.Total + " differences.", 2.5f);
+            else Notice(Round.Count > 0 ? LocalizeLiteral("Level progress restored.") : Localize("level_find", "Find {0} differences.", Round.Total), 2.5f);
             RestoreHint();
             UpdateAdsVisibility();
             FinishAnalyticsLoad();
@@ -1063,9 +1076,9 @@ namespace Hotfix.UI
         {
             var claimed = GiftClaimed(DateTime.UtcNow.ToString("yyyy-MM-dd"));
             var button = At<UnityEngine.UI.Button>("Shop/Scroll/Viewport/Content/Free/Buy");
-            button.interactable = !claimed; button.GetComponentInChildren<UnityEngine.UI.Text>().text = claimed ? "Claimed" : "Daily Free Hint";
+            button.interactable = !claimed; button.GetComponentInChildren<UnityEngine.UI.Text>().text = LocalizeLiteral(claimed ? "Claimed" : "Daily Free Hint");
             At<UnityEngine.UI.Button>("Shop/Scroll/Viewport/Content/HintOffer/Buy").interactable = coins >= 900;
-            SetText("Shop/HintCount", "My Hints  ×" + hints);
+            SetText("Shop/HintCount", Localize("my_hints", "My Hints  ×{0}", hints));
         }
         public void ClaimDailyHint()
         {
@@ -1120,7 +1133,7 @@ namespace Hotfix.UI
             albumPrevious.interactable = albumPage > 0;
             albumNext.interactable = albumPage < ActiveCompleted / levels.Length;
             var more = At<UnityEngine.UI.Text>("Album/Card/More");
-            more.text = OnlineLevels ? (albumPage + 1) + " / " + (ActiveCompleted / levels.Length + 1) : "More scenes coming soon";
+            more.text = OnlineLevels ? (albumPage + 1) + " / " + (ActiveCompleted / levels.Length + 1) : LocalizeLiteral("More scenes coming soon");
             more.rectTransform.anchoredPosition = new Vector2(OnlineLevels ? 200 : 40, -794);
             more.rectTransform.sizeDelta = new Vector2(OnlineLevels ? 212 : 532, 49);
             for (var i = 0; i < levels.Length; i++)
@@ -1131,11 +1144,11 @@ namespace Hotfix.UI
                 if (entry >= LevelLimit) continue;
                 var index = (int)entry;
                 var data = OnlineLevels ? (index < LevelLimit && loadedApiUrl == LevelUrl(index) ? remoteLevel?.Level : null) : levels[i];
-                row.Find("Title").GetComponent<UnityEngine.UI.Text>().text = ((long)index + 1) + "  " + (OnlineLevels ? "Online Level" : data.title);
-                row.Find("Count").GetComponent<UnityEngine.UI.Text>().text = data == null ? "Tap to load level" : data.regions.Length + " differences";
+                row.Find("Title").GetComponent<UnityEngine.UI.Text>().text = ((long)index + 1) + "  " + LocalizeLiteral(OnlineLevels ? "Online Level" : data.title);
+                row.Find("Count").GetComponent<UnityEngine.UI.Text>().text = data == null ? LocalizeLiteral("Tap to load level") : Localize("difference_count", "{0} differences", data.regions.Length);
                 row.Find("Preview").GetComponent<UnityEngine.UI.Image>().sprite = data?.original;
                 row.GetComponent<UnityEngine.UI.Button>().interactable = index <= ActiveCompleted && index < LevelLimit;
-                row.Find("Status").GetComponent<UnityEngine.UI.Text>().text = index < ActiveCompleted ? "Completed · Replay" : index == ActiveCompleted ? "Start Finding" : "Locked";
+                row.Find("Status").GetComponent<UnityEngine.UI.Text>().text = LocalizeLiteral(index < ActiveCompleted ? "Completed · Replay" : index == ActiveCompleted ? "Start Finding" : "Locked");
             }
         }
 
@@ -1143,11 +1156,11 @@ namespace Hotfix.UI
         {
             if (AdInputBlocked) return;
             modalAction.interactable = modalSecondary.interactable = modalTertiary.interactable = true;
-            modalTitle.text = title; modalBody.text = body; modalActionLabel.text = actionLabel;
+            modalTitle.text = LocalizeLiteral(title); modalBody.text = LocalizeLiteral(body); modalActionLabel.text = LocalizeLiteral(actionLabel);
             dialogAction = action; secondaryAction = secondAction; tertiaryAction = thirdAction;
             modalSecondary.gameObject.SetActive(second != null); modalTertiary.gameObject.SetActive(third != null);
-            modalSecondary.GetComponentInChildren<UnityEngine.UI.Text>().text = second;
-            modalTertiary.GetComponentInChildren<UnityEngine.UI.Text>().text = third;
+            modalSecondary.GetComponentInChildren<UnityEngine.UI.Text>().text = LocalizeLiteral(second);
+            modalTertiary.GetComponentInChildren<UnityEngine.UI.Text>().text = LocalizeLiteral(third);
             modalClose.gameObject.SetActive(!terminal); resultIcon.gameObject.SetActive(terminal && Round != null && Round.Complete);
             modal.SetActive(true); modal.transform.SetAsLastSibling();
             UpdateAdsVisibility();
@@ -1258,7 +1271,7 @@ namespace Hotfix.UI
             { target.localScale = Vector3.one * (1 + amount * Mathf.Sin(elapsed / .32f * Mathf.PI)); yield return null; }
             target.localScale = Vector3.one;
         }
-        void Notice(string message, float seconds) { toast.Show(message, seconds); }
+        void Notice(string message, float seconds) { toast.Show(LocalizeLiteral(message), seconds); }
         T At<T>(string path) where T : Component
         {
             var found = stage.Find(path); if (!found) throw new InvalidOperationException("Missing UI node: " + path);
@@ -1266,7 +1279,7 @@ namespace Hotfix.UI
         }
         void PlayButtonSound() { if (!AdInputBlocked) PlayTone(buttonSound); }
         void Bind(string path, Action action) { At<UnityEngine.UI.Button>(path).onClick.AddListener(() => { if (AdInputBlocked) return; action(); UpdateAdsVisibility(); }); }
-        void SetText(string path, string value) { At<UnityEngine.UI.Text>(path).text = value; }
+        void SetText(string path, string value) { At<UnityEngine.UI.Text>(path).text = LocalizeLiteral(value); }
     }
 }
 #endif

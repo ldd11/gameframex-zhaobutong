@@ -54,8 +54,12 @@ public static class DifferenceSafeAreaCheck
                 .Where(rect => rect.name == "Card" || rect.name == "Toast").ToArray();
             Check(protectedRects.Any(rect => rect.name == "Card") && protectedRects.Any(rect => rect.name == "Toast"), "必须检查弹窗和 Toast 尺寸");
             var report = new StringBuilder();
-            var screens = new[] { new Vector2(1080, 1920), new Vector2(1080, 2340), new Vector2(1179, 2556), new Vector2(2340, 1080) };
-            var areas = new[] { new Rect(0, 0, 1080, 1920), new Rect(0, 0, 1080, 2261), new Rect(0, 102, 1179, 2277), new Rect(79, 0, 2182, 1080) };
+            var screens = new[] { new Vector2(1080, 1920), new Vector2(1080, 2340), new Vector2(1179, 2556),
+                new Vector2(1320, 2868), new Vector2(1536, 2048), new Vector2(2340, 1080) };
+            var areas = new[] { new Rect(0, 0, 1080, 1920), new Rect(0, 0, 1080, 2261), new Rect(0, 102, 1179, 2277),
+                new Rect(25, 55, 1265, 2680), new Rect(0, 0, 1536, 2048), new Rect(79, 0, 2182, 1080) };
+            var controlScales = new[] { layout.back, layout.life, layout.hint, layout.zoom, layout.progress, layout.level }
+                .Select(item => item.localScale).ToArray();
             var widthChanged = false;
             for (var variant = 0; variant < screens.Length; variant++)
             {
@@ -77,6 +81,7 @@ public static class DifferenceSafeAreaCheck
                 Check(safePages.Toast.anchoredPosition == animatedPosition, "安全区适配不能覆盖 Toast 正在使用的动画位移");
                 safePages.Toast.anchoredPosition = toastPosition;
                 var play = (RectTransform)layout.transform;
+                var phone = play.rect.width <= play.rect.height * .6f;
                 var localSafe = Bounds(play, new[] { new Vector3(safe.xMin, safe.yMin, 0), new Vector3(safe.xMin, safe.yMax, 0),
                     new Vector3(safe.xMax, safe.yMax, 0), new Vector3(safe.xMax, safe.yMin, 0) }.Select(root.TransformPoint).ToArray());
                 Rect[] headers = null;
@@ -85,6 +90,13 @@ public static class DifferenceSafeAreaCheck
                 {
                     layout.bottomAdHeight = adHeight;
                     layout.ApplyLayout(localSafe);
+                    if (!phone)
+                    {
+                        var restored = new[] { layout.back, layout.life, layout.hint, layout.zoom, layout.progress, layout.level };
+                        for (var i = 0; i < restored.Length; i++)
+                            Check(Vector3.Distance(restored[i].localScale, controlScales[i]) < .001f,
+                                restored[i].name + " 从手机切到平板后未恢复原始缩放");
+                    }
                     LayoutRebuilder.ForceRebuildLayoutImmediate(layout.progress);
                     CheckLayout(layout, localSafe, guide);
                     var currentHeaders = new[] { layout.back, layout.life, layout.level }.Select(rect => Bounds(play, Corners(rect))).ToArray();
@@ -92,10 +104,33 @@ public static class DifferenceSafeAreaCheck
                     if (headers == null) { headers = currentHeaders; firstWidth = pictureWidth; }
                     else
                     {
-                        Check(currentHeaders.SequenceEqual(headers), "仅图片可用高度改变时顶部三个控件跟随图片横移");
+                        if (!phone) Check(currentHeaders.SequenceEqual(headers), "仅图片可用高度改变时顶部三个控件跟随图片横移");
                         widthChanged |= Mathf.Abs(pictureWidth - firstWidth) > .1f;
                     }
                     var saved = nodes.Select(Snapshot).ToArray();
+                    if (phone && variant == 0 && Mathf.Approximately(adHeight, 120))
+                    {
+                        var beforePositions = nodes.Select(node => node.localPosition).ToArray();
+                        var beforeSizes = nodes.Select(node => node.rect.size).ToArray();
+                        var beforeScales = nodes.Select(node => node.localScale).ToArray();
+                        var beforeBack = Bounds(play, Corners(layout.back)).center.x;
+                        layout.backOffset = new Vector2(10, 0);
+                        layout.ApplyLayout(localSafe);
+                        Check(Mathf.Abs(Bounds(play, Corners(layout.back)).center.x - beforeBack - 10) < .1f,
+                            "手机水平偏移必须生效");
+                        layout.backOffset = Vector2.zero;
+                        layout.hintOffset = new Vector2(0, -40);
+                        layout.zoomOffset = new Vector2(0, 60);
+                        layout.ApplyLayout(localSafe);
+                        CheckPhoneLayout(layout, localSafe, guide);
+                        layout.hintOffset = layout.zoomOffset = Vector2.zero;
+                        layout.ApplyLayout(localSafe);
+                        for (var i = 0; i < nodes.Length; i++)
+                            Check(Vector3.Distance(nodes[i].localPosition, beforePositions[i]) < .01f &&
+                                Vector2.Distance(nodes[i].rect.size, beforeSizes[i]) < .01f &&
+                                Vector3.Distance(nodes[i].localScale, beforeScales[i]) < .001f, nodes[i].name + " 清除手机偏移后未恢复");
+                        saved = nodes.Select(Snapshot).ToArray();
+                    }
                     var protectedSizes = protectedRects.Select(rect => rect.rect.size).ToArray();
                     for (var pass = 0; pass < 3; pass++)
                     {
@@ -115,7 +150,13 @@ public static class DifferenceSafeAreaCheck
                             "背景必须保持原层级且不拦截点击");
                         foreach (var node in nodes.Skip(1))
                             foreach (var corner in Corners(node))
-                                Check(Contains(safe, root.InverseTransformPoint(corner)), node.name + " 超出安全区域");
+                            {
+                                var point = root.InverseTransformPoint(corner);
+                                var edgeToEdge = phone && (node == layout.upper || node == layout.lower || node == layout.frame);
+                                Check(point.y >= safe.yMin - .1f && point.y <= safe.yMax + .1f &&
+                                    (edgeToEdge ? point.x >= root.rect.xMin - .1f && point.x <= root.rect.xMax + .1f :
+                                        point.x >= safe.xMin - .1f && point.x <= safe.xMax + .1f), node.name + " 超出允许区域");
+                            }
                         foreach (var board in new[] { ui.upperImage.rectTransform, ui.lowerImage.rectTransform }) CheckCoordinates(board);
                         layout.ApplyLayout(localSafe);
                         LayoutRebuilder.ForceRebuildLayoutImmediate(layout.progress);
@@ -241,6 +282,11 @@ public static class DifferenceSafeAreaCheck
     static void CheckLayout(DifferencePlayLayout layout, Rect safe, DifferenceHintHand guide)
     {
         var play = (RectTransform)layout.transform;
+        if (play.rect.width <= play.rect.height * .6f)
+        {
+            CheckPhoneLayout(layout, safe, guide);
+            return;
+        }
         var controls = new[] { layout.back, layout.life, layout.level };
         var bounds = controls.Select(control => Bounds(play, Corners(control))).ToArray();
         Check(bounds.All(rect => Mathf.Abs(rect.center.y - bounds[0].center.y) < .1f), "顶部暂停、生命值和关卡标题没有对齐基线");
@@ -296,6 +342,40 @@ public static class DifferenceSafeAreaCheck
         if (expectedWidth < availableWidth - .1f)
             Check(frame.xMin > safe.xMin + layout.edgePadding.x && frame.xMax < safe.xMax - layout.edgePadding.x,
                 "高度受限的宽屏图片两侧必须保留留白");
+    }
+
+    static void CheckPhoneLayout(DifferencePlayLayout layout, Rect safe, DifferenceHintHand guide)
+    {
+        var play = (RectTransform)layout.transform;
+        var upper = Bounds(play, Corners(layout.upper));
+        var lower = Bounds(play, Corners(layout.lower));
+        var frame = Bounds(play, Corners(layout.frame));
+        var progress = Bounds(play, Corners(layout.progress));
+        var back = Bounds(play, Corners(layout.back));
+        var life = Bounds(play, Corners(layout.life));
+        var title = Bounds(play, Corners(layout.level));
+        var hint = Bounds(play, Corners(layout.hint));
+        var zoom = Bounds(play, Corners(layout.zoom));
+        Check(Mathf.Abs(frame.xMin - play.rect.xMin) < .1f && Mathf.Abs(frame.xMax - play.rect.xMax) < .1f,
+            "手机图片边框必须贴齐物理屏幕左右边缘");
+        Check(Mathf.Abs(upper.width / upper.height - UIDifferences.ImageAspect) < .001f &&
+            Mathf.Abs(lower.width / lower.height - UIDifferences.ImageAspect) < .001f &&
+            Mathf.Abs(upper.width - lower.width) < .1f && Mathf.Abs(upper.center.x - lower.center.x) < .1f,
+            "手机上下图片必须保持相同宽度和 3:2 比例");
+        Check(Mathf.Min(back.yMin, Mathf.Min(life.yMin, title.yMin)) >= progress.yMax - .1f &&
+            progress.yMin >= frame.yMax - .1f && frame.yMin >= Mathf.Max(hint.yMax, zoom.yMax) - .1f,
+            "手机顶部、进度、双图与底部按钮不能重叠");
+        var bottom = safe.yMin + Mathf.Max(0, layout.bottomAdHeight);
+        Check(Mathf.Min(hint.yMin, zoom.yMin) >= bottom - .1f &&
+            hint.center.y - DifferenceHintHand.BottomExtent * Mathf.Abs(layout.hint.localScale.y) >= bottom - .1f,
+            "手机按钮或提示手势超出广告安全区");
+        var hand = (RectTransform)guide.transform.Find("Hand");
+        foreach (var sample in new[] { 0f, .18f, .42f, .56f, .82f, 1.4f })
+        {
+            typeof(DifferenceHintHand).GetField("elapsed", Private).SetValue(guide, 0f);
+            typeof(DifferenceHintHand).GetMethod("Advance", Private).Invoke(guide, new object[] { sample });
+            Check(Bounds(play, Corners(hand)).yMin >= bottom - .1f, "手机提示手动画覆盖广告位");
+        }
     }
 
     sealed class SafePagesState

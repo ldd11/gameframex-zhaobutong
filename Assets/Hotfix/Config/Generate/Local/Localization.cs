@@ -15,7 +15,7 @@ namespace Hotfix.Config.Local
 {
     public sealed partial class Localization : LuBan.Runtime.BeanBase
     {
-        public Localization(string Key, string ChineseSimplified, string ChineseTraditional, string English, string Japanese, string Korean, string Thai, string Indonesian, string French, string German, string Russian, string Italian, string PortuguesePortugal, string Spanish, string Vietnamese) 
+        public Localization(string Key, string ChineseSimplified, string ChineseTraditional, string English, string Japanese, string Korean, string Thai, string Indonesian, string French, string German, string Russian, string Italian, string PortuguesePortugal, string Spanish, string Vietnamese, string PortugueseBrazil, string SpanishLatinAmerica, string SpanishSpain, string Hindi)
         {
             this.Key = Key;
             this.ChineseSimplified = ChineseSimplified;
@@ -32,6 +32,10 @@ namespace Hotfix.Config.Local
             this.PortuguesePortugal = PortuguesePortugal;
             this.Spanish = Spanish;
             this.Vietnamese = Vietnamese;
+            this.PortugueseBrazil = PortugueseBrazil;
+            this.SpanishLatinAmerica = SpanishLatinAmerica;
+            this.SpanishSpain = SpanishSpain;
+            this.Hindi = Hindi;
             PostInit();
         }
 
@@ -52,6 +56,10 @@ namespace Hotfix.Config.Local
             { if(!_buf["PortuguesePortugal"].IsString) { throw new SerializationException(); }  PortuguesePortugal = _buf["PortuguesePortugal"]; }
             { if(!_buf["Spanish"].IsString) { throw new SerializationException(); }  Spanish = _buf["Spanish"]; }
             { if(!_buf["Vietnamese"].IsString) { throw new SerializationException(); }  Vietnamese = _buf["Vietnamese"]; }
+            { if(!_buf["PortugueseBrazil"].IsString) { throw new SerializationException(); }  PortugueseBrazil = _buf["PortugueseBrazil"]; }
+            { if(!_buf["SpanishLatinAmerica"].IsString) { throw new SerializationException(); }  SpanishLatinAmerica = _buf["SpanishLatinAmerica"]; }
+            { if(!_buf["SpanishSpain"].IsString) { throw new SerializationException(); }  SpanishSpain = _buf["SpanishSpain"]; }
+            { if(!_buf["Hindi"].IsString) { throw new SerializationException(); }  Hindi = _buf["Hindi"]; }
 
             // Localization Key Begin
             // Localization Key End
@@ -123,26 +131,46 @@ namespace Hotfix.Config.Local
         /// 越南语
         /// </summary>
         public string Vietnamese { private set; get; }
+        /// <summary>
+        /// 葡萄牙语（巴西）
+        /// </summary>
+        public string PortugueseBrazil { private set; get; }
+        /// <summary>
+        /// 西班牙语（拉美）
+        /// </summary>
+        public string SpanishLatinAmerica { private set; get; }
+        /// <summary>
+        /// 西班牙语（西班牙）
+        /// </summary>
+        public string SpanishSpain { private set; get; }
+        /// <summary>
+        /// 印地语
+        /// </summary>
+        public string Hindi { private set; get; }
         public const int __ID__ = -1694250884;
         public override int GetTypeId() => __ID__;
 
         public  void ResolveRef(TablesComponent tables)
         {
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         }
 
         public void TranslateText(System.Func<string, string, string> translator)
@@ -167,6 +195,10 @@ namespace Hotfix.Config.Local
             + "PortuguesePortugal:" + PortuguesePortugal + ","
             + "Spanish:" + Spanish + ","
             + "Vietnamese:" + Vietnamese + ","
+            + "PortugueseBrazil:" + PortugueseBrazil + ","
+            + "SpanishLatinAmerica:" + SpanishLatinAmerica + ","
+            + "SpanishSpain:" + SpanishSpain + ","
+            + "Hindi:" + Hindi + ","
             + "}";
         }
 

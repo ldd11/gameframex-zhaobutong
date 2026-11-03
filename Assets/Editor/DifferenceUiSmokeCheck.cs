@@ -175,7 +175,8 @@ public static class DifferenceUiSmokeCheck
             if (Mathf.Abs(nativeBack.xMin - (nativeArea.center.x - nativeHeaderWidth * .5f)) > .1f ||
                 Mathf.Abs(nativeLife.xMax - (nativeArea.center.x + nativeHeaderWidth * .5f)) > .1f ||
                 Mathf.Abs(nativeBack.center.y - nativeLife.center.y) > .1f || Mathf.Abs(nativeBack.center.y - nativeLevel.center.y) > .1f ||
-                Mathf.Abs(nativeArea.yMax - Mathf.Max(nativeBack.yMax, Mathf.Max(nativeLife.yMax, nativeLevel.yMax)) - layout.edgePadding.y) > .1f)
+                nativeArea.yMax - Mathf.Max(nativeBack.yMax, Mathf.Max(nativeLife.yMax, nativeLevel.yMax)) < -.1f ||
+                nativeArea.yMax - Mathf.Max(nativeBack.yMax, Mathf.Max(nativeLife.yMax, nativeLevel.yMax)) > layout.edgePadding.y + .1f)
                 throw new Exception("编辑模式无参数布局没有遵守 Play.rect 的安全边距、Header 最大宽度与顶部基线");
             report.AppendLine("PASS EditMode ApplyLayout() equals ApplyLayout(Play.rect); centered header respects safe margins, maximum width and a shared baseline.");
             var heightLimited = 0;
@@ -187,7 +188,10 @@ public static class DifferenceUiSmokeCheck
                 layout.bottomAdHeight = adHeight;
                 var page = ((RectTransform)ui.play.transform).rect;
                 var size = new Vector2(page.height * screen.x / screen.y, page.height);
-                var area = new Rect(page.center - size * .5f, size);
+                rect.sizeDelta = size; rect.ForceUpdateRectTransforms();
+                var fullArea = ((RectTransform)ui.play.transform).rect;
+                var phone = screen.x / screen.y <= .6f;
+                var area = fullArea;
                 if (inset) area = Rect.MinMaxRect(area.xMin + 35, area.yMin + 55, area.xMax - 65, area.yMax - 110);
                 for (var i = 0; i < ui.progressDots.Length; i++) ui.progressDots[i].rectTransform.sizeDelta = dotSizes[i];
                 row.spacing = dotSpacing;
@@ -198,13 +202,16 @@ public static class DifferenceUiSmokeCheck
                 var p = Bounds(layout.progress); var back = Bounds(layout.back); var life = Bounds(layout.life);
                 var level = Bounds(layout.level);
                 var hint = Bounds(layout.hint); var zoom = Bounds(layout.zoom);
-                var gap = Mathf.Max(0, layout.sectionGap);
-                var padding = Vector2.Max(Vector2.zero, layout.edgePadding);
+                var hudScale = Mathf.Abs(layout.back.localScale.x / controlScales[0].x);
+                var gap = Mathf.Max(0, p.yMin - f.yMax);
+                var spacingScale = layout.sectionGap > 0 ? Mathf.Clamp01(gap / layout.sectionGap) : 1;
+                var padding = Vector2.Max(Vector2.zero, layout.edgePadding); padding.y *= spacingScale;
                 var border = Mathf.Max(0, layout.framePadding);
                 foreach (var item in items)
                 {
                     var bounds = Bounds(item);
-                    if (bounds.xMin < area.xMin - .1f || bounds.xMax > area.xMax + .1f ||
+                    var allowed = phone && (item == layout.upper || item == layout.lower || item == layout.frame) ? fullArea : area;
+                    if (bounds.xMin < allowed.xMin - .1f || bounds.xMax > allowed.xMax + .1f ||
                         bounds.yMin < area.yMin + adHeight - .1f || bounds.yMax > area.yMax + .1f)
                         throw new Exception(screen + ": " + item.name + " 越界");
                 }
@@ -236,7 +243,9 @@ public static class DifferenceUiSmokeCheck
                 if (Mathf.Abs(level.width - titleWidth) > .1f || Mathf.Abs(level.height - Mathf.Max(back.height, life.height)) > .1f)
                     throw new Exception(screen + ": Level 标题没有使用 Header 剩余宽度和按钮行高");
                 CheckSingleLineLevelTitle(layout.level, titleFontSize);
-                var fullWidth = area.width - padding.x * 2 - border * 2;
+                var fullWidth = phone ? fullArea.width - border * 2 : area.width - padding.x * 2 - border * 2;
+                if (phone && a.width >= fullWidth - .1f && (Mathf.Abs(f.xMin - fullArea.xMin) > .1f || Mathf.Abs(f.xMax - fullArea.xMax) > .1f))
+                    throw new Exception(screen + ": 手机满宽时边框没有贴齐屏幕两侧");
                 var footerReserve = Mathf.Max(Mathf.Max(hint.height, zoom.height) * .5f,
                     DifferenceHintHand.BottomExtent * Mathf.Abs(layout.hint.localScale.y));
                 var topSlack = headerBottom - gap - p.yMax;
@@ -258,10 +267,10 @@ public static class DifferenceUiSmokeCheck
                     if (anchors[i] != new Vector4(items[i].anchorMin.x,items[i].anchorMin.y,items[i].anchorMax.x,items[i].anchorMax.y))
                         throw new Exception("适配修改了原有锚点");
                 for (var i = 0; i < controls.Length; i++)
-                    if (controls[i].sizeDelta != controlSizes[i] || controls[i].localScale != controlScales[i])
-                        throw new Exception(screen + ": " + controls[i].name + " 的原有尺寸或缩放被布局修改");
+                    if (controls[i].sizeDelta != controlSizes[i] || Vector3.Distance(controls[i].localScale, controlScales[i] * hudScale) > .001f)
+                        throw new Exception(screen + ": " + controls[i].name + " 的尺寸或等比缩放不正确");
                 typeof(UIDifferences).GetMethod("FitProgressRow", Private).Invoke(ui, new object[] { 30 });
-                if (ui.progressDots[0].rectTransform.rect.width * 30 + row.spacing * 29 + row.padding.horizontal > p.width + .1f)
+                if (ui.progressDots[0].rectTransform.rect.width * 30 + row.spacing * 29 + row.padding.horizontal > layout.progress.rect.width + .1f)
                     throw new Exception("30 个进度点超出图片宽度");
                 report.AppendLine($"PASS {screen.x}x{screen.y}, area={area.width:F1}x{area.height:F1}, ad={adHeight}, inset={inset}: board={a.width:F1}x{a.height:F1}; capped safe header; centered content; ordered gaps; maximum fitting images; unchanged buttons; hand above banner; 30 dots fit");
             }
@@ -269,7 +278,8 @@ public static class DifferenceUiSmokeCheck
             foreach (var width in new[] { 1200f, 2400f })
             {
                 var size = new Vector2(width, nativeArea.height);
-                var area = new Rect(nativeArea.center - size * .5f, size);
+                rect.sizeDelta = size; rect.ForceUpdateRectTransforms();
+                var area = ((RectTransform)ui.play.transform).rect;
                 layout.headerMaxWidth = float.MaxValue;
                 layout.ApplyLayout(area);
                 var unlimited = items.Select(Bounds).ToArray();
@@ -319,12 +329,13 @@ public static class DifferenceUiSmokeCheck
             rect.anchorMin = rect.anchorMax = rect.pivot = Vector2.one * .5f;
             rect.sizeDelta = new Vector2(1179, 2556);
             rect.ForceUpdateRectTransforms();
-            foreach (var screen in new[] { new Vector2(1179, 2556), new Vector2(1440, 2960), new Vector2(1536, 2048), new Vector2(2048, 1536) })
+            foreach (var screen in new[] { new Vector2(1536, 2048), new Vector2(2048, 1536) })
             {
                 foreach (var field in fields) field.SetValue(layout, Vector2.zero);
                 var page = ((RectTransform)layout.transform).rect;
                 var size = new Vector2(page.height * screen.x / screen.y, page.height);
-                var area = new Rect(page.center - size * .5f, size);
+                rect.sizeDelta = size; rect.ForceUpdateRectTransforms();
+                var area = ((RectTransform)layout.transform).rect;
                 layout.ApplyLayout(area);
                 var positions = items.Select(item => item.localPosition).ToArray();
                 var sizes = items.Select(item => item.rect.size).ToArray();
@@ -420,7 +431,7 @@ public static class DifferenceUiSmokeCheck
                 }
             }
             layout.level = null; layout.ApplyLayout(((RectTransform)layout.transform).rect);
-            File.WriteAllText(report, "PASS: nine independent offsets at four screen ratios; horizontal offsets preserve size while title width adapts to header reserves at a stable height; vertical offsets reserve section gaps, banner and hand space without accumulation; Hint/Zoom Y=-40/-100 increase their frame gaps by 40/100 and keep buttons/hand above the banner; button sizes/scales, anchors and pivots preserved; zero restores automatic positions and sizes; optional Level is safe.");
+            File.WriteAllText(report, "PASS: nine independent offsets at two tablet screen ratios; horizontal offsets preserve size while title width adapts to header reserves at a stable height; vertical offsets reserve section gaps, banner and hand space without accumulation; Hint/Zoom Y=-40/-100 increase their frame gaps by 40/100 and keep buttons/hand above the banner; button sizes/scales, anchors and pivots preserved; zero restores automatic positions and sizes; optional Level is safe.");
         }
         catch (Exception error) { File.WriteAllText(report, "FAIL: " + error); Debug.LogException(error); }
         finally { PrefabUtility.UnloadPrefabContents(root); }

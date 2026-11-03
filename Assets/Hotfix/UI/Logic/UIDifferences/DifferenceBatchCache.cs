@@ -17,7 +17,7 @@ namespace Hotfix.UI
     public sealed class DifferenceBatchCache : IDisposable
     {
         public const string DefaultEndpoint = "https://diffapi.joystar.pro/batch/";
-        public const float DefaultTimeout = 12f;
+        public const float DefaultTimeout = 120f;
         const int BatchSize = 10;
         readonly string directory, endpoint;
         readonly List<Download> active = new List<Download>();

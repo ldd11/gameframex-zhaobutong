@@ -107,7 +107,7 @@ public static class DifferenceBatchStartupCheck
         try
         {
             var now = EditorApplication.timeSinceStartup;
-            Check(now - startedAt < 30, "Actual startup did not finish within the 30-second total limit.");
+            Check(now - startedAt < DifferenceBatchCache.DefaultTimeout + 30, "Actual startup did not finish within the total limit.");
             Check(runtimeError == null, "Unexpected runtime error: " + runtimeError);
             if (!EditorApplication.isPlaying) return;
             var launcher = LauncherField.GetValue(null) as UIForm;
@@ -126,7 +126,7 @@ public static class DifferenceBatchStartupCheck
                         logoVisible + ", homeReady=" + homeReady + ", warmupElapsed=" + (now - warmupAt).ToString("F2") + "s. " + LauncherDetails());
                 Check(ui.Round == null && Field(ui, "loadingLevel") == null && !ui.play.activeSelf,
                     "Startup marker failed to defer automatic first-level loading until the batch was ready.");
-                Check(now - warmupAt < DifferenceBatchCache.DefaultTimeout + 2, "Batch warmup exceeded its 12-second timeout allowance.");
+                Check(now - warmupAt < DifferenceBatchCache.DefaultTimeout + 2, "Batch warmup exceeded its timeout allowance.");
                 return;
             }
             if (sawWarmup && !warmupEnded)

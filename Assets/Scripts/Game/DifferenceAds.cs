@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using UnityEngine;
 
 namespace GameFrameX.Startup.Application
@@ -12,7 +11,7 @@ namespace GameFrameX.Startup.Application
         public int interstitialFirstLevel = 6;
         public int interstitialDenseLevel = 15;
         public int interstitialEarlyStep = 2;
-        public double interstitialCooldownSeconds = 60;
+        public double interstitialCooldownSeconds = 120;
         public bool bannerEnabled = true;
         public int bannerFirstVisibleLevel = 2;
         public bool rewardedEnabled = true;
@@ -27,6 +26,7 @@ namespace GameFrameX.Startup.Application
     {
         const string Key = "DifferenceAds.";
         const double StartupProtectionSeconds = 180;
+        const double InterstitialIntervalSeconds = 120;
         enum FullscreenKind { None, Interstitial, Rewarded }
         static readonly HashSet<string> checkedOperations = new HashSet<string>();
         static DifferenceAdConfig config = new DifferenceAdConfig();
@@ -68,6 +68,7 @@ namespace GameFrameX.Startup.Application
             if (Busy) AudioListener.pause = previousAudioPause;
             initialized = false;
             pending = FullscreenKind.None;
+            lastInterstitialTime = double.NegativeInfinity;
             currentLevel = 0;
             currentJourney = pendingJourney = false;
             gamePageVisible = false;
@@ -86,16 +87,6 @@ namespace GameFrameX.Startup.Application
             initialized = true;
             noAds = PlayerPrefs.GetInt(Key + "NoAds", 0) == 1;
             highestLevel = Math.Max(0, PlayerPrefs.GetInt(Key + "HighestLevel", 0));
-            lastInterstitialTime = double.NegativeInfinity;
-            if (double.TryParse(PlayerPrefs.GetString(Key + "LastInterstitialUtc", ""),
-                NumberStyles.Float, CultureInfo.InvariantCulture, out var utc) &&
-                !double.IsNaN(utc) && !double.IsInfinity(utc) && utc > 0)
-            {
-                // Convert persisted wall time once; in-session cooldown uses only the monotonic clock.
-                // A device clock moving backwards starts a fresh cooldown, never an indefinite wait.
-                var elapsed = Math.Max(0, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() / 1000d - utc);
-                lastInterstitialTime = Time.realtimeSinceStartupAsDouble - elapsed;
-            }
         }
 
         public static bool ApplyConfig(DifferenceAdConfig value)
@@ -111,6 +102,8 @@ namespace GameFrameX.Startup.Application
                 return false;
             }
             config = value.Copy();
+            // Match the puzzle game's fixed interval even when older remote configs supply another value.
+            config.interstitialCooldownSeconds = InterstitialIntervalSeconds;
             Log("config", 0, "", "applied");
             NotifyRefresh();
             return true;
@@ -162,6 +155,7 @@ namespace GameFrameX.Startup.Application
             }
             string reason = !SdkEnabled ? "sdk-off" : string.IsNullOrWhiteSpace(operationId) ? "invalid-operation" :
                 InterstitialBlockReason(level, journey, Time.realtimeSinceStartupAsDouble);
+            if (reason == null || reason == "not-ready") lastInterstitialTime = Time.timeAsDouble;
             if (reason == null || reason == "not-ready")
                 DifferenceAnalytics.Track("interstitial_ad_trigger", "trigger_timing", placement == "level_retry" ? "level_enter" : placement);
             if (reason != null)
@@ -184,7 +178,7 @@ namespace GameFrameX.Startup.Application
                 level < (journey ? 3 : rules.interstitialFirstLevel) ? "before-first-level" :
                 !journey && level < rules.interstitialDenseLevel && (level - rules.interstitialFirstLevel) % rules.interstitialEarlyStep != 0 ? "not-candidate" :
                 !journey && PlayerPrefs.GetInt(Key + "InterstitialShown." + level, 0) == 1 ? "level-already-shown" :
-                !journey && now - lastInterstitialTime < rules.interstitialCooldownSeconds ? "cooldown" :
+                Time.timeAsDouble - lastInterstitialTime < InterstitialIntervalSeconds ? "cooldown" :
                 ShowInterstitial == null || !IsReady(InterstitialReady) ? "not-ready" : null;
         }
 
@@ -233,10 +227,7 @@ namespace GameFrameX.Startup.Application
         {
             if (pending != FullscreenKind.Interstitial || displayed) return;
             displayed = true;
-            lastInterstitialTime = Time.realtimeSinceStartupAsDouble;
             if (!pendingJourney) PlayerPrefs.SetInt(Key + "InterstitialShown." + pendingLevel, 1);
-            PlayerPrefs.SetString(Key + "LastInterstitialUtc",
-                (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() / 1000d).ToString("R", CultureInfo.InvariantCulture));
             PlayerPrefs.Save();
             Log("interstitial", pendingLevel, pendingPlacement, "displayed", pendingConfigVersion);
         }
@@ -260,6 +251,7 @@ namespace GameFrameX.Startup.Application
         {
             if (!Busy) return;
             Log(pending.ToString(), pendingLevel, pendingPlacement, failed ? "failed" : "closed", pendingConfigVersion);
+            if (!failed) lastInterstitialTime = Time.timeAsDouble;
             var finished = pendingFinished;
             pending = FullscreenKind.None;
             pendingJourney = false;

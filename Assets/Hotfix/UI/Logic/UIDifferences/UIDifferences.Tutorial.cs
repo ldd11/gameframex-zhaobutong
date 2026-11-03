@@ -218,9 +218,9 @@ namespace Hotfix.UI
                 tutorialShade.Show(upperImage.GetComponent<DifferenceBoard>(), button, button, new Vector2(.5f, .5f), -1, false);
             }
             else tutorialShade.Cancel();
-            tutorialMessage.text = tutorialStep == TutorialStep.Zoom ? (Application.isMobilePlatform ? "Pinch out to zoom in." : "Pinch out to zoom in.\nOn a computer, scroll to zoom.") :
+            tutorialMessage.text = LocalizeLiteral(tutorialStep == TutorialStep.Zoom ? (Application.isMobilePlatform ? "Pinch out to zoom in." : "Pinch out to zoom in.\nOn a computer, scroll to zoom.") :
                 tutorialStep == TutorialStep.HintButton ? "Tap Hint to find a difference.\nUnlimited hints in this level." :
-                tutorialStep == TutorialStep.HintDifference ? "Tap the highlighted spot\nto find this difference." : "Tap the highlighted spot\nin either picture.";
+                tutorialStep == TutorialStep.HintDifference ? "Tap the highlighted spot\nto find this difference." : "Tap the highlighted spot\nin either picture.");
             tutorialVisuals.gameObject.SetActive(true);
             // Keep the disabled hint at half brightness instead of darkening it again with the tutorial shade.
             hintButton.transform.SetAsLastSibling();

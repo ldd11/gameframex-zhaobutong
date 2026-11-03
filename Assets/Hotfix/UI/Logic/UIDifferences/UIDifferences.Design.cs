@@ -38,6 +38,25 @@ namespace Hotfix.UI
         Coroutine localLoadRoutine;
         float loadingStarted, loadingFillWidth;
         Vector2 loadingMagnifierCenter;
+        Transform loadingTrack;
+        Text loadingCaption;
+        int loadingTipIndex = -1;
+        static readonly string[] LevelLoadingTips =
+        {
+            "Start with one corner and work your way across.",
+            "Compare small sections, one at a time.",
+            "Look for changes in color, shape, and size.",
+            "Count the little things. Is something missing?",
+            "Check the edges—you might find a surprise.",
+            "Look between the big things for tiny clues.",
+            "Flowers, buttons, stripes… little details can be sneaky.",
+            "Does anything look longer, shorter, or slightly different?",
+            "Stuck? Try looking at a different part of the picture.",
+            "Take a little break, then look again with fresh eyes.",
+            "You don’t need eagle eyes—just a little curiosity.",
+            "Every difference you find is a little victory.",
+            "Need a little help? Tap the hint button."
+        };
 
         // All page objects and graphics are authored in UIDifferences.prefab.
         void BindFigmaDesign()
@@ -53,6 +72,8 @@ namespace Hotfix.UI
             if (homeDesign && !homeDesign.GetComponent<DifferenceHomeMotion>())
                 homeDesign.AddComponent<DifferenceHomeMotion>();
             loadingMagnifierCenter = ((RectTransform)loadingMagnifier.transform).anchoredPosition;
+            loadingTrack = loadingFill.transform.parent.Find("Caption") ? loadingFill.transform.parent : null;
+            if (loadingTrack) loadingCaption = loadingTrack.Find("Caption").GetComponent<Text>();
             loadingFillWidth = loadingFill.rectTransform.rect.width;
             designSettingsButton.onClick.AddListener(ShowSettings);
             designStartButton.onClick.AddListener(StartLevel);
@@ -113,12 +134,19 @@ namespace Hotfix.UI
         void AdvanceDesignLoading()
         {
             if (!loadingDesign || !loadingDesign.activeSelf) return;
-            var elapsed = Time.unscaledTime - loadingStarted;
+            var elapsed = Mathf.Max(0, Time.unscaledTime - loadingStarted);
             var angle = elapsed * Mathf.PI;
             var magnifier = (RectTransform)loadingMagnifier.transform;
             magnifier.anchoredPosition = loadingMagnifierCenter + new Vector2(Mathf.Sin(angle), Mathf.Cos(angle)) * 24;
-            loadingFill.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal,
-                loadingFillWidth * (.18f + .67f * (1 - Mathf.Exp(-elapsed))));
+            var progress = .18f + .67f * (1 - Mathf.Exp(-elapsed));
+            if (loadingTrack)
+            {
+                var width = ((RectTransform)loadingTrack).rect.width;
+                var inset = Mathf.Max(0, width * .5f + loadingFill.rectTransform.anchoredPosition.x);
+                loadingFill.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, Mathf.Max(0, width - inset * 2) * progress);
+                if (loadingCaption) loadingCaption.text = LocalizeLiteral(LevelLoadingTips[(loadingTipIndex + (int)(elapsed / 3f)) % LevelLoadingTips.Length]);
+            }
+            else loadingFill.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, loadingFillWidth * progress);
         }
 
         IEnumerator LoadLocalLevel(int index, bool resume, bool isRetry = false)
@@ -132,11 +160,12 @@ namespace Hotfix.UI
         {
             figmaResultWon = won; figmaResultActive = true; modal.SetActive(false); CloseDesignHint();
             victoryPreview.sprite = upperImage.sprite;
-            failProgress.text = "You completed " + Mathf.RoundToInt(100f * Round.Count / Mathf.Max(1, Round.Total)) + "%.";
+            failProgress.text = Localize("level_completed_percent", "You completed {0}%.", Mathf.RoundToInt(100f * Round.Count / Mathf.Max(1, Round.Total)));
             UpdateFigmaDesign(currentPage);
             if (won)
             {
-                designNextButton.GetComponentInChildren<Text>(true).text = level + 1 < LevelLimit ? "Level " + (level + 2) : "Home";
+                PlayResultVibration(0);
+                designNextButton.GetComponentInChildren<Text>(true).text = level + 1 < LevelLimit ? Localize("level_title", "Level {0}", level + 2) : LocalizeLiteral("Home");
                 SetVictoryVote(0); ReplayVictoryAnimation();
             }
             PlayTone(won ? winSound : failSound);
@@ -199,6 +228,7 @@ namespace Hotfix.UI
                 }
                 PlayProgressTransition(progressDots[i], "a4");
                 PlayTone(progressCompleteSound);
+                PlayResultVibration(0);
                 nextStart += .065f;
                 yield return new WaitForSecondsRealtime(Mathf.Max(0, nextStart - Time.unscaledTime));
             }

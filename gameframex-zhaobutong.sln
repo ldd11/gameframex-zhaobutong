@@ -93,6 +93,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameFrameX.Mono.Editor", "G
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unity.AI.Navigation", "Unity.AI.Navigation.csproj", "{a4c9d9cb-29d3-4778-d2a7-9deb1f657ede}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameFrameX.Startup.Application", "GameFrameX.Startup.Application.csproj", "{6af2d8df-b204-1381-37bb-2d60d6feb4e0}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unity.AI.Navigation.Editor.ConversionSystem", "Unity.AI.Navigation.Editor.ConversionSystem.csproj", "{1810cac7-258d-f7ff-4170-cd8751acc3a5}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "spine-unity", "spine-unity.csproj", "{d2e75416-4671-06fb-01d6-d88221084f39}"
@@ -154,8 +156,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameFrameX.SystemInfo.Runtime", "GameFrameX.SystemInfo.Runtime.csproj", "{ae7ec287-2743-4395-cd62-f41b80521d42}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameFrameX.ImageCache.Editor", "GameFrameX.ImageCache.Editor.csproj", "{3d468c0a-3052-1cf7-d3fa-d27c1f6ce214}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameFrameX.Startup.Application", "GameFrameX.Startup.Application.csproj", "{6af2d8df-b204-1381-37bb-2d60d6feb4e0}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameFrameX.Scene.Editor", "GameFrameX.Scene.Editor.csproj", "{1df8515d-dfd4-b7e5-1fad-ca8594612829}"
 EndProject
@@ -293,6 +293,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AdjustSdk.Scripts", "Adjust
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unity.AI.Navigation", "Unity.AI.Navigation.Player.csproj", "{058ecfee-9129-75a7-9f96-f790a0375834}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameFrameX.Startup.Application", "GameFrameX.Startup.Application.Player.csproj", "{ea8deba2-2768-8e55-20f6-b851c5364614}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "spine-unity", "spine-unity.Player.csproj", "{15268058-f7a6-8334-3d1e-df3677b10e53}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnityWebSocket.Runtime", "UnityWebSocket.Runtime.Player.csproj", "{104287ec-77a3-4f2e-8ca9-571a365e6124}"
@@ -332,8 +334,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameFrameX.Event.Runtime", "GameFrameX.Event.Runtime.Player.csproj", "{37eb641f-c64b-b9bd-9064-514b0b43a700}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameFrameX.SystemInfo.Runtime", "GameFrameX.SystemInfo.Runtime.Player.csproj", "{67105e1c-fa3c-7ab9-ad28-6c060e5ed72b}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameFrameX.Startup.Application", "GameFrameX.Startup.Application.Player.csproj", "{ea8deba2-2768-8e55-20f6-b851c5364614}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Difference.Sdk", "Difference.Sdk.Player.csproj", "{32782a91-3c26-5ed5-2fe4-0774f466fa64}"
 EndProject
@@ -494,6 +494,8 @@ Global
 		{01945aeb-a668-2f63-6ee8-601c0fa8a8fb}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{a4c9d9cb-29d3-4778-d2a7-9deb1f657ede}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{a4c9d9cb-29d3-4778-d2a7-9deb1f657ede}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6af2d8df-b204-1381-37bb-2d60d6feb4e0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6af2d8df-b204-1381-37bb-2d60d6feb4e0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1810cac7-258d-f7ff-4170-cd8751acc3a5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{1810cac7-258d-f7ff-4170-cd8751acc3a5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{d2e75416-4671-06fb-01d6-d88221084f39}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -556,8 +558,6 @@ Global
 		{ae7ec287-2743-4395-cd62-f41b80521d42}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3d468c0a-3052-1cf7-d3fa-d27c1f6ce214}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{3d468c0a-3052-1cf7-d3fa-d27c1f6ce214}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6af2d8df-b204-1381-37bb-2d60d6feb4e0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6af2d8df-b204-1381-37bb-2d60d6feb4e0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1df8515d-dfd4-b7e5-1fad-ca8594612829}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{1df8515d-dfd4-b7e5-1fad-ca8594612829}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{533e19a3-815a-0035-257d-8c327b09c88b}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -694,6 +694,8 @@ Global
 		{3e00bf85-70ac-1538-d09c-1c6c5c9490f2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{058ecfee-9129-75a7-9f96-f790a0375834}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{058ecfee-9129-75a7-9f96-f790a0375834}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ea8deba2-2768-8e55-20f6-b851c5364614}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ea8deba2-2768-8e55-20f6-b851c5364614}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{15268058-f7a6-8334-3d1e-df3677b10e53}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{15268058-f7a6-8334-3d1e-df3677b10e53}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{104287ec-77a3-4f2e-8ca9-571a365e6124}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -734,8 +736,6 @@ Global
 		{37eb641f-c64b-b9bd-9064-514b0b43a700}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{67105e1c-fa3c-7ab9-ad28-6c060e5ed72b}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{67105e1c-fa3c-7ab9-ad28-6c060e5ed72b}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{ea8deba2-2768-8e55-20f6-b851c5364614}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{ea8deba2-2768-8e55-20f6-b851c5364614}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{32782a91-3c26-5ed5-2fe4-0774f466fa64}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{32782a91-3c26-5ed5-2fe4-0774f466fa64}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{b267711b-958c-7e05-e6aa-3dfe1573e18f}.Debug|Any CPU.ActiveCfg = Debug|Any CPU

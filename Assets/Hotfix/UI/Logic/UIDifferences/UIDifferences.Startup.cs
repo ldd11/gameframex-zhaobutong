@@ -21,6 +21,8 @@ namespace Hotfix.UI
             var cancellation = CancellationTokenSource.CreateLinkedTokenSource(this.GetCancellationTokenOnDestroy());
             startupDataCancellation = cancellation;
             string error = null;
+            var loaded = false;
+            LauncherUIHandler.BeginDataLoading();
             try
             {
                 using (var cache = new DifferenceBatchCache())
@@ -33,12 +35,14 @@ namespace Hotfix.UI
                     }
                     finally { (warmup as IDisposable)?.Dispose(); }
                     error = cache.Error;
+                    loaded = error == null;
                 }
             }
             catch (OperationCanceledException) { return; }
             catch (Exception exception) { error = exception.Message; }
             finally
             {
+                if (ReferenceEquals(startupDataCancellation, cancellation)) LauncherUIHandler.EndDataLoading(loaded);
                 cancellation.Cancel();
                 if (ReferenceEquals(startupDataCancellation, cancellation)) startupDataCancellation = null;
                 cancellation.Dispose();
@@ -55,7 +59,11 @@ namespace Hotfix.UI
         {
             var cancellation = startupDataCancellation;
             startupDataCancellation = null;
-            if (cancellation != null) cancellation.Cancel();
+            if (cancellation != null)
+            {
+                LauncherUIHandler.EndDataLoading(false);
+                cancellation.Cancel();
+            }
         }
 
         IEnumerator ShowStartupDataError()

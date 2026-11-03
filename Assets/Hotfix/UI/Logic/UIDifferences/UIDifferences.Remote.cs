@@ -61,7 +61,7 @@ namespace Hotfix.UI
                 request.Dispose();
                 if (journeyPlaying) ShowJourney();
                 else { StopTutorial(); ShowHomeInternal(); }
-                Notice("Failed to load level " + (index + 1) + ". Please try again later.", 3f);
+                Notice(Localize("level_failed", "Failed to load level {0}. Please try again later.", index + 1), 3f);
                 yield break;
             }
             ReleaseRemoteLevel();
@@ -144,7 +144,7 @@ namespace Hotfix.UI
         UnityEngine.UI.Button AlbumPageButton(string name, string caption, float x, int step)
         {
             var label = Instantiate(At<UnityEngine.UI.Text>("Album/Card/More"), stage.Find("Album/Card"));
-            label.name = name; label.text = caption; label.raycastTarget = true;
+            label.name = name; label.text = Localize(step < 0 ? "album_previous" : "album_next", caption); label.raycastTarget = true;
             label.rectTransform.anchoredPosition = new Vector2(x, -794);
             label.rectTransform.sizeDelta = new Vector2(160, 49);
             var button = label.gameObject.AddComponent<UnityEngine.UI.Button>();

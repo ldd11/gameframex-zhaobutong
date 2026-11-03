@@ -114,7 +114,7 @@ namespace Hotfix.UI
                 var sprite = i == journeySelected ? journeyCurrentNodeSprite : journeyDefaultNodeSprite;
                 if (sprite) button.image.sprite = sprite;
             }
-            if (journeyPlayLabel) journeyPlayLabel.text = "Play Level " + (journeySelected + 1);
+            if (journeyPlayLabel) journeyPlayLabel.text = Localize("level_play", "Play Level {0}", journeySelected + 1);
             journeyPlayButton.interactable = journeySelected <= journeyCompleted;
         }
 

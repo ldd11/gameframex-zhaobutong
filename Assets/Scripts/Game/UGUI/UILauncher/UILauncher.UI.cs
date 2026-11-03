@@ -123,10 +123,10 @@ namespace Unity.Startup
 			this.self = this.gameObject;
 			BgImage = gameObject.transform.FindChildName("BgImage").GetComponent<UnityEngine.UI.Image>();
 			TipText = gameObject.transform.FindChildName("TipText").GetComponent<UnityEngine.UI.Text>();
-			ProgressBar_Background = gameObject.transform.FindChildName("ProgressBar/Background").GetComponent<UnityEngine.UI.Image>();
-			ProgressBar_FillArea_Fill = gameObject.transform.FindChildName("ProgressBar/Fill Area/Fill").GetComponent<UnityEngine.UI.Image>();
-			ProgressBar_FillArea = gameObject.transform.FindChildName("ProgressBar/Fill Area").GetComponent<UnityEngine.Transform>();
-			ProgressBar = gameObject.transform.FindChildName("ProgressBar").GetComponent<UnityEngine.UI.Slider>();
+			ProgressBar_Background = gameObject.transform.FindChildName("ProgressBar/Background")?.GetComponent<UnityEngine.UI.Image>();
+			ProgressBar_FillArea_Fill = gameObject.transform.FindChildName("ProgressBar/Fill Area/Fill")?.GetComponent<UnityEngine.UI.Image>();
+			ProgressBar_FillArea = gameObject.transform.FindChildName("ProgressBar/Fill Area");
+			ProgressBar = gameObject.transform.FindChildName("ProgressBar")?.GetComponent<UnityEngine.UI.Slider>();
 			upgrade_Image = gameObject.transform.FindChildName("upgrade/Image").GetComponent<UnityEngine.UI.Image>();
 			upgrade_TextContent = gameObject.transform.FindChildName("upgrade/TextContent").GetComponent<UnityEngine.UI.Text>();
 			upgrade_EnterButton_Text = gameObject.transform.FindChildName("upgrade/EnterButton/Text").GetComponent<UnityEngine.UI.Text>();

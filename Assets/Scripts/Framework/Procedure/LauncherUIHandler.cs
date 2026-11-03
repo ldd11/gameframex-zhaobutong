@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using Cysharp.Threading.Tasks;
 using GameFrameX.Asset.Runtime;
 using GameFrameX.Event.Runtime;
@@ -20,6 +21,67 @@ namespace GameFrameX.Startup.Application
     public static class LauncherUIHandler
     {
         private static UILauncher _ui;
+#if ENABLE_UI_UGUI
+        private static Transform dataLoadingTrack;
+        private static Coroutine dataLoadingRoutine;
+        private static readonly string[] LoadingCaptions =
+        {
+            "Hiding a few surprises...",
+            "Getting the tiny details just right...",
+            "Your next “Aha!” moment is loading...",
+            "A little looking, a lot of joy."
+        };
+
+        public static void UpdateLoadingTrack(Transform track, float elapsed, float progress)
+        {
+            if (!track) return;
+            var fill = track.Find("Progress") as RectTransform;
+            var caption = track.Find("Caption");
+            if (fill && track is RectTransform bounds)
+            {
+                var inset = Mathf.Max(0, bounds.rect.width * .5f + fill.anchoredPosition.x);
+                fill.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal,
+                    Mathf.Max(0, bounds.rect.width - inset * 2) * Mathf.Clamp01(progress));
+            }
+            if (caption && caption.TryGetComponent<UnityEngine.UI.Text>(out var text))
+            {
+                var index = (int)(Mathf.Max(0, elapsed) / 3f) % LoadingCaptions.Length;
+                var key = "startup_tip_0" + (index + 1);
+                text.text = GameApp.Localization.HasRawString(key) ? GameApp.Localization.GetString(key) : LoadingCaptions[index];
+            }
+        }
+
+        public static void BeginDataLoading()
+        {
+            if (!_ui) return;
+            if (dataLoadingRoutine != null) _ui.StopCoroutine(dataLoadingRoutine);
+            if (!dataLoadingTrack) dataLoadingTrack = _ui.transform.Find("Loading");
+            if (!dataLoadingTrack) return;
+            dataLoadingTrack.gameObject.SetActive(true);
+            dataLoadingTrack.SetAsLastSibling();
+            dataLoadingRoutine = _ui.StartCoroutine(AnimateDataLoading());
+        }
+
+        private static IEnumerator AnimateDataLoading()
+        {
+            var started = Time.unscaledTime;
+            while (dataLoadingTrack)
+            {
+                var elapsed = Time.unscaledTime - started;
+                UpdateLoadingTrack(dataLoadingTrack, elapsed, .9f * (1 - Mathf.Exp(-elapsed / 5f)));
+                yield return null;
+            }
+        }
+
+        public static void EndDataLoading(bool success)
+        {
+            if (_ui && dataLoadingRoutine != null) _ui.StopCoroutine(dataLoadingRoutine);
+            dataLoadingRoutine = null;
+            if (!dataLoadingTrack) return;
+            if (success) UpdateLoadingTrack(dataLoadingTrack, 0, 1);
+            else dataLoadingTrack.gameObject.SetActive(false);
+        }
+#endif
 
         /// <summary>
         /// 启动加载界面，并注册 FairyGUI 加载器扩展。
@@ -49,9 +111,13 @@ namespace GameFrameX.Startup.Application
         /// <returns>异步任务 / The async task</returns>
         public static async UniTask StartAsync(string uiResName)
         {
+            DifferenceLocalization.Initialize();
             try
             {
                 _ui = await GameApp.UI.OpenFullScreenAsync<UILauncher>(uiResName);
+#if ENABLE_UI_UGUI
+                if (_ui) DifferenceLocalizedFonts.Apply(_ui.gameObject);
+#endif
                 if (DifferenceAnalytics.Enabled)
                 {
                     await UniTask.NextFrame();
@@ -75,6 +141,10 @@ namespace GameFrameX.Startup.Application
         /// </remarks>
         public static void Dispose()
         {
+#if ENABLE_UI_UGUI
+            dataLoadingRoutine = null;
+            dataLoadingTrack = null;
+#endif
             GameApp.UI.CloseUIForm<UILauncher>();
             _ui = null;
             DifferenceStartupAnalytics.LauncherClosed();
@@ -132,9 +202,15 @@ namespace GameFrameX.Startup.Application
 
 #if ENABLE_UI_FAIRYGUI
             _ui.m_IsDownload.SetSelectedIndex(1);
-#endif
             _ui.m_ProgressBar.value = Mathf.Clamp01(progress) * 100;
-            _ui.m_TipText.text = $"Downloading {sizeInfo}";
+#else
+            if (_ui.m_ProgressBar) _ui.m_ProgressBar.value = Mathf.Clamp01(progress) * 100;
+            var track = _ui.transform.Find("Loading");
+            if (track) UpdateLoadingTrack(track, Time.unscaledTime, progress);
+#endif
+            _ui.m_TipText.text = GameApp.Localization.HasRawString("download_size")
+                ? GameApp.Localization.GetString("download_size", sizeInfo)
+                : $"Downloading {sizeInfo}";
         }
 
         /// <summary>

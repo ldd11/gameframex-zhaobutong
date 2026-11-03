@@ -15,3 +15,14 @@ UserSettings/Layouts
 Assets/StreamingAssets
 *.csproj
 Bundles
+!/Assets/Bundles/
+/Assets/Bundles/*
+!/Assets/Bundles/UI/
+/Assets/Bundles/UI/*
+!/Assets/Bundles/UI/UIDifferences/
+/Assets/Bundles/UI/UIDifferences/*
+!/Assets/Bundles/UI/UIDifferences/Prefab.meta
+!/Assets/Bundles/UI/UIDifferences/Prefab/
+/Assets/Bundles/UI/UIDifferences/Prefab/*
+!/Assets/Bundles/UI/UIDifferences/Prefab/Loading.prefab
+!/Assets/Bundles/UI/UIDifferences/Prefab/Loading.prefab.meta

@@ -16,7 +16,7 @@ namespace Hotfix.Config.Local
 {
     public partial class TbLocalization : BaseDataTable<Local.Localization>
     {
-        private readonly System.Func<System.Threading.Tasks.Task<JSONNode>> _loadFunc;        
+        private readonly System.Func<System.Threading.Tasks.Task<JSONNode>> _loadFunc;
         public TbLocalization(System.Func<System.Threading.Tasks.Task<JSONNode>> loadFunc)
         {
             _loadFunc = loadFunc;
@@ -35,7 +35,7 @@ namespace Hotfix.Config.Local
             }
             PostInit();
         }
-    
+
         public void ResolveRef(TablesComponent tables)
         {
             foreach(var value in DataList)

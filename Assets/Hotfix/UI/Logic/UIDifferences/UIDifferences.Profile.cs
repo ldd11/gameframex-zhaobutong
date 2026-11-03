@@ -75,7 +75,7 @@ namespace Hotfix.UI
         int FrameCoinCost(int index) => index switch { 4 => 288, 5 => 888, 6 => 1588, 7 => 2588, _ => 0 };
         int FrameRequiredLevels(int index) => index switch { 8 => 30, 9 => 20, 10 => 50, 11 => 100, _ => 0 };
         bool FrameRequiresJourney(int index) => index == 9 || index == 10;
-        string FrameLevelLabel(int index) => (FrameRequiresJourney(index) ? "Journey " : "Level ") + FrameRequiredLevels(index);
+        string FrameLevelLabel(int index) => FrameRequiresJourney(index) ? Localize("journey_number", "Journey {0}", FrameRequiredLevels(index)) : Localize("level_title", "Level {0}", FrameRequiredLevels(index));
         bool ProfileFrameUnlocked(int index) => index >= 0 && index < ProfileFrameCount &&
             (index < 4 || (index < 32 && (ownedFrames & (1 << index)) != 0) ||
              (FrameRequiredLevels(index) > 0 && (FrameRequiresJourney(index) ? journeyCompleted : completed) >= FrameRequiredLevels(index)));
@@ -110,7 +110,7 @@ namespace Hotfix.UI
                 if (locked) locked.gameObject.SetActive(!owned);
             }
             var cost = ProfileCost();
-            SetText("Profile/Card/Save/Label", cost > 0 ? "Unlock & Save  " + cost : "Save");
+            SetText("Profile/Card/Save/Label", cost > 0 ? Localize("unlock_save_cost", "Unlock & Save  {0}", cost) : "Save");
             At<UnityEngine.UI.Button>("Profile/Card/Save").interactable = coins >= cost;
             if (profileChoicesScroll)
             {
@@ -187,9 +187,9 @@ namespace Hotfix.UI
             if (draftAvatar < 0 || draftAvatar >= avatarSprites.Length || draftFrame < 0 || draftFrame >= ProfileFrameCount)
             { Notice("This item is unavailable.", 2); return; }
             if (!ProfileFrameUnlocked(draftFrame) && FrameRequiredLevels(draftFrame) > 0)
-            { Notice("Complete " + FrameLevelLabel(draftFrame) + " to unlock this frame.", 2.5f); return; }
+            { Notice(Localize("frame_unlock_level", "Complete {0} to unlock this frame.", FrameLevelLabel(draftFrame)), 2.5f); return; }
             var cost = ProfileCost();
-            if (coins < cost) { Notice("You need " + cost + " coins to unlock this frame.", 2); return; }
+            if (coins < cost) { Notice(Localize("frame_unlock_coins", "You need {0} coins to unlock this frame.", cost), 2); return; }
             coins -= cost; avatar = draftAvatar; frame = draftFrame;
             if (frame < 32) ownedFrames |= 1 << frame;
             nickname = value; Save();
