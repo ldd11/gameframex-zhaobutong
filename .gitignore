@@ -21,6 +21,8 @@ Bundles
 /Assets/Bundles/UI/*
 !/Assets/Bundles/UI/UIDifferences/
 /Assets/Bundles/UI/UIDifferences/*
+!/Assets/Bundles/UI/UIDifferences/LocalLevel.meta
+!/Assets/Bundles/UI/UIDifferences/LocalLevel/
 !/Assets/Bundles/UI/UIDifferences/Prefab.meta
 !/Assets/Bundles/UI/UIDifferences/Prefab/
 /Assets/Bundles/UI/UIDifferences/Prefab/*

@@ -12,6 +12,9 @@ namespace Hotfix.UI
     {
         [FormerlySerializedAs("firstLevelApiUrl")]
         public string levelApiUrl = "https://jaspergame-diff.tiaoya.com/api/greyfun/levels/1";
+        public TextAsset[] localLevelDiffs = Array.Empty<TextAsset>();
+        public TextAsset[] localLevelOriginals = Array.Empty<TextAsset>();
+        public TextAsset[] localLevelChanged = Array.Empty<TextAsset>();
         DifferenceRemoteLevel remoteLevel, loadingLevel;
         string loadedApiUrl;
         readonly float[] patchElapsed = new float[DifferenceRound.MaxSpots];
@@ -41,9 +44,16 @@ namespace Hotfix.UI
         IEnumerator LoadRemoteLevel(DifferenceRemoteLevel request, int index, bool resume, bool isRetry = false)
         {
             var url = LevelUrl(index);
-            yield return journeyPlaying ? request.Load(url, index + 1) : request.LoadMainBatch(url, index + 1);
+            yield return journeyPlaying ? request.Load(url, index + 1) :
+                request.LoadMainBatch(url, index + 1, index < 2 ? 15f : DifferenceBatchCache.DefaultTimeout);
             while (loadingLevel == request && Time.unscaledTime - loadingStarted < .55f) yield return null;
             if (loadingLevel != request) { request.Dispose(); yield break; }
+            if ((request.Error != null || request.Level == null) && !journeyPlaying && index < 2 &&
+                index < localLevelDiffs.Length && index < localLevelOriginals.Length && index < localLevelChanged.Length)
+            {
+                Debug.LogWarning("后台关卡加载失败，尝试本地关卡：" + request.Error);
+                request.LoadLocal(url, index + 1, localLevelDiffs[index], localLevelOriginals[index], localLevelChanged[index]);
+            }
             loadingLevel = null;
             UpdateFigmaDesign(currentPage);
             startButton.interactable = true;

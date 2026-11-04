@@ -78,7 +78,30 @@ namespace Hotfix.UI
             }
         }
 
-        public IEnumerator LoadMainBatch(string apiUrl, int expectedNumber = 1)
+        public void LoadLocal(string apiUrl, int number, TextAsset diffs, TextAsset original, TextAsset changed)
+        {
+            ReleaseResources(); Error = null;
+            Attempt(() =>
+            {
+                Require(diffs && original && changed, "The local level assets are missing.");
+                var data = JSON.Parse(diffs.text);
+                var endpoint = new JSONObject();
+                endpoint["ok"] = true; endpoint["number"] = number; endpoint["revision"] = 0;
+                endpoint["level_id"] = data["level_id"].Value;
+                var assets = new JSONObject();
+                assets["level-diffs.json"] = apiUrl + "/level-diffs.json";
+                assets["level-base.png"] = apiUrl + "/source.png";
+                assets["different.png"] = apiUrl + "/target.png";
+                endpoint["assets"] = assets;
+                Level = Parse(apiUrl, endpoint.ToString(), diffs.text, out var size, number);
+                originalTexture = DecodeTexture(original.bytes, size);
+                changedTexture = DecodeTexture(changed.bytes, size);
+                CreateSprites(Level, originalTexture, changedTexture, size);
+            });
+            if (Error != null) ReleaseResources();
+        }
+
+        public IEnumerator LoadMainBatch(string apiUrl, int expectedNumber = 1, float timeout = DifferenceBatchCache.DefaultTimeout)
         {
             if (loading) throw new InvalidOperationException("Level Loading");
             ReleaseResources();
@@ -88,7 +111,7 @@ namespace Hotfix.UI
                 yield return null;
                 if (cancelled) { Error = "Loading was cancelled."; yield break; }
                 if (!Attempt(() => { WebUrl(apiUrl); batchCache = new DifferenceBatchCache(); })) yield break;
-                yield return batchCache.Ensure(expectedNumber);
+                yield return batchCache.Ensure(expectedNumber, timeout);
                 if (cancelled) { Error = "Loading was cancelled."; yield break; }
                 if (batchCache.Error != null) { Error = batchCache.Error; yield break; }
                 string endpointJson = null, diffsJson = null;
