@@ -24,8 +24,10 @@ namespace Hotfix.UI
         [SerializeField] string termsOfServiceUrl = "https://joystar.pro/terms";
         [SerializeField] string privacyPolicyUrl = "https://joystar.pro/privacy.html";
         [Header("Vibration")]
-        [SerializeField, Min(1)] int foundVibrationMilliseconds = 30, missVibrationMilliseconds = 60;
-        [SerializeField, Range(1, 255)] int foundVibrationAmplitude = 100, missVibrationAmplitude = 200;
+        [SerializeField, Min(1)] int missVibrationMilliseconds = 60;
+        [SerializeField, Range(1, 255)] int missVibrationAmplitude = 200;
+        bool completionHapticsCancelled;
+        float lastCompletionTickTime;
         [SerializeField] RectTransform rewardWallet, rewardCoinOrigin;
         [SerializeField] Text rewardCoinsLabel;
         [SerializeField] Image rewardCoinIcon;
@@ -164,7 +166,11 @@ namespace Hotfix.UI
             UpdateFigmaDesign(currentPage);
             if (won)
             {
-                PlayResultVibration(0);
+                if (vibration && !testing)
+                {
+                    TraceVibration("VictoryConfetti");
+                    GameFrameX.Startup.Application.DifferenceHaptics.PlayLight();
+                }
                 designNextButton.GetComponentInChildren<Text>(true).text = level + 1 < LevelLimit ? Localize("level_title", "Level {0}", level + 2) : LocalizeLiteral("Home");
                 SetVictoryVote(0); ReplayVictoryAnimation();
             }
@@ -216,6 +222,7 @@ namespace Hotfix.UI
                 return horizontal != 0 ? horizontal : spots[a].y.CompareTo(spots[b].y);
             });
             var nextStart = Time.unscaledTime;
+            lastCompletionTickTime = float.NegativeInfinity;
             for (var i = 0; i < count; i++)
             {
                 if (i < ringOrder.Length)
@@ -228,7 +235,8 @@ namespace Hotfix.UI
                 }
                 PlayProgressTransition(progressDots[i], "a4");
                 PlayTone(progressCompleteSound);
-                PlayResultVibration(0);
+                yield return new WaitForSecondsRealtime(.035f);
+                PlayCompletionTick(i);
                 nextStart += .065f;
                 yield return new WaitForSecondsRealtime(Mathf.Max(0, nextStart - Time.unscaledTime));
             }
@@ -328,14 +336,15 @@ namespace Hotfix.UI
         {
             if (AdInputBlocked) return;
             vibration = !vibration; Save(); RefreshSettings();
-            PlayResultVibration(0);
+            if (!vibration) { if (Round != null && Round.Complete) completionHapticsCancelled = true; }
+            else if (!testing) GameFrameX.Startup.Application.DifferenceHaptics.PlayMedium();
         }
 
         Vector2Int GetVibrationFeedback(int result)
         {
             if (!vibration || (result < 0 && result != Hotfix.Manager.DifferenceRound.Miss)) return Vector2Int.zero;
             return result >= 0
-                ? new Vector2Int(Mathf.Max(1, foundVibrationMilliseconds), Mathf.Clamp(foundVibrationAmplitude, 1, 255))
+                ? new Vector2Int(20, 120)
                 : new Vector2Int(Mathf.Max(1, missVibrationMilliseconds), Mathf.Clamp(missVibrationAmplitude, 1, 255));
         }
 
@@ -343,7 +352,41 @@ namespace Hotfix.UI
         {
             if (testing) return;
             var feedback = GetVibrationFeedback(result);
-            if (feedback.x > 0) GameFrameX.Startup.Application.DifferenceHaptics.Play(feedback.x, feedback.y);
+            if (feedback.x <= 0) return;
+            if (result == Hotfix.Manager.DifferenceRound.Miss)
+            {
+                TraceVibration("Miss");
+                GameFrameX.Startup.Application.DifferenceHaptics.Play(feedback.x, feedback.y);
+            }
+            else if (Round != null && Round.Complete)
+            {
+                TraceVibration("LastFoundPoint");
+                GameFrameX.Startup.Application.DifferenceHaptics.PlayHeavy();
+            }
+            else
+            {
+                TraceVibration("FoundPoint");
+                GameFrameX.Startup.Application.DifferenceHaptics.PlayMedium();
+            }
+        }
+
+        static bool CanPlayCompletionTick(bool enabled, bool testing, bool cancelled, float elapsed) =>
+            enabled && !testing && !cancelled && elapsed >= .05f;
+
+        void PlayCompletionTick(int index)
+        {
+            var now = Time.realtimeSinceStartup;
+            if (!CanPlayCompletionTick(vibration, testing, completionHapticsCancelled, now - lastCompletionTickTime)) return;
+            lastCompletionTickTime = now;
+            TraceVibration("CompletionStep", index);
+            GameFrameX.Startup.Application.DifferenceHaptics.PlayLight();
+        }
+
+        void TraceVibration(string kind, int index = -1)
+        {
+#if DEVELOPMENT_BUILD
+            Debug.Log($"[Haptic] level={level + 1} event={kind} index={index} time={Time.realtimeSinceStartup:F3}");
+#endif
         }
 
         async void OpenSettingsLink(string url)

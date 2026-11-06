@@ -517,14 +517,25 @@ public static class DifferenceUiSmokeCheck
             enabled.SetValue(ui, true);
             var found = (Vector2Int)feedback.Invoke(ui, new object[] { 0 });
             var miss = (Vector2Int)feedback.Invoke(ui, new object[] { Hotfix.Manager.DifferenceRound.Miss });
-            if (found != new Vector2Int(30, 100) || miss != new Vector2Int(60, 200))
-                throw new Exception("点中应沿用拼图震动，点错应更强");
+            if (found != new Vector2Int(20, 120) || miss != new Vector2Int(60, 200))
+                throw new Exception("点中应使用中等震动，点错保留独立震动");
             if ((Vector2Int)feedback.Invoke(ui, new object[] { Hotfix.Manager.DifferenceRound.Ignored }) != Vector2Int.zero)
                 throw new Exception("重复点击已找到位置不应震动");
             enabled.SetValue(ui, false);
             foreach (var result in new[] { 0, Hotfix.Manager.DifferenceRound.Miss })
                 if ((Vector2Int)feedback.Invoke(ui, new object[] { result }) != Vector2Int.zero)
                     throw new Exception("关闭震动后仍触发反馈");
+
+            var tick = typeof(UIDifferences).GetMethod("CanPlayCompletionTick", BindingFlags.Static | BindingFlags.NonPublic);
+            if (tick == null) throw new Exception("缺少通关轻震节奏检查");
+            foreach (var check in new[] {
+                (enabled: true, testing: false, cancelled: false, elapsed: .05f, expected: true),
+                (enabled: true, testing: false, cancelled: false, elapsed: .049f, expected: false),
+                (enabled: false, testing: false, cancelled: false, elapsed: 1f, expected: false),
+                (enabled: true, testing: true, cancelled: false, elapsed: 1f, expected: false),
+                (enabled: true, testing: false, cancelled: true, elapsed: 1f, expected: false) })
+                if ((bool)tick.Invoke(null, new object[] { check.enabled, check.testing, check.cancelled, check.elapsed }) != check.expected)
+                    throw new Exception("通关轻震节奏或开关检查失败：" + check);
 
             const string gradle = "Temp/SettingsPermissionCheck";
             Directory.CreateDirectory(gradle + "/src/main");
@@ -1434,9 +1445,13 @@ public static class DifferenceUiSmokeCheck
             Static("PlayProgressTransition", first, "a2");
             Static("PlayProgressAnimation", ui.progressDots[2], "a1");
             replay = (System.Collections.IEnumerator)Call("ReplayCompletedProgress");
+            Check(replay.MoveNext() && replay.Current is WaitForSecondsRealtime firstTickDelay && Mathf.Abs(firstTickDelay.waitTime - .035f) < .001f &&
+                first.AnimationState.GetCurrent(0).Animation.Name == "a4",
+                "The first victory animation must start immediately, with a short delay before its tick.");
             for (var i = 0; i < 3; i++)
             {
-                Check(replay.MoveNext() && replay.Current is WaitForSecondsRealtime wait && Mathf.Abs(wait.waitTime - (i + 1) * .065f) < .001f,
+                Check(replay.MoveNext() && replay.Current is WaitForSecondsRealtime wait &&
+                    (i == 0 ? wait.waitTime >= 0 && wait.waitTime <= .065f : Mathf.Abs(wait.waitTime - (i + 1) * .065f) < .001f),
                     "Victory progress must schedule .065-second starts against one clock, avoiding accumulated frame delays.");
                 for (var j = 0; j < 3; j++)
                 {
@@ -1469,6 +1484,10 @@ public static class DifferenceUiSmokeCheck
                 }
                 CheckProgressOnly();
                 Advance(.065f);
+                if (i + 1 < 3)
+                    Check(replay.MoveNext() && replay.Current is WaitForSecondsRealtime tickDelay && Mathf.Abs(tickDelay.waitTime - .035f) < .001f &&
+                        ui.progressDots[i + 1].AnimationState.GetCurrent(0).Animation.Name == "a4",
+                        "Each progress animation must start before its delayed tick: " + (i + 1));
             }
             Check(replay.MoveNext(), "Victory replay must wait for the last a4 instead of ending after the final stagger.");
             var last = ui.progressDots[2].AnimationState.GetCurrent(0);

@@ -657,6 +657,7 @@ namespace Hotfix.UI
             if (restored)
             { mask = GetInt("RoundMask", 0); lives = GetInt("RoundLives", 3); roundMistakes = Mathf.Max(3 - lives, GetInt("RoundMistakes", 0)); pendingHint = GetInt("RoundHint", -1); }
             Round = new DifferenceRound(spots, ImageAspect, mask, lives);
+            completionHapticsCancelled = false;
             foundSoundIndex = 0; lastFoundTime = float.NegativeInfinity;
             roundAdOperation = Guid.NewGuid().ToString("N");
             PlayLifeAnimation(false);
@@ -1224,7 +1225,7 @@ namespace Hotfix.UI
         }
         void OnApplicationPause(bool paused)
         {
-            if (paused) gmGesture.Reset();
+            if (paused) { gmGesture.Reset(); if (Round != null && Round.Complete) completionHapticsCancelled = true; }
             SampleAnalytics(); analyticsPaused = paused; SampleAnalytics();
             if (paused && Round != null) SaveRound();
             if (paused && AnalyticsEnabled) GameFrameX.Startup.Application.DifferenceAnalytics.Flush();
