@@ -82,6 +82,7 @@ public static class DifferenceGameBuilder
             ui.audioSource=root.AddComponent<AudioSource>();ui.audioSource.playOnAwake=false;
             ui.musicSource=root.AddComponent<AudioSource>();ui.musicSource.playOnAwake=false;ui.musicSource.loop=true;ui.musicSource.volume=UIDifferences.BackgroundMusicVolume;
             BindAudio(ui);
+            BindFoundRingEffects(ui);
             foreach(var page in new[]{ui.play,ui.shop,ui.ranking,ui.settings,ui.profile,ui.musicPanel,ui.achievements,ui.album,ui.modal})page.SetActive(false);
             ApplyGameplayArt(ui);
             PrefabUtility.SaveAsPrefabAsset(root,Folder+"UIDifferences.prefab");
@@ -260,6 +261,7 @@ public static class DifferenceGameBuilder
     static void RefreshFigmaBindings(UIDifferences ui)
     {
         BindAudio(ui);
+        BindFoundRingEffects(ui);
         BindProgressDots(ui);
         if (!ui.foundFlightPrefab)
             ui.foundFlightPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(Folder + "Effect/SelectEffect/a1a1/xingxingtuowei2.prefab");
@@ -747,6 +749,14 @@ public static class DifferenceGameBuilder
         t.Apply();File.WriteAllBytes(Folder+"Art/"+name+".png",t.EncodeToPNG());UnityEngine.Object.DestroyImmediate(t);var sprite=ImportSprite("Art/"+name+".png");
         if(kind==0){var imp=(TextureImporter)AssetImporter.GetAtPath(Folder+"Art/"+name+".png");imp.spriteBorder=new Vector4(24,24,24,24);imp.SaveAndReimport();sprite=AssetDatabase.LoadAssetAtPath<Sprite>(Folder+"Art/"+name+".png");}return sprite;
     }
+    static void BindFoundRingEffects(UIDifferences ui)
+    {
+        if (!ui.normalFoundRingEffectPrefab)
+            ui.normalFoundRingEffectPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(Folder + "Effect/SelectEffect/a1a1/quanfaguang.prefab");
+        if (!ui.foundRingEffectPrefab)
+            ui.foundRingEffectPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(Folder + "Effect/SelectEffect/a1a1/quanfaguangBig.prefab");
+    }
+
     static void BindAudio(UIDifferences ui)
     {
         ui.musicSource.volume = UIDifferences.BackgroundMusicVolume;
@@ -760,6 +770,9 @@ public static class DifferenceGameBuilder
         ui.buttonSound = Clip("Click_Btn.wav");
         ui.failSound = Clip("False.wav");
         ui.foundSound = Clip("Found.wav");
+        ui.foundComboSounds = new[] { Clip("01_First.wav"), Clip("02_Combo_02.wav"), Clip("03_Combo_03.wav"),
+            Clip("04_Combo_04.wav"), Clip("05_Combo_05.wav"), Clip("06_Combo_06.wav"), Clip("07_Combo_07.wav"),
+            Clip("08_Combo_08.wav"), Clip("09_Combo_09.wav"), Clip("10_Combo_10.wav"), Clip("11_Completion.wav") };
         ui.missSound = Clip("Miss.wav");
         ui.winSound = Clip("Win.wav");
         ui.coinCreateSound = Clip("CoinCreate.WAV");

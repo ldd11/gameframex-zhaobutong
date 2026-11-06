@@ -6,7 +6,7 @@ namespace Hotfix.UI
 {
     public sealed class DifferenceFoundFlight : UnityEngine.UI.MaskableGraphic
     {
-        const float FlightTime = .52f, FlashTime = .12f, SettleTime = .20f;
+        const float FlightTime = .2f, FlashTime = .12f, SettleTime = .20f;
         public const float Duration = 1.6f;
         Vector2 origin;
         RectTransform destination;

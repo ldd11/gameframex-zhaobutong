@@ -642,6 +642,24 @@ public static class DifferenceUiSmokeCheck
             if (!clip || AssetDatabase.GetAssetPath(clip) != "Assets/Bundles/UI/UIDifferences/Audio/" + pair[1])
                 throw new Exception("音频绑定错误：" + binding);
         }
+        var comboNames = new[] { "01_First.wav", "02_Combo_02.wav", "03_Combo_03.wav", "04_Combo_04.wav", "05_Combo_05.wav", "06_Combo_06.wav", "07_Combo_07.wav", "08_Combo_08.wav", "09_Combo_09.wav", "10_Combo_10.wav", "11_Completion.wav" };
+        var comboSounds = (AudioClip[])typeof(UIDifferences).GetField("foundComboSounds").GetValue(ui);
+        if (comboSounds == null || comboSounds.Length != comboNames.Length) throw new Exception("找对连击音效数量错误");
+        for (var i = 0; i < comboNames.Length; i++)
+            if (!comboSounds[i] || AssetDatabase.GetAssetPath(comboSounds[i]) != "Assets/Bundles/UI/UIDifferences/Audio/" + comboNames[i])
+                throw new Exception("找对连击音效绑定错误：" + comboNames[i]);
+        var nextSound = typeof(UIDifferences).GetMethod("NextFoundSoundIndex", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+        if (nextSound == null) throw new Exception("找不到连击音效规则");
+        foreach (var check in new[] {
+            (previous: 0, first: true, complete: false, elapsed: 0f, expected: 0),
+            (previous: 0, first: false, complete: false, elapsed: 1f, expected: 1),
+            (previous: 1, first: false, complete: false, elapsed: 3f, expected: 2),
+            (previous: 5, first: false, complete: false, elapsed: 3.01f, expected: 1),
+            (previous: 9, first: false, complete: false, elapsed: 1f, expected: 9),
+            (previous: 0, first: true, complete: true, elapsed: 0f, expected: 10),
+            (previous: 5, first: false, complete: true, elapsed: 4f, expected: 10) })
+            if ((int)nextSound.Invoke(null, new object[] { check.previous, check.first, check.complete, check.elapsed }) != check.expected)
+                throw new Exception("找对连击音效规则错误：" + check);
         if (!ui.musicSource.loop || ui.audioSource == ui.musicSource) throw new Exception("背景音乐应循环，并与音效使用独立声源");
         if (Application.isPlaying)
         {
@@ -832,6 +850,10 @@ public static class DifferenceUiSmokeCheck
             var ui = root.GetComponent<UIDifferences>();
             ui.upperImage.transform.parent.localScale = Vector3.one; // This fixture checks local units; the alignment check covers authored viewport scaling.
             typeof(UIDifferences).GetField("useSpineFoundRing", Private).SetValue(ui, false);
+            const string effectPath = "Assets/Bundles/UI/UIDifferences/Effect/SelectEffect/a1a1/";
+            if (AssetDatabase.GetAssetPath(ui.normalFoundRingEffectPrefab) != effectPath + "quanfaguang.prefab" ||
+                AssetDatabase.GetAssetPath(ui.foundRingEffectPrefab) != effectPath + "quanfaguangBig.prefab")
+                throw new Exception("找对普通与 Big 粒子特效的预制体绑定错误");
             var marker = ui.topRings[0];
             marker.gameObject.SetActive(true);
             var spine = Spine.Unity.SkeletonGraphic.NewSkeletonGraphicGameObject(ui.foundRingSpine, marker.transform, ui.foundRingMaterial);
@@ -1316,6 +1338,21 @@ public static class DifferenceUiSmokeCheck
             ui.play.SetActive(true);
             typeof(UIDifferences).GetField("sound", Private).SetValue(ui, false);
             typeof(UIDifferences).GetField("useSpineFoundRing", Private).SetValue(ui, false);
+            foreach (var effectCase in new[] { (total: 15, before: 9, big: false), (total: 15, before: 10, big: true),
+                (total: 15, before: 14, big: true), (total: 5, before: 0, big: true) })
+            {
+                Round(effectCase.total, (1 << effectCase.before) - 1);
+                ui.Round.RevealNext();
+                var marker = ui.topRings[0]; marker.gameObject.SetActive(true);
+                Call("ShowFoundRing", marker, true);
+                var effect = marker.transform.Find("FoundRingParticles");
+                Check(effect && (effect.Find("quan") != null) == effectCase.big,
+                    "Found-ring particles must switch to Big for the last five discoveries.");
+                var systems = effect.GetComponentsInChildren<ParticleSystem>(true);
+                Check(systems.Length > 0 && systems.All(system => system.gameObject.activeInHierarchy && system.isPlaying),
+                    "Every found-ring particle system must be active and playing.");
+                UnityEngine.Object.DestroyImmediate(effect.gameObject);
+            }
             Check(ui.progressDots.Length == 15 && ui.progressDots.All(dot => dot && dot.skeletonDataAsset), "All fifteen authored Spine progress dots must be bound.");
             var asset = ui.progressDots[0].skeletonDataAsset;
             Check(AssetDatabase.GetAssetPath(asset).EndsWith("/Dingdan/dingdan_SkeletonData.asset"), "Progress must use the authored dingdan asset.");

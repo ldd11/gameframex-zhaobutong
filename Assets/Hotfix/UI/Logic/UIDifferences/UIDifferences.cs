@@ -41,6 +41,7 @@ namespace Hotfix.UI
         public Material foundFlightMaterial, hintSpotlightMaterial;
         public GameObject foundFlightPrefab, foundArrivalPrefab;
         public GameObject foundRingEffectPrefab;
+        public GameObject normalFoundRingEffectPrefab;
         public Spine.Unity.SkeletonDataAsset foundRingSpine;
         public Material foundRingMaterial;
         [SerializeField] bool useSpineFoundRing;
@@ -51,6 +52,7 @@ namespace Hotfix.UI
         public UnityEngine.UI.Graphic crossTop, crossBottom;
         public AudioSource audioSource, musicSource;
         public AudioClip foundSound, missSound, winSound;
+        public AudioClip[] foundComboSounds;
         public AudioClip coinCreateSound, progressCompleteSound;
         public AudioClip buttonSound, failSound, tipsSound, homeMusic, gameMusic, journeyMusic;
         public AudioClip[] musicTracks;
@@ -67,6 +69,8 @@ namespace Hotfix.UI
         public static readonly Color[] FrameColors = { new Color(.95f,.37f,.65f), new Color(.15f,.68f,1), new Color(.71f,.31f,.95f), new Color(1,.70f,.14f), new Color(.35f,.9f,.5f), new Color(.95f,.35f,.27f) };
         int level, completed, coins, hints, avatar, frame, music, totalFound, perfect, ownedAvatars, ownedFrames;
         int draftAvatar, draftFrame, roundMistakes;
+        int foundSoundIndex;
+        float lastFoundTime;
         bool sound, musicEnabled, settled, frameTab, testing, shopReturnsToPlay, interactionsBound;
         bool vibration = true;
         string nickname, giftDate, roundContent;
@@ -653,6 +657,7 @@ namespace Hotfix.UI
             if (restored)
             { mask = GetInt("RoundMask", 0); lives = GetInt("RoundLives", 3); roundMistakes = Mathf.Max(3 - lives, GetInt("RoundMistakes", 0)); pendingHint = GetInt("RoundHint", -1); }
             Round = new DifferenceRound(spots, ImageAspect, mask, lives);
+            foundSoundIndex = 0; lastFoundTime = float.NegativeInfinity;
             roundAdOperation = Guid.NewGuid().ToString("N");
             PlayLifeAnimation(false);
             if (pendingHint < 0 || pendingHint >= Round.Total || Round.IsFound(pendingHint) || Round.Finished) pendingHint = -1;
@@ -812,7 +817,10 @@ namespace Hotfix.UI
                         pendingProgress[slot] = false;
                         UpdateHUD();
                     }, foundFlightPrefab);
-                PlayTone(foundSound);
+                var now = Time.realtimeSinceStartup;
+                foundSoundIndex = NextFoundSoundIndex(foundSoundIndex, Round.Count == 1, Round.Complete, now - lastFoundTime);
+                lastFoundTime = now;
+                PlayTone(foundComboSounds != null && foundSoundIndex < foundComboSounds.Length ? foundComboSounds[foundSoundIndex] : foundSound);
             }
             else { roundMistakes++; PlayLifeAnimation(true); PlayTone(missSound); StartCoroutine(Pulse(heartsLabel.transform)); }
             if (Round.Finished) FreezeAnalyticsRound();
@@ -872,7 +880,8 @@ namespace Hotfix.UI
                 if (animate) ring.AnimationState.AddAnimation(0, "a1", false, 0);
             }
             if (!animate || !foundRingEffectPrefab) return;
-            var effect = Instantiate(foundRingEffectPrefab, marker.transform, false);
+            var effectPrefab = Round != null && Round.Total - Round.Count >= 5 && normalFoundRingEffectPrefab ? normalFoundRingEffectPrefab : foundRingEffectPrefab;
+            var effect = Instantiate(effectPrefab, marker.transform, false);
             effect.name = "FoundRingParticles";
             effect.transform.localPosition = Vector3.zero;
             var canvas = marker.GetComponentInParent<Canvas>();
@@ -1238,6 +1247,12 @@ namespace Hotfix.UI
             if (clip == winSound) return .28f;
             if (clip == missSound || clip == tipsSound) return .3f;
             return .4f;
+        }
+        static int NextFoundSoundIndex(int previousIndex, bool first, bool complete, float elapsed)
+        {
+            if (complete) return 10;
+            if (first) return 0;
+            return elapsed <= 3f ? Mathf.Min(previousIndex + 1, 9) : 1;
         }
         void PlayTone(AudioClip clip) { if (sound && clip) audioSource.PlayOneShot(clip, ToneVolume(clip)); }
         void ShowCross(float x, float y)

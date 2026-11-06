@@ -2,11 +2,11 @@ dingdan.png
 size:256,128
 filter:Linear,Linear
 Frame 19
-bounds:101,37,64,63
-offsets:1,0,66,66
+bounds:101,36,66,64
+offsets:0,0,66,66
 Frame 3
-bounds:167,37,64,63
-offsets:1,0,66,66
+bounds:169,36,66,64
+offsets:0,0,66,66
 guang
 bounds:2,2,97,98
 offsets:8,8,113,114
